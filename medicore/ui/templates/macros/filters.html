@@ -1,0 +1,40 @@
+{% macro render_filters(schema, base_url='/patients') %}
+<form id="filter-form" 
+      hx-get="{{ base_url }}/table"
+      hx-target="#patients-table-container"
+      hx-trigger="change, keyup delay:300ms from:#search-input"
+      class="flex flex-wrap items-center gap-2 p-3 surface-bg border-b border-subtle">
+  
+  <!-- Search Field -->
+  <div class="relative flex-1 min-w-[200px] max-w-sm">
+    <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-2.5 text-muted pointer-events-none"></i>
+    <input id="search-input"
+           name="q"
+           type="text"
+           value="{{ q|default('') }}"
+           placeholder="Search MRN, name, phone..."
+           class="w-full pl-8 pr-3 input-dense rounded-lg border border-subtle app-bg text-main placeholder-slate-400 focus:outline-none focus:border-teal-500">
+  </div>
+
+  <!-- Dynamic Filter Dropdowns from Schema -->
+  {% for filter in schema.filters %}
+  <div class="flex items-center">
+    <select name="{{ filter.field_name }}"
+            class="input-dense rounded-lg border border-subtle app-bg text-xs text-secondary focus:outline-none focus:border-teal-500">
+      <option value="All">{{ filter.label }}: All</option>
+      {% for opt in filter.options %}
+      <option value="{{ opt }}">{{ opt }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% endfor %}
+
+  <!-- Clear Button -->
+  <button type="button"
+          onclick="document.getElementById('filter-form').reset(); htmx.ajax('GET', '{{ base_url }}/table', {target: '#patients-table-container'});"
+          class="px-2.5 py-1.5 rounded-lg border border-subtle text-xs text-muted hover:text-rose-500 transition-colors"
+          title="Reset all filters">
+    <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+  </button>
+</form>
+{% endmacro %}

@@ -1,0 +1,140 @@
+/* MediCore Design Tokens & Theme Variables */
+:root {
+  /* Brand Medical Teal & Slate Palette */
+  --color-primary-50: #f0fdfa;
+  --color-primary-100: #ccfbf1;
+  --color-primary-200: #99f6e4;
+  --color-primary-300: #5eead4;
+  --color-primary-400: #2dd4bf;
+  --color-primary-500: #14b8a6;
+  --color-primary-600: #0d9488;
+  --color-primary-700: #0f766e;
+  --color-primary-800: #115e59;
+  --color-primary-900: #134e4a;
+
+  /* Default Light Theme */
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-sidebar: #0f172a;
+  --text-sidebar: #e2e8f0;
+  --text-sidebar-muted: #94a3b8;
+  --border-subtle: #e2e8f0;
+  --border-focus: #0d9488;
+  --text-main: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --badge-bg: #e2e8f0;
+
+  /* Density Default: Compact */
+  --table-py: 0.45rem;
+  --table-px: 0.75rem;
+  --table-font-size: 0.8125rem;
+  --input-py: 0.375rem;
+  --input-px: 0.625rem;
+  --card-padding: 0.875rem;
+  --badge-py: 0.125rem;
+  --badge-px: 0.5rem;
+}
+
+/* Dark Theme Overrides */
+[data-theme="dark"] {
+  --bg-app: #090d16;
+  --bg-surface: #0f172a;
+  --bg-surface-hover: #1e293b;
+  --bg-card: #0f172a;
+  --bg-sidebar: #050811;
+  --text-sidebar: #f8fafc;
+  --text-sidebar-muted: #64748b;
+  --border-subtle: #1e293b;
+  --border-focus: #2dd4bf;
+  --text-main: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --badge-bg: #1e293b;
+}
+
+/* Density: Comfortable */
+[data-density="comfortable"] {
+  --table-py: 0.85rem;
+  --table-px: 1.125rem;
+  --table-font-size: 0.875rem;
+  --input-py: 0.55rem;
+  --input-px: 0.875rem;
+  --card-padding: 1.25rem;
+  --badge-py: 0.25rem;
+  --badge-px: 0.625rem;
+}
+
+/* Helper Utilities */
+.app-bg {
+  background-color: var(--bg-app);
+}
+
+.surface-bg {
+  background-color: var(--bg-surface);
+}
+
+.surface-hover:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+.border-subtle {
+  border-color: var(--border-subtle);
+}
+
+.text-main {
+  color: var(--text-main);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.table-cell-dense {
+  padding-top: var(--table-py);
+  padding-bottom: var(--table-py);
+  padding-left: var(--table-px);
+  padding-right: var(--table-px);
+  font-size: var(--table-font-size);
+}
+
+.input-dense {
+  padding-top: var(--input-py);
+  padding-bottom: var(--input-py);
+  padding-left: var(--input-px);
+  padding-right: var(--input-px);
+  font-size: var(--table-font-size);
+}
+
+.card-dense {
+  padding: var(--card-padding);
+}
+
+.badge-dense {
+  padding-top: var(--badge-py);
+  padding-bottom: var(--badge-py);
+  padding-left: var(--badge-px);
+  padding-right: var(--badge-px);
+}
+
+/* Subtle scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}

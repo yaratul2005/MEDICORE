@@ -1,0 +1,38 @@
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Logs & temp files
+*.log
+uvicorn.log
+cloudflared.log
+
+# Temporary bundle/sync artifacts from previous transfers
+bundle*
+chunk*
+part*
+project_archive.b64
+sync_update.b64
+update_files.*
+
+# OS specific
+.DS_Store
+Thumbs.db

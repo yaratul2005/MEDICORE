@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ user_theme|default('light') }}" data-density="{{ user_density|default('compact') }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ app_name }}{% endblock %} | Hospital Information System</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ['selector', '[data-theme="dark"]'],
+      theme: {
+        extend: {
+          colors: {
+            teal: {
+              50: '#f0fdfa', 100: '#ccfbf1', 200: '#99f6e4', 300: '#5eead4',
+              400: '#2dd4bf', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e',
+              800: '#115e59', 900: '#134e4a', 950: '#042f2e'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- HTMX & Alpine.js -->
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.10/dist/cdn.min.js"></script>
+
+  <!-- MediCore Design Tokens -->
+  <link rel="stylesheet" href="/static/css/tokens.css">
+</head>
+<body class="app-bg text-main antialiased h-screen flex flex-col overflow-hidden selection:bg-teal-500 selection:text-white">
+
+  <!-- Top Progress Bar for HTMX -->
+  <div id="loading-bar" class="h-0.5 bg-teal-500 w-full fixed top-0 left-0 z-50 transition-all duration-300 opacity-0 pointer-events-none"></div>
+
+  <!-- App Wrapper -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- Left Sidebar -->
+    <aside class="w-60 bg-slate-900 text-slate-200 flex flex-col flex-shrink-0 z-20 border-r border-slate-800">
+      
+      <!-- Brand Header -->
+      <div class="h-14 flex items-center gap-3 px-4 border-b border-slate-800 bg-slate-950/60">
+        <div class="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center text-white font-bold shadow-md shadow-teal-900/30">
+          <i data-lucide="cross" class="w-5 h-5 text-white"></i>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
+            MediCore
+            <span class="text-[10px] uppercase font-mono px-1 py-0.2 rounded bg-teal-950 text-teal-400 border border-teal-800">Core</span>
+          </span>
+          <span class="text-[11px] text-slate-400 truncate max-w-[130px]">{{ hospital_profile.name|default('Central Hospital') }}</span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="flex-1 overflow-y-auto py-3 px-2 space-y-1">
+        <div class="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">Clinical Modules</div>
+
+        {% for nav in nav_entries %}
+        <a href="{{ nav.url }}" 
+           class="flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-colors {% if request.url.path.startswith(nav.url) %}bg-teal-600/20 text-teal-300 border border-teal-500/30{% else %}text-slate-300 hover:bg-slate-800/80 hover:text-white{% endif %}">
+          <i data-lucide="{{ nav.icon|default('file-text') }}" class="w-4 h-4 flex-shrink-0"></i>
+          <span class="truncate">{{ nav.label }}</span>
+          {% if nav.badge %}
+            <span class="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-teal-900 text-teal-300">{{ nav.badge }}</span>
+          {% endif %}
+        </a>
+        {% endfor %}
+
+        <div class="pt-4 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">Administration</div>
+
+        <a href="/settings" 
+           class="flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-colors {% if request.url.path.startswith('/settings') %}bg-teal-600/20 text-teal-300 border border-teal-500/30{% else %}text-slate-300 hover:bg-slate-800/80 hover:text-white{% endif %}">
+          <i data-lucide="sliders" class="w-4 h-4 flex-shrink-0"></i>
+          <span>System Settings</span>
+        </a>
+
+        <a href="/audit" 
+           class="flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-colors {% if request.url.path.startswith('/audit') %}bg-teal-600/20 text-teal-300 border border-teal-500/30{% else %}text-slate-300 hover:bg-slate-800/80 hover:text-white{% endif %}">
+          <i data-lucide="shield-check" class="w-4 h-4 flex-shrink-0"></i>
+          <span>RBAC & Audit Trail</span>
+        </a>
+      </div>
+
+      <!-- Quick Emergency Hotline Banner -->
+      <div class="p-3 border-t border-slate-800 bg-slate-950/40">
+        <div class="flex items-center justify-between text-[11px] text-slate-400">
+          <span class="flex items-center gap-1.5 font-medium text-rose-400">
+            <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+            Emergency Hotline
+          </span>
+        </div>
+        <div class="mt-1 text-xs font-mono font-bold text-white">{{ hospital_profile.emergency_hotline|default('911') }}</div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+      
+      <!-- Top Navigation Bar -->
+      <header class="h-14 surface-bg border-b border-subtle flex items-center justify-between px-5 flex-shrink-0 z-10 shadow-sm">
+        
+        <!-- Search & Command Palette Bar -->
+        <div class="flex items-center gap-4 flex-1 max-w-xl">
+          <button onclick="toggleCommandPalette()" 
+                  type="button"
+                  class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-subtle app-bg text-secondary text-xs hover:border-teal-500 transition-all w-72 text-left shadow-sm">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-muted"></i>
+            <span class="flex-1 truncate">Search MRN, patients, actions...</span>
+            <kbd class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-slate-200 dark:bg-slate-800 text-muted border border-subtle">Ctrl K</kbd>
+          </button>
+        </div>
+
+        <!-- Controls: Density, Theme, User Profile -->
+        <div class="flex items-center gap-3">
+          
+          <!-- Density Toggle Button -->
+          <button onclick="toggleDensity()" 
+                  title="Toggle Display Density (Compact / Comfortable)"
+                  class="p-1.5 rounded-lg border border-subtle surface-hover text-secondary hover:text-teal-600 transition-colors">
+            <i data-lucide="rows-3" class="w-4 h-4"></i>
+          </button>
+
+          <!-- Theme Toggle Button -->
+          <button onclick="toggleTheme()" 
+                  title="Toggle Light / Dark Mode"
+                  class="p-1.5 rounded-lg border border-subtle surface-hover text-secondary hover:text-teal-600 transition-colors">
+            <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+            <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
+          </button>
+
+          <div class="h-5 w-[1px] bg-slate-200 dark:bg-slate-800"></div>
+
+          <!-- User Profile -->
+          <div class="flex items-center gap-2.5 pl-1">
+            <div class="w-8 h-8 rounded-full bg-teal-700 text-white flex items-center justify-center text-xs font-semibold uppercase">
+              {{ user.full_name[:2] if user else 'AD' }}
+            </div>
+            <div class="flex flex-col text-left">
+              <span class="text-xs font-semibold leading-tight text-main">{{ user.full_name if user else 'Administrator' }}</span>
+              <span class="text-[10px] text-muted">{{ user.roles[0].name if user and user.roles else 'SuperAdmin' }}</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page Content Block -->
+      <main class="flex-1 overflow-hidden relative">
+        {% block content %}{% endblock %}
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Command Palette Modal (Ctrl+K) -->
+  <div id="command-palette-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-start justify-center pt-20 hidden">
+    <div class="surface-bg border border-subtle rounded-xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[70vh]"
+         onclick="event.stopPropagation()">
+      <div class="p-3 border-b border-subtle flex items-center gap-2">
+        <i data-lucide="search" class="w-4 h-4 text-teal-600"></i>
+        <input id="palette-search-input"
+               type="text" 
+               placeholder="Type a command, patient name, MRN..." 
+               class="w-full bg-transparent text-sm focus:outline-none text-main placeholder-slate-400"
+               hx-get="/api/palette"
+               hx-trigger="keyup changed delay:200ms"
+               hx-target="#palette-results">
+        <kbd class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-slate-100 dark:bg-slate-800 text-muted border border-subtle">ESC</kbd>
+      </div>
+      <div id="palette-results" class="p-2 overflow-y-auto max-h-96 space-y-1">
+        <!-- Rendered by /api/palette partial -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic Modal / Drawer Container -->
+  <div id="modal-container"></div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- MediCore App JS -->
+  <script src="/static/js/app.js"></script>
+  <script>
+    // Initialize Lucide icons on every DOM update and HTMX swap
+    lucide.createIcons();
+    document.body.addEventListener('htmx:afterSwap', function() {
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

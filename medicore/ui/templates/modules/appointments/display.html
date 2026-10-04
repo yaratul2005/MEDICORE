@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Waiting Room Patient Display | MediCore</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <style>
+    body { background-color: #0b0f19; color: #f8fafc; }
+  </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col font-sans select-none">
+
+  <!-- Top Display Bar -->
+  <header class="h-20 bg-slate-950/90 border-b border-slate-800 px-8 flex items-center justify-between flex-shrink-0">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-teal-600 flex items-center justify-center text-white shadow-lg shadow-teal-900/40">
+        <i data-lucide="cross" class="w-7 h-7"></i>
+      </div>
+      <div>
+        <h1 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+          <span>{{ hospital_name|default('MediCore Central Hospital') }}</span>
+          <span class="text-xs uppercase font-mono px-2 py-0.5 rounded bg-teal-950 text-teal-400 border border-teal-800">Outpatient Intake</span>
+        </h1>
+        <p class="text-xs text-slate-400 font-mono">Real-Time Clinical Queue & Patient Directives</p>
+      </div>
+    </div>
+
+    <!-- Live Clock & Hotline -->
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-2 text-rose-400 font-mono text-sm px-3 py-1.5 rounded-lg bg-rose-950/40 border border-rose-900">
+        <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+        <span>Hotline: {{ emergency_hotline|default('911') }}</span>
+      </div>
+
+      <div class="text-right">
+        <div id="live-clock" class="text-2xl font-black font-mono tracking-wider text-teal-400">00:00:00</div>
+        <div id="live-date" class="text-xs text-slate-400 font-mono">Today</div>
+      </div>
+
+      <button onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()"
+              class="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
+              title="Toggle Fullscreen">
+        <i data-lucide="maximize" class="w-5 h-5"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Auto-Refreshing Content Container (HTMX every 5s) -->
+  <main id="display-content" 
+        hx-get="/appointments/display/content" 
+        hx-trigger="load, every 5s" 
+        hx-swap="innerHTML"
+        class="flex-1 overflow-hidden">
+    {% include "modules/appointments/display_partial.html" %}
+  </main>
+
+  <!-- Footer Banner -->
+  <footer class="h-10 bg-slate-950 border-t border-slate-900 px-8 flex items-center justify-between text-xs text-slate-500 font-mono">
+    <span>Please keep your token ready. When called, proceed directly to the indicated room.</span>
+    <span>MediCore HIS • Outpatient Services</span>
+  </footer>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('live-clock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      document.getElementById('live-date').textContent = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+    lucide.createIcons();
+    document.body.addEventListener('htmx:afterSwap', function() {
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

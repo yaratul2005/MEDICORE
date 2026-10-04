@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}RBAC & Audit Trail | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col min-w-0 overflow-y-auto p-6 space-y-6 max-w-6xl mx-auto">
+  
+  <div>
+    <h1 class="text-xl font-bold tracking-tight text-main">RBAC & Clinical Audit Trail</h1>
+    <p class="text-xs text-muted mt-1">Granular permissions formatted as <code>module.entity.action</code> and immutable audit event logs.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    
+    <!-- Roles & Permissions Summary -->
+    <div class="surface-bg border border-subtle rounded-xl p-5 shadow-sm space-y-4">
+      <div class="flex items-center gap-2 pb-2 border-b border-subtle">
+        <i data-lucide="shield" class="w-4 h-4 text-teal-600"></i>
+        <h2 class="text-sm font-bold text-main">Configured Roles ({{ roles|length }})</h2>
+      </div>
+
+      <div class="space-y-2">
+        {% for role in roles %}
+        <div class="p-2.5 rounded-lg border border-subtle app-bg">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-main">{{ role.name }}</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
+              {{ role.permissions|length }} perms
+            </span>
+          </div>
+          <p class="text-[11px] text-muted mt-0.5">{{ role.description|default('Standard clinical role') }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Live Audit Trail Log Stream -->
+    <div class="md:col-span-2 surface-bg border border-subtle rounded-xl p-5 shadow-sm space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-subtle">
+        <div class="flex items-center gap-2">
+          <i data-lucide="activity" class="w-4 h-4 text-teal-600"></i>
+          <h2 class="text-sm font-bold text-main">System-Wide Audit Log (Recent Events)</h2>
+        </div>
+        <span class="text-[11px] font-mono text-muted">{{ logs|length }} events</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead>
+            <tr class="border-b border-subtle text-[11px] font-semibold uppercase text-muted">
+              <th class="py-2 px-2.5">Timestamp</th>
+              <th class="py-2 px-2.5">User</th>
+              <th class="py-2 px-2.5">Action</th>
+              <th class="py-2 px-2.5">Entity</th>
+              <th class="py-2 px-2.5">Payload Diff</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-subtle font-mono text-[11px]">
+            {% for log in logs %}
+            <tr class="surface-hover transition-colors">
+              <td class="py-2 px-2.5 text-muted whitespace-nowrap">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+              <td class="py-2 px-2.5 font-semibold text-main">{{ log.username }}</td>
+              <td class="py-2 px-2.5">
+                {% set badge = 'bg-emerald-100 text-emerald-800' if log.action == 'CREATE' else ('bg-sky-100 text-sky-800' if log.action == 'UPDATE' else 'bg-slate-100 text-slate-800') %}
+                <span class="px-1.5 py-0.5 rounded text-[10px] {{ badge }}">{{ log.action }}</span>
+              </td>
+              <td class="py-2 px-2.5 text-secondary">{{ log.module }}.{{ log.entity }} #{{ log.entity_id or '—' }}</td>
+              <td class="py-2 px-2.5 font-mono text-[10px] text-muted truncate max-w-xs">{{ log.changes|tojson if log.changes else '{}' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="py-6 text-center text-muted">No audit events recorded yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

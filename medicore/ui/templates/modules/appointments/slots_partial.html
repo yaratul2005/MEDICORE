@@ -1,0 +1,38 @@
+<div class="space-y-2">
+  <label class="block text-xs font-semibold text-secondary mb-1">Available Schedule Slots ({{ slots|length }} generated)</label>
+  {% if not slots %}
+    <div class="p-3 text-xs text-center rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-400">
+      No available slots on this date. Doctor may be on leave or outside scheduled hours.
+    </div>
+  {% else %}
+    <div class="grid grid-cols-4 sm:grid-cols-6 gap-1.5 max-h-48 overflow-y-auto p-1.5 border border-subtle rounded-lg bg-slate-50/50 dark:bg-slate-900/40">
+      {% for slot in slots %}
+        <label class="relative flex flex-col items-center justify-center p-2 rounded-md border text-center cursor-pointer transition-all
+          {% if slot.status == 'available' %}
+            border-emerald-200 bg-white dark:bg-slate-800 hover:border-teal-500 hover:shadow-sm
+          {% elif slot.status == 'overbook_available' %}
+            border-amber-200 bg-amber-50/50 dark:bg-amber-950/30 hover:border-amber-500
+          {% else %}
+            border-slate-200 bg-slate-100 dark:bg-slate-800/50 opacity-60 cursor-not-allowed
+          {% endif %}">
+          <input type="radio" 
+                 name="slot_radio" 
+                 value="{{ slot.start_time }}-{{ slot.end_time }}"
+                 {% if slot.status == 'booked' %}disabled{% endif %}
+                 onchange="selectSlot('{{ slot.start_time }}', '{{ slot.end_time }}')"
+                 class="sr-only peer">
+          <span class="text-xs font-mono font-bold text-main peer-checked:text-teal-600">{{ slot.start_time }}</span>
+          <span class="text-[10px] font-mono text-muted">{{ slot.end_time }}</span>
+          {% if slot.status == 'overbook_available' %}
+            <span class="text-[9px] text-amber-600 dark:text-amber-400 font-medium">Overbook</span>
+          {% elif slot.status == 'booked' %}
+            <span class="text-[9px] text-rose-500 font-medium">Booked</span>
+          {% else %}
+            <span class="text-[9px] text-emerald-600 dark:text-emerald-400 font-medium">Open</span>
+          {% endif %}
+          <div class="absolute inset-0 rounded-md border-2 border-teal-600 hidden peer-checked:block pointer-events-none"></div>
+        </label>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

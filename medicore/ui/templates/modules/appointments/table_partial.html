@@ -1,0 +1,31 @@
+{% import "macros/table.html" as t %}
+
+{{ t.render_table(schema, appointments, selected_id=selected_appointment_id, base_url='/appointments', target_container='#appointments-table-container') }}
+
+<!-- Pagination Controls -->
+<div class="p-3 border-t border-subtle flex items-center justify-between text-xs text-muted surface-bg select-none">
+  <div>
+    Showing <span class="font-semibold text-main">{{ appointments|length }}</span> of <span class="font-semibold text-main">{{ total_count }}</span> appointments
+  </div>
+
+  <div class="flex items-center gap-1.5 font-mono">
+    {% if page > 1 %}
+    <button hx-get="/appointments/table?page={{ page - 1 }}&q={{ q }}&status={{ status_filter }}&department={{ department_filter }}&type={{ type_filter }}&doctor_id={{ doctor_id_filter }}&date={{ date_filter }}"
+            hx-target="#appointments-table-container"
+            class="px-2.5 py-1 rounded border border-subtle surface-hover text-secondary">
+      Prev
+    </button>
+    {% endif %}
+
+    <span class="px-2 py-1 text-[11px] text-muted">Page {{ page }} / {{ total_pages }}</span>
+
+    {% if page < total_pages %}
+    <button hx-get="/appointments/table?page={{ page + 1 }}&q={{ q }}&status={{ status_filter }}&department={{ department_filter }}&type={{ type_filter }}&doctor_id={{ doctor_id_filter }}&date={{ date_filter }}"
+            hx-target="#appointments-table-container"
+            class="px-2.5 py-1 rounded border border-subtle surface-hover text-secondary">
+      Next
+    </button>
+    {% endif %}
+  </div>
+</div>
+<script>lucide.createIcons();</script>

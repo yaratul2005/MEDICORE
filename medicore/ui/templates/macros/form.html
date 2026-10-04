@@ -1,0 +1,70 @@
+{% macro render_form_fields(schema, item=None) %}
+<div class="grid grid-cols-2 gap-3">
+  {% for field in schema.fields %}
+    {% if not field.name == 'mrn' %}
+    {% set current_val = schema.extract_value(item, field.name) if item else (field.default if field.default is not none else '') %}
+    
+    <div class="{% if field.grid_col_span == 2 %}col-span-2{% else %}col-span-1{% endif %} flex flex-col gap-1">
+      <label class="text-xs font-semibold text-secondary flex items-center justify-between">
+        <span>
+          {{ field.label }}
+          {% if field.required %}<span class="text-rose-500">*</span>{% endif %}
+          {% if field.is_custom %}<span class="text-[9px] uppercase px-1 py-0.2 bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-400 rounded ml-1 font-mono">Custom</span>{% endif %}
+        </span>
+      </label>
+
+      {% if field.field_type == 'select' %}
+        <select name="{{ field.name }}"
+                id="{{ field.name.replace('.', '_') }}"
+                {% if field.required %}required{% endif %}
+                class="w-full input-dense rounded-lg border border-subtle app-bg text-main focus:outline-none focus:border-teal-500">
+          {% for opt in field.options %}
+          <option value="{{ opt }}" {% if current_val == opt %}selected{% endif %}>{{ opt }}</option>
+          {% endfor %}
+        </select>
+
+      {% elif field.field_type == 'text' %}
+        <textarea name="{{ field.name }}"
+                  id="{{ field.name.replace('.', '_') }}"
+                  rows="2"
+                  placeholder="{{ field.placeholder }}"
+                  {% if field.required %}required{% endif %}
+                  class="w-full input-dense rounded-lg border border-subtle app-bg text-main focus:outline-none focus:border-teal-500">{{ current_val }}</textarea>
+
+      {% elif field.field_type == 'boolean' %}
+        <div class="flex items-center gap-2 pt-1">
+          <input type="checkbox"
+                 name="{{ field.name }}"
+                 id="{{ field.name.replace('.', '_') }}"
+                 value="true"
+                 {% if current_val %}checked{% endif %}
+                 class="w-4 h-4 text-teal-600 rounded border-subtle focus:ring-teal-500">
+          <span class="text-xs text-muted">Yes / Enabled</span>
+        </div>
+
+      {% elif field.field_type == 'date' %}
+        <input type="date"
+               name="{{ field.name }}"
+               id="{{ field.name.replace('.', '_') }}"
+               value="{{ current_val }}"
+               {% if field.required %}required{% endif %}
+               class="w-full input-dense rounded-lg border border-subtle app-bg text-main focus:outline-none focus:border-teal-500">
+
+      {% else %}
+        <input type="text"
+               name="{{ field.name }}"
+               id="{{ field.name.replace('.', '_') }}"
+               value="{{ current_val }}"
+               placeholder="{{ field.placeholder }}"
+               {% if field.required %}required{% endif %}
+               class="w-full input-dense rounded-lg border border-subtle app-bg text-main focus:outline-none focus:border-teal-500">
+      {% endif %}
+
+      {% if field.help_text %}
+      <span class="text-[10px] text-muted">{{ field.help_text }}</span>
+      {% endif %}
+    </div>
+    {% endif %}
+  {% endfor %}
+</div>
+{% endmacro %}

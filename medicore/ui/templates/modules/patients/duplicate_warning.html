@@ -1,0 +1,20 @@
+{% if matches %}
+<div class="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs">
+  <div class="flex items-center gap-1.5 font-bold text-amber-800 dark:text-amber-300">
+    <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600"></i>
+    <span>Possible Duplicate Patient Detected!</span>
+  </div>
+  <p class="text-[11px] text-amber-700 dark:text-amber-400 mt-1">
+    A record with matching phone number or name & date of birth already exists:
+  </p>
+  <ul class="mt-1 space-y-1">
+    {% for match in matches %}
+    <li class="flex items-center justify-between py-0.5 border-t border-amber-200/50 dark:border-amber-800/50">
+      <span class="font-medium text-amber-900 dark:text-amber-200">{{ match.full_name }} ({{ match.mrn }})</span>
+      <span class="font-mono text-[10px] text-amber-700 dark:text-amber-400">DOB: {{ match.date_of_birth }} • {{ match.phone }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+<script>lucide.createIcons();</script>
+{% endif %}

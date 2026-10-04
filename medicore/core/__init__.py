@@ -1,0 +1,3 @@
+"""
+MediCore Core Package
+"""
