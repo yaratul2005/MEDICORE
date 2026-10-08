@@ -60,6 +60,24 @@ from medicore.modules.laboratory.models import (
     TestCatalog,
     TestPanel,
 )
+from medicore.modules.billing.models import (
+    CashSession,
+    Claim,
+    CreditNote,
+    Deposit,
+    Discount,
+    InsurancePolicy,
+    InsuranceProvider,
+    Invoice,
+    InvoiceLine,
+    Package,
+    Payment,
+    PendingCharge,
+    PriceList,
+    PriceListItem,
+    Refund,
+    ServiceCatalog,
+)
 
 
 # Alembic Config object

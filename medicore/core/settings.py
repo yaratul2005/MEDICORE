@@ -65,6 +65,92 @@ DEFAULT_SETTINGS = [
             "emergency_24_7": True,
         },
     },
+    # Billing Configuration
+    {
+        "namespace": "billing",
+        "key": "config",
+        "label": "Billing & Financial Configuration",
+        "description": "Tax rates, discount approval limits, currency and rounding rules",
+        "value": {
+            "currency": "USD",
+            "currency_symbol": "$",
+            "currency_unit": "Dollars",
+            "currency_subunit": "Cents",
+            "tax_rate": 5.0,
+            "tax_name": "VAT",
+            "tax_included": False,
+            "discount_approval_limit": 10.0,
+            "discount_fixed_approval_limit": 50.0,
+            "rounding_rule": "nearest_cent",
+        },
+    },
+    # Numbering patterns for billing
+    {
+        "namespace": "numbering",
+        "key": "invoice",
+        "label": "Invoice Numbering Pattern",
+        "description": "Template format for new patient invoices",
+        "value": {
+            "prefix": "INV",
+            "pattern": "INV-{YEAR}-{SEQ:5}",
+            "current_sequence": 0,
+        },
+    },
+    {
+        "namespace": "numbering",
+        "key": "receipt",
+        "label": "Money Receipt Numbering Pattern",
+        "description": "Template format for money receipts",
+        "value": {
+            "prefix": "REC",
+            "pattern": "REC-{YEAR}-{SEQ:5}",
+            "current_sequence": 0,
+        },
+    },
+    {
+        "namespace": "numbering",
+        "key": "credit_note",
+        "label": "Credit Note Numbering Pattern",
+        "description": "Template format for credit notes",
+        "value": {
+            "prefix": "CN",
+            "pattern": "CN-{YEAR}-{SEQ:5}",
+            "current_sequence": 0,
+        },
+    },
+    {
+        "namespace": "numbering",
+        "key": "deposit",
+        "label": "Deposit Numbering Pattern",
+        "description": "Template format for advance deposits",
+        "value": {
+            "prefix": "DEP",
+            "pattern": "DEP-{YEAR}-{SEQ:5}",
+            "current_sequence": 0,
+        },
+    },
+    {
+        "namespace": "numbering",
+        "key": "claim",
+        "label": "Claim Numbering Pattern",
+        "description": "Template format for insurance claims",
+        "value": {
+            "prefix": "CLM",
+            "pattern": "CLM-{YEAR}-{SEQ:5}",
+            "current_sequence": 0,
+        },
+    },
+    {
+        "namespace": "numbering",
+        "key": "session",
+        "label": "Cash Session Numbering Pattern",
+        "description": "Template format for cashier till sessions",
+        "value": {
+            "prefix": "CS",
+            "pattern": "CS-{YEAR}-{SEQ:5}",
+            "current_sequence": 0,
+        },
+    },
     # Modules enabled
     {
         "namespace": "modules",
@@ -73,6 +159,11 @@ DEFAULT_SETTINGS = [
         "description": "Dynamic toggle for active modular monolith modules",
         "value": {
             "patients": True,
+            "appointments": True,
+            "consultations": True,
+            "pharmacy": True,
+            "laboratory": True,
+            "billing": True,
         },
     },
 ]
@@ -159,28 +250,83 @@ class SettingsRegistry:
 
     def generate_mrn(self) -> str:
         """Atomically generate the next MRN using the configured pattern"""
-        with Session(engine) as session:
-            entry = session.exec(
-                select(Setting).where(Setting.namespace == "numbering", Setting.key == "mrn")
+        return self.generate_number("mrn", "MC", "MC-{YEAR}-{SEQ:5}")
+
+    def generate_number(self, entity_key: str, default_prefix: str, default_pattern: str, session: Optional[Session] = None) -> str:
+        """Atomically generate the next sequence number for any entity pattern"""
+        def _get_next(s: Session) -> str:
+            entry = s.exec(
+                select(Setting).where(Setting.namespace == "numbering", Setting.key == entity_key)
             ).first()
             if not entry:
                 seq = 1
-                pattern = "MC-{YEAR}-{SEQ:5}"
+                pattern = default_pattern
+                data = {"prefix": default_prefix, "pattern": pattern, "current_sequence": seq}
+                new_setting = Setting(
+                    namespace="numbering",
+                    key=entity_key,
+                    label=f"{entity_key.replace('_', ' ').title()} Pattern",
+                    value=data
+                )
+                s.add(new_setting)
+                s.commit()
             else:
                 data = dict(entry.value or {})
                 seq = data.get("current_sequence", 0) + 1
-                pattern = data.get("pattern", "MC-{YEAR}-{SEQ:5}")
+                pattern = data.get("pattern", default_pattern)
                 data["current_sequence"] = seq
                 entry.value = data
-                session.add(entry)
-                session.commit()
-                cache_key = "numbering:mrn"
-                self._cache[cache_key] = data
+                s.add(entry)
+                s.commit()
 
             year = datetime.now(timezone.utc).year
-            # Format pattern e.g. MC-2026-00001
-            mrn = pattern.replace("{YEAR}", str(year)).replace("{SEQ:5}", f"{seq:05d}")
-            return mrn
+            num = pattern.replace("{YEAR}", str(year)).replace("{SEQ:5}", f"{seq:05d}")
+
+            # Collision avoidance check against DB
+            try:
+                if entity_key == "payment":
+                    from medicore.modules.billing.models import Payment
+                    while s.exec(select(Payment).where(Payment.payment_no == num)).first():
+                        seq += 1
+                        num = pattern.replace("{YEAR}", str(year)).replace("{SEQ:5}", f"{seq:05d}")
+                elif entity_key == "receipt":
+                    from medicore.modules.billing.models import Payment
+                    while s.exec(select(Payment).where(Payment.receipt_no == num)).first():
+                        seq += 1
+                        num = pattern.replace("{YEAR}", str(year)).replace("{SEQ:5}", f"{seq:05d}")
+                elif entity_key == "credit_note":
+                    from medicore.modules.billing.models import CreditNote
+                    while s.exec(select(CreditNote).where(CreditNote.credit_note_no == num)).first():
+                        seq += 1
+                        num = pattern.replace("{YEAR}", str(year)).replace("{SEQ:5}", f"{seq:05d}")
+                elif entity_key == "invoice":
+                    from medicore.modules.billing.models import Invoice
+                    while s.exec(select(Invoice).where(Invoice.invoice_no == num)).first():
+                        seq += 1
+                        num = pattern.replace("{YEAR}", str(year)).replace("{SEQ:5}", f"{seq:05d}")
+                elif entity_key == "deposit":
+                    from medicore.modules.billing.models import Deposit
+                    while s.exec(select(Deposit).where(Deposit.deposit_no == num)).first():
+                        seq += 1
+                        num = pattern.replace("{YEAR}", str(year)).replace("{SEQ:5}", f"{seq:05d}")
+
+                if seq != data.get("current_sequence"):
+                    data["current_sequence"] = seq
+                    entry.value = data
+                    s.add(entry)
+                    s.commit()
+            except Exception:
+                pass
+
+            cache_key = f"numbering:{entity_key}"
+            self._cache[cache_key] = data
+            return num
+
+        if session:
+            return _get_next(session)
+        else:
+            with Session(engine) as s:
+                return _get_next(s)
 
 
 settings_registry = SettingsRegistry()

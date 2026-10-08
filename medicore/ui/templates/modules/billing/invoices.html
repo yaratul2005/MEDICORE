@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Invoices{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+
+  <!-- Header -->
+  <header class="surface-bg border-b border-subtle px-6 py-3.5 flex items-center justify-between flex-shrink-0 shadow-xs">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-teal-600/10 text-teal-600 flex items-center justify-center font-bold">
+        <i data-lucide="file-text" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <h1 class="text-base font-bold text-main">Patient Invoices Directory</h1>
+        <p class="text-xs text-muted">Immutable finalized invoices, payment statuses, and credit note audit history</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <a href="/billing" class="px-3 py-1.5 rounded-lg surface-bg hover:surface-hover border border-subtle text-main text-xs font-semibold flex items-center gap-1.5 transition-colors">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        <span>Billing Desk</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Filter & Search Toolbar -->
+  <div class="px-6 py-3 surface-bg border-b border-subtle flex flex-wrap items-center justify-between gap-4 flex-shrink-0">
+    <!-- Status Tabs -->
+    <div class="flex items-center gap-1.5 overflow-x-auto text-xs">
+      <a href="/billing/invoices{% if category_filter %}?category_filter={{ category_filter }}{% endif %}"
+         class="px-2.5 py-1 rounded-md font-medium transition-colors {% if not status_filter %}bg-teal-600 text-white font-semibold{% else %}surface-bg border border-subtle text-muted hover:text-main{% endif %}">
+        All
+      </a>
+      <a href="/billing/invoices?status_filter=draft{% if category_filter %}&category_filter={{ category_filter }}{% endif %}"
+         class="px-2.5 py-1 rounded-md font-medium transition-colors {% if status_filter == 'draft' %}bg-teal-600 text-white font-semibold{% else %}surface-bg border border-subtle text-muted hover:text-main{% endif %}">
+        Draft
+      </a>
+      <a href="/billing/invoices?status_filter=finalized{% if category_filter %}&category_filter={{ category_filter }}{% endif %}"
+         class="px-2.5 py-1 rounded-md font-medium transition-colors {% if status_filter == 'finalized' %}bg-teal-600 text-white font-semibold{% else %}surface-bg border border-subtle text-muted hover:text-main{% endif %}">
+        Finalized
+      </a>
+      <a href="/billing/invoices?status_filter=partially_paid{% if category_filter %}&category_filter={{ category_filter }}{% endif %}"
+         class="px-2.5 py-1 rounded-md font-medium transition-colors {% if status_filter == 'partially_paid' %}bg-teal-600 text-white font-semibold{% else %}surface-bg border border-subtle text-muted hover:text-main{% endif %}">
+        Partially Paid
+      </a>
+      <a href="/billing/invoices?status_filter=paid{% if category_filter %}&category_filter={{ category_filter }}{% endif %}"
+         class="px-2.5 py-1 rounded-md font-medium transition-colors {% if status_filter == 'paid' %}bg-teal-600 text-white font-semibold{% else %}surface-bg border border-subtle text-muted hover:text-main{% endif %}">
+        Paid
+      </a>
+      <a href="/billing/invoices?status_filter=credit_note_issued{% if category_filter %}&category_filter={{ category_filter }}{% endif %}"
+         class="px-2.5 py-1 rounded-md font-medium transition-colors {% if status_filter == 'credit_note_issued' %}bg-teal-600 text-white font-semibold{% else %}surface-bg border border-subtle text-muted hover:text-main{% endif %}">
+        Credit Note Issued
+      </a>
+    </div>
+
+    <!-- Search input -->
+    <form method="GET" action="/billing/invoices" class="flex items-center gap-2">
+      {% if status_filter %}<input type="hidden" name="status_filter" value="{{ status_filter }}" />{% endif %}
+      <div class="relative">
+        <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-muted"></i>
+        <input type="text" name="q" value="{{ q or '' }}" placeholder="Search Invoice #, MRN, Patient..."
+               class="pl-8 pr-3 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs focus:ring-1 focus:ring-teal-500 w-64" />
+      </div>
+      <button type="submit" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-semibold">Filter</button>
+    </form>
+  </div>
+
+  <!-- Table Container -->
+  <div class="flex-1 overflow-y-auto p-6">
+    <div class="surface-bg rounded-xl border border-subtle overflow-hidden shadow-xs">
+      <table class="w-full text-xs text-left">
+        <thead class="bg-slate-100 dark:bg-slate-900 border-b border-subtle text-muted uppercase font-semibold text-[10px]">
+          <tr>
+            <th class="px-4 py-3">Invoice #</th>
+            <th class="px-3 py-3">Date</th>
+            <th class="px-4 py-3">Patient Name</th>
+            <th class="px-3 py-3">MRN</th>
+            <th class="px-3 py-3">Category</th>
+            <th class="px-3 py-3 text-right">Total ($)</th>
+            <th class="px-3 py-3 text-right">Paid ($)</th>
+            <th class="px-3 py-3 text-right">Due ($)</th>
+            <th class="px-3 py-3 text-center">Status</th>
+            <th class="px-4 py-3 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-subtle">
+          {% if invoices %}
+            {% for inv in invoices %}
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+              <td class="px-4 py-3 font-mono font-bold text-main">
+                <a href="/billing/invoice/{{ inv.id }}" class="hover:text-teal-600">
+                  {{ inv.invoice_no }}
+                </a>
+              </td>
+              <td class="px-3 py-3 text-muted">
+                {{ inv.created_at.strftime('%Y-%m-%d %H:%M') }}
+              </td>
+              <td class="px-4 py-3 font-semibold text-main">
+                {{ inv.patient_name }}
+              </td>
+              <td class="px-3 py-3 font-mono text-muted">
+                {{ inv.patient_mrn }}
+              </td>
+              <td class="px-3 py-3">
+                <span class="px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold border
+                  {% if inv.patient_category == 'vip' %}bg-purple-100 text-purple-800 border-purple-200
+                  {% elif inv.patient_category == 'staff' %}bg-blue-100 text-blue-800 border-blue-200
+                  {% elif inv.patient_category == 'insured' %}bg-indigo-100 text-indigo-800 border-indigo-200
+                  {% else %}bg-slate-100 text-slate-700 border-slate-200{% endif %}">
+                  {{ inv.patient_category }}
+                </span>
+              </td>
+              <td class="px-3 py-3 text-right font-mono font-bold text-main">
+                ${{ "%.2f"|format(inv.total_amount) }}
+              </td>
+              <td class="px-3 py-3 text-right font-mono text-emerald-600 font-semibold">
+                ${{ "%.2f"|format(inv.paid_amount) }}
+              </td>
+              <td class="px-3 py-3 text-right font-mono font-bold {% if inv.balance_due > 0 %}text-rose-600{% else %}text-muted{% endif %}">
+                ${{ "%.2f"|format(inv.balance_due) }}
+              </td>
+              <td class="px-3 py-3 text-center">
+                <span class="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold
+                  {% if inv.status == 'paid' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300
+                  {% elif inv.status == 'partially_paid' %}bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300
+                  {% elif inv.status == 'credit_note_issued' %}bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300
+                  {% elif inv.status == 'finalized' %}bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300
+                  {% else %}bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300{% endif %}">
+                  {{ inv.status.replace('_', ' ') }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex items-center justify-end gap-1.5">
+                  <a href="/billing/invoice/{{ inv.id }}" class="px-2 py-1 rounded surface-bg hover:surface-hover border border-subtle text-muted hover:text-main text-[11px] font-semibold">
+                    View
+                  </a>
+                  <a href="/billing/invoice/{{ inv.id }}/print" target="_blank" class="px-2 py-1 rounded surface-bg hover:surface-hover border border-subtle text-muted hover:text-main text-[11px] font-semibold" title="Print">
+                    <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                  </a>
+                  <a href="/billing/invoice/{{ inv.id }}/pdf" class="px-2 py-1 rounded surface-bg hover:surface-hover border border-subtle text-teal-600 hover:text-teal-700 text-[11px] font-semibold" title="PDF">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="10" class="px-4 py-12 text-center text-muted">
+                <i data-lucide="file-question" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                No invoices found matching criteria.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

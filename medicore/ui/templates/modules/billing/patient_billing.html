@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Billing - {{ patient.first_name }} {{ patient.last_name }}{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950" x-data="{
+  selectedCharges: {{ pending_charges|map(attribute='id')|list|tojson }},
+  allCharges: {{ pending_charges|map(attribute='id')|list|tojson }},
+  chargesPrices: { {% for ch in pending_charges %}'{{ ch.id }}': {{ ch.total_price }}{% if not loop.last %},{% endif %}{% endfor %} },
+  get runningTotal() {
+    return this.selectedCharges.reduce((sum, id) => sum + (this.chargesPrices[id] || 0), 0);
+  },
+  toggleSelectAll() {
+    if (this.selectedCharges.length === this.allCharges.length) {
+      this.selectedCharges = [];
+    } else {
+      this.selectedCharges = [...this.allCharges];
+    }
+  },
+  showManualModal: false,
+  showDepositModal: false
+}">
+
+  <!-- Header -->
+  <header class="surface-bg border-b border-subtle px-6 py-3.5 flex items-center justify-between flex-shrink-0 shadow-xs">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-teal-600/10 text-teal-600 flex items-center justify-center font-bold">
+        <i data-lucide="credit-card" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <h1 class="text-base font-bold text-main flex items-center gap-2">
+          Patient Billing Screen: {{ patient.first_name }} {{ patient.last_name }}
+          <span class="font-mono text-xs px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-muted">{{ patient.mrn }}</span>
+        </h1>
+        <p class="text-xs text-muted">Review captured pending charges, apply insurance splits, advance deposits, and generate invoice</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <a href="/billing" class="px-3 py-1.5 rounded-lg surface-bg hover:surface-hover border border-subtle text-main text-xs font-semibold flex items-center gap-1.5 transition-colors">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        <span>Billing Desk</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Patient Summary Strip -->
+  <div class="px-6 py-3 surface-bg border-b border-subtle grid grid-cols-2 md:grid-cols-4 gap-4 flex-shrink-0 text-xs">
+    <div class="p-2.5 rounded-lg border border-subtle app-bg">
+      <span class="text-[10px] uppercase font-semibold text-muted block">Phone & Contact</span>
+      <span class="font-mono text-main font-medium">{{ patient.phone }}</span>
+    </div>
+
+    <div class="p-2.5 rounded-lg border border-subtle app-bg">
+      <span class="text-[10px] uppercase font-semibold text-muted block">Insurance Policy</span>
+      {% if policy %}
+        <span class="font-semibold text-teal-600">{{ policy.provider_name }}</span>
+        <span class="text-[10px] text-muted block">Co-Pay: {{ policy.co_pay_percentage }}% • Policy: {{ policy.policy_number }}</span>
+      {% else %}
+        <span class="text-muted">Self-Pay / Non-Insured</span>
+      {% endif %}
+    </div>
+
+    <div class="p-2.5 rounded-lg border border-subtle app-bg">
+      <span class="text-[10px] uppercase font-semibold text-muted block">Available Deposit Advance</span>
+      <span class="font-mono font-bold text-emerald-600 text-sm">${{ "%.2f"|format(available_deposit) }}</span>
+      <span class="text-[10px] text-muted block">{{ deposits|length }} active deposit(s)</span>
+    </div>
+
+    <div class="p-2.5 rounded-lg border border-subtle app-bg">
+      <span class="text-[10px] uppercase font-semibold text-muted block">Past Invoices Balance</span>
+      {% set past_due = past_invoices|sum(attribute='balance_due') %}
+      <span class="font-mono font-bold {% if past_due > 0 %}text-rose-600{% else %}text-muted{% endif %} text-sm">${{ "%.2f"|format(past_due) }}</span>
+      <span class="text-[10px] text-muted block">{{ past_invoices|length }} invoice history</span>
+    </div>
+  </div>
+
+  <!-- Workspace 2-Column Layout -->
+  <div class="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Column 1 & 2: Pending Charges Selection Table -->
+    <div class="lg:col-span-2 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-bold text-main flex items-center gap-2">
+          <i data-lucide="list-checks" class="w-4 h-4 text-teal-600"></i>
+          Unbilled Pending Charges (Event-Captured)
+        </h2>
+        <div class="flex items-center gap-2">
+          <button type="button" @click="toggleSelectAll()"
+                  class="px-2.5 py-1 rounded surface-bg hover:surface-hover border border-subtle text-xs font-semibold text-muted hover:text-main">
+            Select / Deselect All
+          </button>
+        </div>
+      </div>
+
+      <form id="create-invoice-form" method="POST" action="/billing/patient/{{ patient.id }}/invoice/create">
+        <div class="surface-bg rounded-xl border border-subtle overflow-hidden shadow-xs">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-slate-100 dark:bg-slate-900 border-b border-subtle text-muted uppercase font-semibold text-[10px]">
+              <tr>
+                <th class="px-4 py-3 w-8">
+                  <input type="checkbox" :checked="selectedCharges.length === allCharges.length && allCharges.length > 0" @click="toggleSelectAll()"
+                         class="rounded border-subtle text-teal-600 focus:ring-teal-500" />
+                </th>
+                <th class="px-3 py-3">Source / Service</th>
+                <th class="px-3 py-3">Type</th>
+                <th class="px-3 py-3 text-right">Qty</th>
+                <th class="px-3 py-3 text-right">Unit Price</th>
+                <th class="px-4 py-3 text-right">Total Price</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-subtle">
+              {% if pending_charges %}
+                {% for ch in pending_charges %}
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+                  <td class="px-4 py-3">
+                    <input type="checkbox" name="charge_ids" value="{{ ch.id }}" x-model="selectedCharges"
+                           class="rounded border-subtle text-teal-600 focus:ring-teal-500" />
+                  </td>
+                  <td class="px-3 py-3 font-medium text-main">
+                    <div>{{ ch.description }}</div>
+                    <span class="text-[10px] text-muted font-mono">Ref: {{ ch.source_id }}</span>
+                  </td>
+                  <td class="px-3 py-3">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold border
+                      {% if ch.source_type == 'consultation' %}bg-blue-100 text-blue-800 border-blue-200
+                      {% elif ch.source_type == 'pharmacy' %}bg-emerald-100 text-emerald-800 border-emerald-200
+                      {% elif ch.source_type == 'laboratory' %}bg-purple-100 text-purple-800 border-purple-200
+                      {% else %}bg-amber-100 text-amber-800 border-amber-200{% endif %}">
+                      {{ ch.source_type }}
+                    </span>
+                  </td>
+                  <td class="px-3 py-3 text-right font-mono">
+                    {{ ch.quantity }}
+                  </td>
+                  <td class="px-3 py-3 text-right font-mono text-muted">
+                    ${{ "%.2f"|format(ch.unit_price) }}
+                  </td>
+                  <td class="px-4 py-3 text-right font-mono font-bold text-main">
+                    ${{ "%.2f"|format(ch.total_price) }}
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="6" class="px-4 py-8 text-center text-muted">
+                    <i data-lucide="check-circle" class="w-8 h-8 mx-auto mb-2 text-emerald-500 opacity-60"></i>
+                    No pending unbilled charges for this patient.
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Configuration Strip for Invoice Generation -->
+        <div class="mt-4 p-4 surface-bg rounded-xl border border-subtle flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-4 text-xs">
+            <div>
+              <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Billing Category</label>
+              <select name="patient_category" class="px-2.5 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs">
+                <option value="general" {% if not policy %}selected{% endif %}>General / Self-Pay</option>
+                <option value="insured" {% if policy %}selected{% endif %}>Insured / Corporate</option>
+                <option value="staff">Hospital Staff Concession</option>
+                <option value="vip">VIP / Executive Suite</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Tariff / Price List</label>
+              <select name="price_list_id" class="px-2.5 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs">
+                <option value="">Default Standard Tariff</option>
+                {% for pl in price_lists %}
+                <option value="{{ pl.id }}">{{ pl.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" :disabled="selectedCharges.length === 0"
+                  class="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs flex items-center gap-2 shadow-xs transition-colors">
+            <i data-lucide="file-plus" class="w-4 h-4"></i>
+            <span>Generate Patient Invoice (<span x-text="selectedCharges.length"></span> items)</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Column 3: Live Running Total & Deposit Actions -->
+    <div class="space-y-4">
+      <div class="surface-bg rounded-xl border border-subtle p-4 shadow-xs space-y-4">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-muted">Bill Preparation Summary</h3>
+
+        <div class="space-y-2 text-xs divide-y divide-subtle">
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-muted">Selected Items:</span>
+            <span class="font-mono font-bold text-main" x-text="selectedCharges.length"></span>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <span class="text-muted">Selected Subtotal:</span>
+            <span class="font-mono font-bold text-main text-base">$<span x-text="runningTotal.toFixed(2)"></span></span>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <span class="text-muted">Est. Tax (VAT 5%):</span>
+            <span class="font-mono text-muted">$<span x-text="(runningTotal * 0.05).toFixed(2)"></span></span>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <span class="font-semibold text-main">Estimated Total:</span>
+            <span class="font-mono font-bold text-teal-600 text-lg">$<span x-text="(runningTotal * 1.05).toFixed(2)"></span></span>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-lg bg-slate-100 dark:bg-slate-900 text-xs space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-muted">Available Deposit:</span>
+            <span class="font-mono font-bold text-emerald-600">${{ "%.2f"|format(available_deposit) }}</span>
+          </div>
+          <p class="text-[10px] text-muted">You can apply deposits directly on the generated invoice.</p>
+        </div>
+      </div>
+
+      <!-- Past Invoices History for this patient -->
+      <div class="surface-bg rounded-xl border border-subtle p-4 shadow-xs space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-muted flex items-center justify-between">
+          <span>Past Invoices</span>
+          <span class="text-[10px] text-muted">{{ past_invoices|length }} records</span>
+        </h3>
+
+        <div class="space-y-2">
+          {% for inv in past_invoices %}
+          <div class="p-2 rounded-lg border border-subtle flex items-center justify-between text-xs hover:bg-slate-50 dark:hover:bg-slate-900/40">
+            <div>
+              <a href="/billing/invoice/{{ inv.id }}" class="font-mono font-bold text-main hover:text-teal-600">
+                {{ inv.invoice_no }}
+              </a>
+              <span class="text-[10px] text-muted block">{{ inv.created_at.strftime('%Y-%m-%d') }}</span>
+            </div>
+            <div class="text-right">
+              <span class="font-mono font-bold text-main">${{ "%.2f"|format(inv.total_amount) }}</span>
+              <span class="text-[10px] block font-semibold {% if inv.balance_due > 0 %}text-rose-600{% else %}text-emerald-600{% endif %}">
+                {% if inv.balance_due > 0 %}Due: ${{ "%.2f"|format(inv.balance_due) }}{% else %}PAID{% endif %}
+              </span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

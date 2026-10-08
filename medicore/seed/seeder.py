@@ -66,6 +66,24 @@ from medicore.modules.laboratory.service import (
     evaluate_parameter_value,
 )
 from medicore.modules.pharmacy.service import record_stock_movement
+from medicore.modules.billing.models import (
+    CashSession,
+    Claim,
+    CreditNote,
+    Deposit,
+    Discount,
+    InsurancePolicy,
+    InsuranceProvider,
+    Invoice,
+    InvoiceLine,
+    Package,
+    Payment,
+    PendingCharge,
+    PriceList,
+    PriceListItem,
+    Refund,
+    ServiceCatalog,
+)
 
 fake = Faker()
 Faker.seed(42)
@@ -125,6 +143,18 @@ def seed_database():
             ("laboratory.result.amend", "laboratory", "result", "amend", "Amend and issue corrected diagnostic reports with audit logging"),
             ("laboratory.critical.acknowledge", "laboratory", "critical", "acknowledge", "Physician acknowledgement of life-threatening critical lab values"),
             ("laboratory.catalog.manage", "laboratory", "catalog", "manage", "Manage test catalog, LOINC mappings, and biological reference intervals"),
+            ("billing.payment.collect", "billing", "payment", "collect", "Collect patient payments and advance deposits at cashier till"),
+            ("billing.invoice.create", "billing", "invoice", "create", "Generate draft invoices from pending charges or manual lines"),
+            ("billing.invoice.finalize", "billing", "invoice", "finalize", "Finalize patient invoices locking them as immutable"),
+            ("billing.discount.apply", "billing", "discount", "apply", "Apply standard discounts and promotional concessions"),
+            ("billing.discount.approve", "billing", "discount", "approve", "Manager authorization for high-value discounts and waivers"),
+            ("billing.refund.request", "billing", "refund", "request", "Initiate patient payment or deposit refund requests"),
+            ("billing.refund.approve", "billing", "refund", "approve", "Manager authorization and disbursement of refunds"),
+            ("billing.credit_note.issue", "billing", "credit_note", "issue", "Issue official credit notes for invoice adjustments"),
+            ("billing.session.manage", "billing", "session", "manage", "Open and close cashier cash sessions with till reconciliation"),
+            ("billing.pricing.manage", "billing", "pricing", "manage", "Configure price lists, tariffs, and clinical package bundles"),
+            ("billing.insurance.manage", "billing", "insurance", "manage", "Manage insurance policies, coverage rules, and claims"),
+            ("billing.report.view", "billing", "report", "view", "Access revenue analytics, collection breakdowns, and insurance aging"),
             ("core.settings.view", "core", "settings", "view", "View system configuration"),
             ("core.settings.edit", "core", "settings", "edit", "Modify hospital and module settings"),
             ("core.audit.view", "core", "audit", "view", "Inspect clinical audit trail logs"),
@@ -179,6 +209,18 @@ def seed_database():
                 "laboratory.order.view", "laboratory.result.enter", "laboratory.result.approve",
                 "laboratory.result.amend", "laboratory.catalog.manage", "patients.patient.read", "core.audit.view",
             ]),
+            ("Cashier", "Front desk cashier collecting patient payments, deposits, and issuing receipts", [
+                "patients.patient.read", "billing.payment.collect", "billing.invoice.create",
+                "billing.invoice.finalize", "billing.discount.apply", "billing.refund.request",
+                "billing.session.manage", "core.audit.view",
+            ]),
+            ("BillingManager", "Finance and billing supervisor approving waivers, refunds, and managing tariffs and reports", [
+                "patients.patient.read", "billing.payment.collect", "billing.invoice.create",
+                "billing.invoice.finalize", "billing.discount.apply", "billing.discount.approve",
+                "billing.refund.request", "billing.refund.approve", "billing.credit_note.issue",
+                "billing.session.manage", "billing.pricing.manage", "billing.insurance.manage",
+                "billing.report.view", "core.audit.view", "core.settings.view", "core.settings.edit",
+            ]),
         ]
 
         db_roles = {}
@@ -214,6 +256,8 @@ def seed_database():
             ("storekeeper.dan", "dan.miller@medicore.health", "Dan Miller (Storekeeper)", "store123", False, "StoreKeeper"),
             ("tech.alex", "alex.rivera@medicore.health", "Alex Rivera (Lab Tech)", "lab123", False, "LabTechnician"),
             ("pathologist.victor", "victor.vance@medicore.health", "Dr. Victor Vance, MD (Pathologist)", "path123", False, "Pathologist"),
+            ("cashier.emma", "emma.watson@medicore.health", "Emma Watson (Cashier)", "cashier123", False, "Cashier"),
+            ("manager.robert", "robert.king@medicore.health", "Robert King (Billing Manager)", "manager123", False, "BillingManager"),
         ]
 
         seeded_users = {}
@@ -840,6 +884,9 @@ def seed_database():
         # Step 10: Seed Laboratory
         seed_laboratory_data(session)
 
+        # Step 11: Seed Billing
+        seed_billing_data(session)
+
         total_appts = len(session.exec(select(Appointment)).all())
         total_tokens = len(session.exec(select(QueueToken)).all())
         total_encounters = len(session.exec(select(Encounter)).all())
@@ -848,7 +895,8 @@ def seed_database():
         total_dispenses = len(session.exec(select(Dispense)).all())
         total_lab_orders = len(session.exec(select(LabOrder)).all())
         total_lab_tests = len(session.exec(select(TestCatalog)).all())
-        print(f"Seeding completed successfully! 200 patients, 5 doctors, {total_appts} appointments, {total_tokens} queue tokens, {total_encounters} encounters, {total_items} pharmacy items, {total_batches} batches, {total_dispenses} dispenses, {total_lab_tests} lab tests, and {total_lab_orders} lab orders ready.")
+        total_invoices = len(session.exec(select(Invoice)).all())
+        print(f"Seeding completed successfully! 200 patients, 5 doctors, {total_appts} appointments, {total_tokens} queue tokens, {total_encounters} encounters, {total_items} pharmacy items, {total_batches} batches, {total_dispenses} dispenses, {total_lab_tests} lab tests, {total_lab_orders} lab orders, and {total_invoices} invoices ready.")
 
 
 def seed_pharmacy_data(session: Session):
@@ -1727,5 +1775,640 @@ def seed_laboratory_data(session: Session):
     print(f"  [OK] Laboratory seeded successfully: {total_orders_final} orders, {total_results_final} results, {total_reports_final} reports.")
 
 
+def seed_billing_data(session: Session):
+    print("[11/11] Seeding Billing module (price lists, services, packages, insurance, cash sessions, 300 invoices, deposits)...")
+
+    # 1. Price Lists
+    price_list_defs = [
+        ("GENERAL", "General Standard Tariff", "general", 0.0),
+        ("STAFF", "Hospital Staff & Family Tariff", "staff", 20.0),
+        ("INSURED", "Commercial Health Insurance Tariff", "insured", 0.0),
+        ("VIP", "Executive & VIP Healthcare Tariff", "vip", 0.0),
+    ]
+    db_price_lists = {}
+    for code, name, pcat, disc in price_list_defs:
+        pl = session.exec(select(PriceList).where(PriceList.code == code)).first()
+        if not pl:
+            pl = PriceList(
+                code=code,
+                name=name,
+                patient_category=pcat,
+                discount_percentage=disc,
+                effective_from=datetime.now(timezone.utc) - timedelta(days=365),
+                is_active=True,
+            )
+            session.add(pl)
+            session.commit()
+            session.refresh(pl)
+        db_price_lists[code] = pl
+
+    # 2. Service Catalog
+    services_defs = [
+        # Consultations
+        ("CONS-GEN", "General OPD Consultation", "consultation", "General Medicine", 50.0, 0.0, False, None),
+        ("CONS-SPEC", "Specialist Consultation", "consultation", "Cardiology", 100.0, 0.0, False, None),
+        ("CONS-PED", "Pediatric Consultation", "consultation", "Pediatrics", 75.0, 0.0, False, None),
+        ("CONS-ORTHO", "Orthopedic Consultation", "consultation", "Orthopedics", 90.0, 0.0, False, None),
+        ("CONS-ER", "Emergency Triage & Consultation", "consultation", "Emergency", 120.0, 0.0, False, None),
+        # Procedures
+        ("PROC-DRESS", "Wound Dressing & Debridement", "procedure", "Surgery", 35.0, 0.05, False, None),
+        ("PROC-SUT", "Minor Suture & Laceration Repair", "procedure", "Surgery", 80.0, 0.05, False, None),
+        ("PROC-NEB", "Nebulization Inhalation Therapy", "procedure", "Pulmonology", 25.0, 0.05, False, None),
+        ("PROC-DELIV", "Normal Vaginal Delivery (NVD)", "procedure", "Obstetrics", 950.0, 0.05, False, None),
+        ("PROC-CATARACT", "Cataract Phacoemulsification with IOL", "procedure", "Ophthalmology", 750.0, 0.05, False, None),
+        ("PROC-ENDO", "Diagnostic Upper GI Endoscopy", "procedure", "Gastroenterology", 320.0, 0.05, False, None),
+        ("PROC-INJ", "Intra-articular Joint Injection", "procedure", "Orthopedics", 65.0, 0.05, False, None),
+        ("PROC-ECG", "12-Lead Electrocardiogram (ECG)", "procedure", "Cardiology", 40.0, 0.05, False, None),
+        ("PROC-ECHO", "Transthoracic Echocardiography (Echo)", "procedure", "Cardiology", 180.0, 0.05, False, None),
+        ("PROC-XRAY", "Digital Chest X-Ray PA View", "procedure", "Radiology", 55.0, 0.05, False, None),
+        ("PROC-USG", "Ultrasound Whole Abdomen", "procedure", "Radiology", 110.0, 0.05, False, None),
+        # Bed Charges
+        ("BED-WARD", "General Ward Bed (Per Day)", "bed_charge", "Inpatient", 85.0, 0.0, False, None),
+        ("BED-SEMI", "Semi-Private Room Bed (Per Day)", "bed_charge", "Inpatient", 160.0, 0.0, False, None),
+        ("BED-ICU", "ICU Critical Care Bed (Per Day)", "bed_charge", "Intensive Care", 450.0, 0.0, False, None),
+        # Packages
+        ("PKG-DELIV", "Maternity Normal Delivery Package", "package", "Obstetrics", 1200.0, 0.05, True, None),
+        ("PKG-CATARACT", "Comprehensive Cataract Surgery Package", "package", "Ophthalmology", 850.0, 0.05, True, None),
+        ("PKG-EXEC", "Executive Wellness Health Package", "package", "General Medicine", 350.0, 0.05, True, None),
+    ]
+
+    db_services = {}
+    for code, name, cat, dept, bprice, tax, is_pkg, pkg_id in services_defs:
+        svc = session.exec(select(ServiceCatalog).where(ServiceCatalog.code == code)).first()
+        if not svc:
+            svc = ServiceCatalog(
+                code=code,
+                name=name,
+                category=cat,
+                department=dept,
+                base_price=bprice,
+                tax_rate=tax,
+                is_package=is_pkg,
+                package_id=pkg_id,
+                is_active=True,
+            )
+            session.add(svc)
+            session.commit()
+            session.refresh(svc)
+        db_services[code] = svc
+
+    # 3. Packages
+    pkg_defs = [
+        (
+            "PKG-DELIV",
+            "Maternity Normal Delivery Package",
+            1200.0,
+            3,
+            "Complete maternity delivery package including labor room, 3 days ward stay, standard nursing, and initial pediatric newborn screening.",
+            [
+                {"code": "PROC-DELIV", "name": "Normal Vaginal Delivery", "quantity": 1, "standard_rate": 950.0},
+                {"code": "BED-WARD", "name": "General Ward Bed", "quantity": 3, "standard_rate": 85.0},
+                {"code": "CONS-PED", "name": "Pediatric Newborn Check", "quantity": 2, "standard_rate": 75.0},
+            ],
+        ),
+        (
+            "PKG-CATARACT",
+            "Comprehensive Cataract Surgery Package",
+            850.0,
+            1,
+            "Daycare phacoemulsification with foldable intraocular lens (IOL), pre-op prep, surgeon charges, and daycare bed.",
+            [
+                {"code": "PROC-CATARACT", "name": "Cataract Phacoemulsification with IOL", "quantity": 1, "standard_rate": 750.0},
+                {"code": "BED-SEMI", "name": "Semi-Private Daycare Bed", "quantity": 1, "standard_rate": 160.0},
+            ],
+        ),
+        (
+            "PKG-EXEC",
+            "Executive Wellness Health Package",
+            350.0,
+            1,
+            "Annual executive preventative health screening package with consultation, resting ECG, and whole abdominal ultrasound.",
+            [
+                {"code": "CONS-SPEC", "name": "Specialist Consultation", "quantity": 1, "standard_rate": 100.0},
+                {"code": "PROC-ECG", "name": "12-Lead Electrocardiogram (ECG)", "quantity": 1, "standard_rate": 40.0},
+                {"code": "PROC-USG", "name": "Ultrasound Whole Abdomen", "quantity": 1, "standard_rate": 110.0},
+            ],
+        ),
+    ]
+
+    for pcode, pname, pprice, dur, desc, inc_svcs in pkg_defs:
+        pkg = session.exec(select(Package).where(Package.code == pcode)).first()
+        if not pkg:
+            pkg = Package(
+                code=pcode,
+                name=pname,
+                package_price=pprice,
+                duration_days=dur,
+                description=desc,
+                included_services=inc_svcs,
+                is_active=True,
+            )
+            session.add(pkg)
+            session.commit()
+            session.refresh(pkg)
+
+    # 4. Price List Items
+    for scode, svc in db_services.items():
+        for pl_code, pl in db_price_lists.items():
+            existing_item = session.exec(
+                select(PriceListItem).where(
+                    PriceListItem.price_list_id == pl.id,
+                    PriceListItem.service_id == svc.id,
+                )
+            ).first()
+            if not existing_item:
+                if pl_code == "GENERAL":
+                    t_price = svc.base_price
+                elif pl_code == "STAFF":
+                    t_price = round(svc.base_price * 0.80, 2)
+                elif pl_code == "INSURED":
+                    t_price = round(svc.base_price * 1.05, 2)
+                elif pl_code == "VIP":
+                    t_price = round(svc.base_price * 1.25, 2)
+                else:
+                    t_price = svc.base_price
+
+                session.add(
+                    PriceListItem(
+                        price_list_id=pl.id,
+                        service_id=svc.id,
+                        price=t_price,
+                    )
+                )
+    session.commit()
+
+    # 5. Insurance Providers
+    provider_defs = [
+        ("MEDISHIELD", "MediShield National Health Assurance", "Sarah Jenkins", "+1-555-0301", "claims@medishield.com", "100 Healthcare Blvd, Suite 400", "MS-101", "MediAssist TPA"),
+        ("STARHLTH", "Star Health & Allied Insurance Co.", "Rajiv Menon", "+1-555-0302", "corporate@starhealth.com", "45 Allied Towers, New York", "SH-202", "Family Health Plan TPA"),
+        ("BUPA", "Bupa Global Healthcare Services", "Claire Davies", "+1-555-0303", "b2b@bupaglobal.com", "12 Chancery Lane, London / NY Branch", "BP-303", "Bupa Worldwide Care"),
+        ("GREENLIFE", "GreenLife Corporate Health TPA", "David Miller", "+1-555-0304", "tpa@greenlifehealth.com", "770 Innovation Way, Boston", "GL-404", "GreenLife TPA Inc."),
+        ("RELIANCE", "Reliance General Healthcare Plan", "Anita Sharma", "+1-555-0305", "service@reliancehealth.com", "200 Metro Plaza, Chicago", "RG-505", "Raksha TPA Services"),
+    ]
+    db_providers = {}
+    for pcode, pname, cpers, phone, email, addr, pid, tpa in provider_defs:
+        prov = session.exec(select(InsuranceProvider).where(InsuranceProvider.code == pcode)).first()
+        if not prov:
+            prov = InsuranceProvider(
+                code=pcode,
+                name=pname,
+                contact_person=cpers,
+                phone=phone,
+                email=email,
+                address=addr,
+                payer_id=pid,
+                tpa_name=tpa,
+                is_active=True,
+            )
+            session.add(prov)
+            session.commit()
+            session.refresh(prov)
+        db_providers[pcode] = prov
+
+    # 6. Patient Insurance Policies (50 policies)
+    all_patients = session.exec(select(Patient)).all()
+    existing_policies = session.exec(select(InsurancePolicy)).all()
+    patient_policies = {p.patient_id: p for p in existing_policies}
+
+    if len(existing_policies) < 50 and len(all_patients) >= 50:
+        providers_list = list(db_providers.values())
+        copays = [10.0, 15.0, 0.0, 20.0, 10.0]
+        for i in range(50):
+            pat = all_patients[i]
+            if pat.id in patient_policies:
+                continue
+            prov = providers_list[i % len(providers_list)]
+            cpay = copays[i % len(copays)]
+            pol_num = f"POL-{prov.code}-{pat.id:04d}-{random.randint(1000, 9999)}"
+            pol = InsurancePolicy(
+                patient_id=pat.id,
+                patient_mrn=pat.mrn,
+                patient_name=pat.full_name,
+                provider_id=prov.id,
+                provider_name=prov.name,
+                policy_number=pol_num,
+                group_number=f"GRP-{random.randint(100, 999)}",
+                member_id=f"MEM-{pat.mrn}",
+                valid_from=datetime.now(timezone.utc) - timedelta(days=180),
+                valid_to=datetime.now(timezone.utc) + timedelta(days=185),
+                co_pay_percentage=cpay,
+                deductible=50.0 if cpay > 0 else 0.0,
+                max_coverage_limit=random.choice([15000.0, 25000.0, 50000.0]),
+                per_service_limits={"consultation": 200.0, "procedure": 2500.0, "laboratory": 500.0, "pharmacy": 1000.0},
+                exclusions=["Cosmetic Surgery", "Experimental Treatments"],
+                status="active",
+            )
+            session.add(pol)
+            patient_policies[pat.id] = pol
+        session.commit()
+
+    # 7. Cash Sessions
+    sess_yesterday = session.exec(select(CashSession).where(CashSession.session_no == "CS-2026-00001")).first()
+    if not sess_yesterday:
+        y_open = datetime.now(timezone.utc) - timedelta(days=1, hours=10)
+        y_close = datetime.now(timezone.utc) - timedelta(days=1, hours=1)
+        sess_yesterday = CashSession(
+            session_no="CS-2026-00001",
+            cashier_username="cashier.emma",
+            opened_at=y_open,
+            closed_at=y_close,
+            opening_balance=500.0,
+            closing_balance=4200.0,
+            cash_collected=3200.0,
+            cash_refunded=0.0,
+            card_collected=1450.0,
+            mobile_banking_collected=600.0,
+            deposit_collected=500.0,
+            total_expected_cash=4200.0,
+            actual_counted_cash=4200.0,
+            variance=0.0,
+            status="closed",
+        )
+        session.add(sess_yesterday)
+
+    sess_today = session.exec(select(CashSession).where(CashSession.session_no == "CS-2026-00002")).first()
+    if not sess_today:
+        t_open = datetime.now(timezone.utc) - timedelta(hours=5)
+        sess_today = CashSession(
+            session_no="CS-2026-00002",
+            cashier_username="cashier.emma",
+            opened_at=t_open,
+            closed_at=None,
+            opening_balance=500.0,
+            closing_balance=None,
+            cash_collected=1150.0,
+            cash_refunded=0.0,
+            card_collected=450.0,
+            mobile_banking_collected=180.0,
+            deposit_collected=200.0,
+            total_expected_cash=1850.0,
+            actual_counted_cash=None,
+            variance=None,
+            status="open",
+        )
+        session.add(sess_today)
+    session.commit()
+    session.refresh(sess_today)
+
+    # 8. Deposits (25 deposits)
+    existing_deposits = session.exec(select(Deposit)).all()
+    if len(existing_deposits) < 25:
+        dep_amounts = [200.0, 300.0, 500.0, 1000.0, 1500.0]
+        for idx in range(1, 26):
+            dep_num = f"DEP-2026-{idx:05d}"
+            if session.exec(select(Deposit).where(Deposit.deposit_no == dep_num)).first():
+                continue
+            pat = all_patients[(idx + 10) % len(all_patients)]
+            damount = dep_amounts[idx % len(dep_amounts)]
+            used = 100.0 if idx % 3 == 0 else 0.0
+            bal = damount - used
+            st = "partially_used" if used > 0 else "available"
+            dep = Deposit(
+                deposit_no=dep_num,
+                patient_id=pat.id,
+                patient_mrn=pat.mrn,
+                patient_name=pat.full_name,
+                amount=damount,
+                used_amount=used,
+                balance_amount=bal,
+                payment_method="cash" if idx % 2 == 0 else "card",
+                cash_session_id=sess_today.id,
+                status=st,
+                collected_by="cashier.emma",
+                notes="Patient admission pre-authorization security deposit.",
+                created_at=datetime.now(timezone.utc) - timedelta(days=random.randint(1, 15)),
+            )
+            session.add(dep)
+        session.commit()
+
+    # 9. 300 Invoices
+    existing_invoices = session.exec(select(Invoice)).all()
+    if len(existing_invoices) < 300:
+        print("  - Generating 300 realistic clinical invoices with lines, split payments, and claims...")
+        svc_pool = list(db_services.values())
+        consult_pool = [s for s in svc_pool if s.category == "consultation"]
+        proc_pool = [s for s in svc_pool if s.category in ["procedure", "bed_charge"]]
+
+        for inv_idx in range(1, 301):
+            inv_no = f"INV-2026-{inv_idx:05d}"
+            if session.exec(select(Invoice).where(Invoice.invoice_no == inv_no)).first():
+                continue
+
+            pat = all_patients[(inv_idx * 3) % len(all_patients)]
+            policy = patient_policies.get(pat.id)
+            is_insured = (policy is not None and inv_idx % 2 == 0)
+
+            if is_insured:
+                price_list = db_price_lists["INSURED"]
+                p_category = "insured"
+            elif inv_idx % 11 == 0:
+                price_list = db_price_lists["STAFF"]
+                p_category = "staff"
+            elif inv_idx % 17 == 0:
+                price_list = db_price_lists["VIP"]
+                p_category = "vip"
+            else:
+                price_list = db_price_lists["GENERAL"]
+                p_category = "general"
+
+            inv_days_ago = (300 - inv_idx) // 5
+            created_time = datetime.now(timezone.utc) - timedelta(days=inv_days_ago, hours=random.randint(1, 8))
+
+            # Determine status
+            # 1-180: paid
+            # 181-220: partially_paid
+            # 221-260: finalized (unpaid)
+            # 261-285: draft
+            # 286-300: credit_note_issued
+            if inv_idx <= 180:
+                inv_status = "paid"
+                is_fin = True
+            elif inv_idx <= 220:
+                inv_status = "partially_paid"
+                is_fin = True
+            elif inv_idx <= 260:
+                inv_status = "finalized"
+                is_fin = True
+            elif inv_idx <= 285:
+                inv_status = "draft"
+                is_fin = False
+            else:
+                inv_status = "credit_note_issued"
+                is_fin = True
+
+            fin_time = created_time + timedelta(minutes=15) if is_fin else None
+            fin_by = "cashier.emma" if is_fin else None
+
+            # Generate 2 to 4 lines
+            num_lines = 2 if inv_idx % 3 == 0 else (3 if inv_idx % 2 == 0 else 4)
+            chosen_svcs = [random.choice(consult_pool)]
+            for _ in range(num_lines - 1):
+                chosen_svcs.append(random.choice(proc_pool))
+
+            subtotal = 0.0
+            tax_total = 0.0
+            discount_total = 0.0
+            lines_data = []
+
+            for s_item in chosen_svcs:
+                qty = 1.0 if s_item.category != "bed_charge" else float(random.randint(1, 3))
+                unit_p = s_item.base_price
+                if p_category == "STAFF":
+                    unit_p = round(unit_p * 0.80, 2)
+                elif p_category == "INSURED":
+                    unit_p = round(unit_p * 1.05, 2)
+                elif p_category == "VIP":
+                    unit_p = round(unit_p * 1.25, 2)
+
+                line_tax = round(unit_p * qty * s_item.tax_rate, 2)
+                line_tot = round(unit_p * qty + line_tax, 2)
+
+                subtotal += round(unit_p * qty, 2)
+                tax_total += line_tax
+
+                if is_insured:
+                    cpay_rate = (policy.co_pay_percentage / 100.0) if policy else 0.10
+                    p_share = round(line_tot * cpay_rate, 2)
+                    i_share = round(line_tot - p_share, 2)
+                else:
+                    p_share = line_tot
+                    i_share = 0.0
+
+                lines_data.append({
+                    "service": s_item,
+                    "qty": qty,
+                    "unit_p": unit_p,
+                    "tax": line_tax,
+                    "tot": line_tot,
+                    "p_share": p_share,
+                    "i_share": i_share,
+                })
+
+            total_amount = round(subtotal + tax_total, 2)
+
+            # Apply discount on ~25 invoices
+            has_disc = (inv_idx % 12 == 0 and inv_status != "draft")
+            if has_disc:
+                disc_rate = 0.10
+                discount_total = round(total_amount * disc_rate, 2)
+                total_amount = round(total_amount - discount_total, 2)
+
+            if is_insured:
+                ins_covered = round(sum(l["i_share"] for l in lines_data), 2)
+                pat_payable = round(total_amount - ins_covered, 2)
+                if pat_payable < 0:
+                    pat_payable = 0.0
+            else:
+                ins_covered = 0.0
+                pat_payable = total_amount
+
+            # Payment allocations
+            if inv_status == "paid":
+                paid_amt = pat_payable
+                bal_due = 0.0
+            elif inv_status == "partially_paid":
+                paid_amt = round(pat_payable * 0.50, 2)
+                bal_due = round(pat_payable - paid_amt, 2)
+            elif inv_status == "finalized":
+                paid_amt = 0.0
+                bal_due = pat_payable
+            elif inv_status == "draft":
+                paid_amt = 0.0
+                bal_due = pat_payable
+            else:  # credit_note_issued
+                paid_amt = 0.0
+                bal_due = 0.0
+
+            invoice = Invoice(
+                invoice_no=inv_no,
+                patient_id=pat.id,
+                patient_mrn=pat.mrn,
+                patient_name=pat.full_name,
+                encounter_id=None,
+                price_list_id=price_list.id,
+                patient_category=p_category,
+                status=inv_status,
+                subtotal=subtotal,
+                tax_amount=tax_total,
+                discount_amount=discount_total,
+                total_amount=total_amount,
+                paid_amount=paid_amt,
+                deposit_applied=0.0,
+                insurance_covered=ins_covered,
+                patient_payable=pat_payable,
+                balance_due=bal_due,
+                is_finalized=is_fin,
+                finalized_at=fin_time,
+                finalized_by=fin_by,
+                has_credit_note=(inv_status == "credit_note_issued"),
+                notes=f"Clinical invoice #{inv_no} under {price_list.name}.",
+                created_at=created_time,
+                updated_at=created_time,
+            )
+            session.add(invoice)
+            session.commit()
+            session.refresh(invoice)
+
+            # Invoice Lines
+            for ld in lines_data:
+                iline = InvoiceLine(
+                    invoice_id=invoice.id,
+                    service_id=ld["service"].id,
+                    service_code=ld["service"].code,
+                    description=ld["service"].name,
+                    category=ld["service"].category,
+                    quantity=ld["qty"],
+                    unit_price=ld["unit_p"],
+                    base_price=ld["service"].base_price,
+                    discount_amount=0.0,
+                    tax_amount=ld["tax"],
+                    total_price=ld["tot"],
+                    patient_share=ld["p_share"],
+                    insurance_share=ld["i_share"],
+                )
+                session.add(iline)
+
+            # Payments
+            if paid_amt > 0:
+                is_split = (inv_idx % 5 == 0)
+                pay_method = "split" if is_split else ("cash" if inv_idx % 2 == 0 else "card")
+                split_details = []
+                if is_split:
+                    half = round(paid_amt / 2.0, 2)
+                    other_half = round(paid_amt - half, 2)
+                    split_details = [
+                        {"method": "cash", "amount": half, "reference": None},
+                        {"method": "card", "amount": other_half, "reference": f"AUTH-{inv_idx:04d}"},
+                    ]
+
+                payment = Payment(
+                    payment_no=f"PAY-2026-{inv_idx:05d}",
+                    receipt_no=f"REC-2026-{inv_idx:05d}",
+                    invoice_id=invoice.id,
+                    patient_id=pat.id,
+                    patient_mrn=pat.mrn,
+                    cash_session_id=sess_yesterday.id if inv_days_ago > 0 else sess_today.id,
+                    amount=paid_amt,
+                    payment_method=pay_method,
+                    payment_split_details=split_details,
+                    reference_number=f"TXN-{random.randint(100000, 999999)}",
+                    collected_by="cashier.emma",
+                    received_at=created_time + timedelta(minutes=20),
+                    status="completed",
+                    notes="Settlement received at billing counter.",
+                )
+                session.add(payment)
+
+            # Discount record if applied
+            if has_disc:
+                req_app = discount_total > 50.0
+                disc_obj = Discount(
+                    discount_no=f"DSC-2026-{inv_idx:05d}",
+                    invoice_id=invoice.id,
+                    type="percentage",
+                    value=10.0,
+                    amount=discount_total,
+                    reason="Senior citizen / clinical hardship discount waiver authorized.",
+                    requires_approval=req_app,
+                    is_approved=True,
+                    approved_by="manager.robert" if req_app else None,
+                    approved_at=created_time + timedelta(minutes=5) if req_app else None,
+                    status="applied",
+                    applied_by="cashier.emma",
+                    created_at=created_time,
+                )
+                session.add(disc_obj)
+
+            # Insurance Claim
+            if is_insured and ins_covered > 0:
+                claim_stat = "settled" if inv_status == "paid" else ("approved" if inv_status == "partially_paid" else "submitted")
+                claim = Claim(
+                    claim_no=f"CLM-2026-{inv_idx:05d}",
+                    invoice_id=invoice.id,
+                    patient_id=pat.id,
+                    patient_mrn=pat.mrn,
+                    policy_id=policy.id,
+                    provider_id=policy.provider_id,
+                    provider_name=policy.provider_name,
+                    claim_amount=ins_covered,
+                    approved_amount=ins_covered if claim_stat in ["approved", "settled"] else 0.0,
+                    patient_co_pay=round(total_amount - ins_covered, 2),
+                    deductible_applied=policy.deductible,
+                    status=claim_stat,
+                    submitted_at=created_time + timedelta(minutes=30),
+                    adjudicated_at=created_time + timedelta(days=2) if claim_stat in ["approved", "settled"] else None,
+                    settled_at=created_time + timedelta(days=5) if claim_stat == "settled" else None,
+                    notes=f"Auto-generated insurance claim for {policy.provider_name}.",
+                    created_at=created_time,
+                )
+                session.add(claim)
+
+            # Credit Note
+            if inv_status == "credit_note_issued":
+                cn = CreditNote(
+                    credit_note_no=f"CN-2026-{inv_idx:05d}",
+                    invoice_id=invoice.id,
+                    original_invoice_no=inv_no,
+                    patient_id=pat.id,
+                    patient_mrn=pat.mrn,
+                    amount=total_amount,
+                    reason="Order cancelled prior to procedure execution / billing tariff dispute resolved.",
+                    issued_by="manager.robert",
+                    issued_at=created_time + timedelta(hours=2),
+                    status="issued",
+                )
+                session.add(cn)
+                session.flush()
+                invoice.credit_note_id = cn.id
+                session.add(invoice)
+
+        session.commit()
+
+    # 10. Unbilled Pending Charges in the Ledger (30 charges)
+    existing_pending = session.exec(select(PendingCharge).where(PendingCharge.status == "pending")).all()
+    if len(existing_pending) < 30:
+        print("  - Seeding 30 unbilled pending charges across consultations, pharmacy, and laboratory...")
+        charge_types = [
+            ("consultation", "CONS-SPEC", "Specialist Follow-up Consultation Fee", 100.0),
+            ("pharmacy", "PHARM-MED", "Prescription Dispense: Atorvastatin & Amlodipine 30-Day", 45.50),
+            ("laboratory", "LAB-CBC", "Laboratory Charge: Complete Blood Count (CBC)", 35.00),
+            ("laboratory", "LAB-LFT", "Laboratory Charge: Comprehensive Liver Function Test", 65.00),
+            ("imaging", "PROC-ECG", "Diagnostic Electrocardiogram (ECG) Recording", 40.00),
+            ("procedure", "PROC-DRESS", "Surgical Dressing & Sterile Debridement", 35.00),
+        ]
+        for c_idx in range(1, 31):
+            src_type, s_code, desc, u_price = charge_types[c_idx % len(charge_types)]
+            ev_id = f"seed.charge:{src_type}:{c_idx:04d}"
+            if session.exec(select(PendingCharge).where(PendingCharge.source_event_id == ev_id)).first():
+                continue
+            pat = all_patients[(c_idx * 7) % len(all_patients)]
+            charge = PendingCharge(
+                patient_id=pat.id,
+                patient_mrn=pat.mrn,
+                patient_name=pat.full_name,
+                encounter_id=None,
+                source_type=src_type,
+                source_id=f"SRC-{c_idx:04d}",
+                source_event_id=ev_id,
+                service_code=s_code,
+                description=desc,
+                quantity=1.0,
+                unit_price=u_price,
+                total_price=u_price,
+                status="pending",
+                invoice_id=None,
+                created_at=datetime.now(timezone.utc) - timedelta(hours=random.randint(1, 24)),
+            )
+            session.add(charge)
+        session.commit()
+
+    total_invoices_final = len(session.exec(select(Invoice)).all())
+    total_payments_final = len(session.exec(select(Payment)).all())
+    total_claims_final = len(session.exec(select(Claim)).all())
+    total_pending_final = len(session.exec(select(PendingCharge)).all())
+    print(f"  [OK] Billing seeded successfully: {total_invoices_final} invoices, {total_payments_final} payments, {total_claims_final} claims, {total_pending_final} ledger charges.")
+
+
 if __name__ == "__main__":
     seed_database()
+

@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Insurance & Claims Tracker{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950" x-data="{
+  tab: 'claims',
+  showStatusModal: false,
+  selectedClaimId: null,
+  claimAmount: 0,
+  openStatusModal(id, amt) {
+    this.selectedClaimId = id;
+    this.claimAmount = amt;
+    this.showStatusModal = true;
+  }
+}">
+
+  <!-- Header -->
+  <header class="surface-bg border-b border-subtle px-6 py-3.5 flex items-center justify-between flex-shrink-0 shadow-xs">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-teal-600/10 text-teal-600 flex items-center justify-center font-bold">
+        <i data-lucide="shield" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <h1 class="text-base font-bold text-main">Insurance & Third-Party Payer Claims</h1>
+        <p class="text-xs text-muted">Policy coverage rules, claim adjudication tracking, and patient/insurer split adjudication</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <a href="/billing" class="px-3 py-1.5 rounded-lg surface-bg hover:surface-hover border border-subtle text-main text-xs font-semibold flex items-center gap-1.5 transition-colors">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        <span>Billing Desk</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <div class="px-6 py-2.5 surface-bg border-b border-subtle flex items-center gap-4 flex-shrink-0 text-xs">
+    <button type="button" @click="tab = 'claims'"
+            :class="tab === 'claims' ? 'border-b-2 border-teal-600 text-teal-600 font-semibold' : 'text-muted hover:text-main'"
+            class="py-1 px-1 transition-colors">
+      Insurance Claims ({{ claims|length }})
+    </button>
+    <button type="button" @click="tab = 'policies'"
+            :class="tab === 'policies' ? 'border-b-2 border-teal-600 text-teal-600 font-semibold' : 'text-muted hover:text-main'"
+            class="py-1 px-1 transition-colors">
+      Patient Policies ({{ policies|length }})
+    </button>
+    <button type="button" @click="tab = 'providers'"
+            :class="tab === 'providers' ? 'border-b-2 border-teal-600 text-teal-600 font-semibold' : 'text-muted hover:text-main'"
+            class="py-1 px-1 transition-colors">
+      Insurance Payers & TPAs ({{ providers|length }})
+    </button>
+  </div>
+
+  <!-- Content Panes -->
+  <div class="flex-1 overflow-y-auto p-6">
+
+    <!-- TAB 1: CLAIMS TRACKER -->
+    <div x-show="tab === 'claims'" class="space-y-4">
+      <div class="surface-bg rounded-xl border border-subtle overflow-hidden shadow-xs">
+        <table class="w-full text-xs text-left">
+          <thead class="bg-slate-100 dark:bg-slate-900 border-b border-subtle text-muted uppercase font-semibold text-[10px]">
+            <tr>
+              <th class="px-4 py-3">Claim #</th>
+              <th class="px-3 py-3">Submitted</th>
+              <th class="px-3 py-3">Payer / Insurer</th>
+              <th class="px-3 py-3">Patient MRN</th>
+              <th class="px-3 py-3 text-right">Claim Amount ($)</th>
+              <th class="px-3 py-3 text-right">Approved Amount ($)</th>
+              <th class="px-3 py-3 text-right">Patient Co-Pay ($)</th>
+              <th class="px-3 py-3 text-center">Status</th>
+              <th class="px-4 py-3 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-subtle">
+            {% if claims %}
+              {% for c in claims %}
+              <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+                <td class="px-4 py-3 font-mono font-bold text-main">
+                  {{ c.claim_no }}
+                </td>
+                <td class="px-3 py-3 text-muted">
+                  {{ c.submitted_at.strftime('%Y-%m-%d') }}
+                </td>
+                <td class="px-3 py-3 font-medium text-main">
+                  {{ c.provider_name }}
+                </td>
+                <td class="px-3 py-3 font-mono text-muted">
+                  {{ c.patient_mrn }}
+                </td>
+                <td class="px-3 py-3 text-right font-mono font-bold text-main">
+                  ${{ "%.2f"|format(c.claim_amount) }}
+                </td>
+                <td class="px-3 py-3 text-right font-mono text-emerald-600 font-semibold">
+                  ${{ "%.2f"|format(c.approved_amount) }}
+                </td>
+                <td class="px-3 py-3 text-right font-mono text-muted">
+                  ${{ "%.2f"|format(c.patient_co_pay) }}
+                </td>
+                <td class="px-3 py-3 text-center">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold
+                    {% if c.status == 'approved' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300
+                    {% elif c.status == 'settled' %}bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300
+                    {% elif c.status == 'rejected' %}bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300
+                    {% elif c.status == 'in_review' %}bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300
+                    {% else %}bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300{% endif %}">
+                    {{ c.status.replace('_', ' ') }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <button type="button" @click="openStatusModal({{ c.id }}, {{ c.claim_amount }})"
+                          class="px-2 py-1 rounded surface-bg hover:surface-hover border border-subtle text-teal-600 hover:text-teal-700 text-[11px] font-semibold">
+                    Adjudicate
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="9" class="px-4 py-8 text-center text-muted">
+                  No insurance claims submitted yet.
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: PATIENT POLICIES -->
+    <div x-show="tab === 'policies'" class="space-y-4">
+      <div class="surface-bg rounded-xl border border-subtle overflow-hidden shadow-xs">
+        <table class="w-full text-xs text-left">
+          <thead class="bg-slate-100 dark:bg-slate-900 border-b border-subtle text-muted uppercase font-semibold text-[10px]">
+            <tr>
+              <th class="px-4 py-3">Patient Name</th>
+              <th class="px-3 py-3">MRN</th>
+              <th class="px-3 py-3">Insurer</th>
+              <th class="px-3 py-3">Policy #</th>
+              <th class="px-3 py-3 text-center">Co-Pay %</th>
+              <th class="px-3 py-3 text-right">Max Coverage</th>
+              <th class="px-3 py-3">Validity</th>
+              <th class="px-3 py-3 text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-subtle">
+            {% for p in policies %}
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+              <td class="px-4 py-3 font-semibold text-main">{{ p.patient_name }}</td>
+              <td class="px-3 py-3 font-mono text-muted">{{ p.patient_mrn }}</td>
+              <td class="px-3 py-3 text-main">{{ p.provider_name }}</td>
+              <td class="px-3 py-3 font-mono font-medium">{{ p.policy_number }}</td>
+              <td class="px-3 py-3 text-center font-mono font-bold">{{ p.co_pay_percentage }}%</td>
+              <td class="px-3 py-3 text-right font-mono font-bold">${{ "%.2f"|format(p.max_coverage_limit) }}</td>
+              <td class="px-3 py-3 text-muted text-[11px]">{{ p.valid_from.strftime('%Y-%m-%d') }} to {{ p.valid_to.strftime('%Y-%m-%d') }}</td>
+              <td class="px-3 py-3 text-center">
+                <span class="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold bg-emerald-100 text-emerald-800">
+                  {{ p.status }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: INSURANCE PROVIDERS -->
+    <div x-show="tab === 'providers'" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {% for pr in providers %}
+      <div class="surface-bg rounded-xl border border-subtle p-5 shadow-xs space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="font-mono text-xs font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded border border-indigo-200">
+            {{ pr.code }}
+          </span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold bg-emerald-100 text-emerald-800">
+            Active Payer
+          </span>
+        </div>
+        <h3 class="text-base font-bold text-main">{{ pr.name }}</h3>
+        <div class="text-xs text-muted space-y-1">
+          <div>Contact: {{ pr.contact_person or 'Claims Desk' }}</div>
+          <div>Phone: {{ pr.phone or '+1 (555) 000-0000' }}</div>
+          <div>Email: {{ pr.email or 'claims@insurer.com' }}</div>
+          <div>TPA Partner: {{ pr.tpa_name or 'Direct Payer' }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+  <!-- MODAL: Adjudicate Claim Status -->
+  <div x-show="showStatusModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" x-cloak>
+    <div class="surface-bg rounded-xl border border-subtle shadow-xl w-full max-w-md overflow-hidden p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-main flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-4 h-4 text-teal-600"></i>
+          Adjudicate Insurance Claim
+        </h3>
+        <button type="button" @click="showStatusModal = false" class="text-muted hover:text-main">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form :action="'/billing/insurance/claims/' + selectedClaimId + '/status'" method="POST" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">New Adjudication Status</label>
+          <select name="claim_status" class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs">
+            <option value="in_review">In Review / Audit</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="settled">Settled / Disbursed</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Approved Amount ($)</label>
+          <input type="number" step="0.01" name="approved_amount" x-model="claimAmount" required
+                 class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main font-mono text-xs font-bold" />
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Rejection / Adjudication Remarks</label>
+          <input type="text" name="rejection_reason" placeholder="Optional comments or rejection justification..."
+                 class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs" />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" @click="showStatusModal = false" class="px-3 py-1.5 rounded-lg border border-subtle text-muted text-xs font-semibold">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs shadow-xs">
+            Save Status
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

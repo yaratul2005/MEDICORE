@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice {{ invoice.invoice_no }} - {{ hospital.name }}</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 30px;
+      color: #0f172a;
+      background: #ffffff;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .invoice-card {
+      max-width: 800px;
+      margin: 0 auto;
+      border: 1px solid #e2e8f0;
+      padding: 32px;
+      border-radius: 8px;
+    }
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .header-table td {
+      vertical-align: top;
+    }
+    .hospital-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #0d9488;
+    }
+    .doc-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      text-align: right;
+    }
+    .hr-line {
+      border-top: 2px solid #0d9488;
+      margin: 15px 0 20px 0;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .info-box {
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .table th {
+      background: #f1f5f9;
+      padding: 8px 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+      text-align: left;
+    }
+    .table td {
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+    }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .totals-table {
+      width: 320px;
+      margin-left: auto;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .totals-table td {
+      padding: 4px 8px;
+    }
+    .total-due {
+      font-size: 16px;
+      font-weight: bold;
+      color: #b91c1c;
+      border-top: 2px solid #0f172a;
+    }
+    .words-box {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-bottom: 30px;
+    }
+    .qr-img {
+      width: 72px;
+      height: 72px;
+    }
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+      padding-top: 20px;
+    }
+    .sig-line {
+      border-top: 1px solid #94a3b8;
+      width: 200px;
+      text-align: center;
+      padding-top: 5px;
+      font-size: 11px;
+      color: #475569;
+    }
+    @media print {
+      body { padding: 0; }
+      .invoice-card { border: none; padding: 0; }
+      .no-print { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="no-print" style="max-width: 800px; margin: 0 auto 15px auto; text-align: right;">
+  <button onclick="window.print()" style="padding: 8px 16px; background: #0d9488; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+    Print Invoice
+  </button>
+</div>
+
+<div class="invoice-card">
+  <!-- Header -->
+  <table class="header-table">
+    <tr>
+      <td style="width: 55%;">
+        <div class="hospital-title">{{ hospital.name }}</div>
+        <div>{{ hospital.address }}</div>
+        <div>Phone: {{ hospital.phone }} • Email: {{ hospital.email }}</div>
+        <div>License: {{ hospital.license_number }}</div>
+      </td>
+      <td style="width: 45%;" class="text-right">
+        <div class="doc-title">OFFICIAL INVOICE</div>
+        <div style="font-family: monospace; font-size: 15px; font-weight: bold; margin-top: 4px;">{{ invoice.invoice_no }}</div>
+        <div style="color: #64748b; font-size: 11px;">Date: {{ invoice.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+        {% if qr_uri %}
+        <div style="margin-top: 8px;">
+          <img src="{{ qr_uri }}" alt="QR Verification" class="qr-img" />
+        </div>
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+
+  <div class="hr-line"></div>
+
+  <!-- Patient & Billing Details -->
+  <div class="info-grid">
+    <div class="info-box">
+      <div style="font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase;">Billed To (Patient):</div>
+      <div style="font-size: 14px; font-weight: bold; margin-top: 2px;">{{ invoice.patient_name }}</div>
+      <div>Medical Record Number (MRN): <strong>{{ invoice.patient_mrn }}</strong></div>
+      <div>Category: <span style="text-transform: capitalize;">{{ invoice.patient_category }}</span></div>
+    </div>
+    <div class="info-box">
+      <div style="font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase;">Payment & Status:</div>
+      <div>Invoice Status: <strong style="text-transform: uppercase;">{{ invoice.status.replace('_', ' ') }}</strong></div>
+      <div>Finalized By: {{ invoice.finalized_by or 'System' }}</div>
+      <div>Finalized At: {{ invoice.finalized_at.strftime('%Y-%m-%d %H:%M') if invoice.finalized_at else 'Draft' }}</div>
+    </div>
+  </div>
+
+  <!-- Items Table -->
+  <table class="table">
+    <thead>
+      <tr>
+        <th style="width: 40px;">#</th>
+        <th>Service / Description</th>
+        <th style="width: 90px;">Category</th>
+        <th class="text-right" style="width: 50px;">Qty</th>
+        <th class="text-right" style="width: 90px;">Unit Price</th>
+        <th class="text-right" style="width: 100px;">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for line in lines %}
+      <tr>
+        <td class="text-center">{{ loop.index }}</td>
+        <td>
+          <strong>{{ line.description }}</strong>
+          <div style="font-size: 10px; color: #64748b; font-family: monospace;">Code: {{ line.service_code }}</div>
+        </td>
+        <td style="text-transform: capitalize;">{{ line.category }}</td>
+        <td class="text-right">{{ line.quantity }}</td>
+        <td class="text-right">${{ "%.2f"|format(line.unit_price) }}</td>
+        <td class="text-right" style="font-weight: 600;">${{ "%.2f"|format(line.total_price) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Totals Summary -->
+  <table class="totals-table">
+    <tr>
+      <td class="text-right">Subtotal:</td>
+      <td class="text-right" style="font-family: monospace;">${{ "%.2f"|format(invoice.subtotal) }}</td>
+    </tr>
+    <tr>
+      <td class="text-right">Discount:</td>
+      <td class="text-right" style="font-family: monospace; color: #b91c1c;">-${{ "%.2f"|format(invoice.discount_amount) }}</td>
+    </tr>
+    <tr>
+      <td class="text-right">Tax (VAT 5%):</td>
+      <td class="text-right" style="font-family: monospace;">${{ "%.2f"|format(invoice.tax_amount) }}</td>
+    </tr>
+    <tr style="font-weight: bold; border-top: 1px solid #cbd5e1;">
+      <td class="text-right">Total Billed:</td>
+      <td class="text-right" style="font-family: monospace;">${{ "%.2f"|format(invoice.total_amount) }}</td>
+    </tr>
+    {% if invoice.insurance_covered > 0 %}
+    <tr>
+      <td class="text-right" style="color: #4f46e5;">Insurance Covered:</td>
+      <td class="text-right" style="font-family: monospace; color: #4f46e5;">-${{ "%.2f"|format(invoice.insurance_covered) }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td class="text-right">Deposit Adjusted:</td>
+      <td class="text-right" style="font-family: monospace;">-${{ "%.2f"|format(invoice.deposit_applied) }}</td>
+    </tr>
+    <tr>
+      <td class="text-right">Paid Amount:</td>
+      <td class="text-right" style="font-family: monospace; color: #16a34a; font-weight: bold;">${{ "%.2f"|format(invoice.paid_amount) }}</td>
+    </tr>
+    <tr class="total-due">
+      <td class="text-right">Balance Due:</td>
+      <td class="text-right" style="font-family: monospace;">${{ "%.2f"|format(invoice.balance_due) }}</td>
+    </tr>
+  </table>
+
+  <!-- Amount in Words -->
+  <div class="words-box">
+    <strong>Amount in Words:</strong> {{ amount_in_words }}
+  </div>
+
+  <!-- Signatures -->
+  <div class="signatures">
+    <div class="sig-line">Prepared By / Cashier</div>
+    <div class="sig-line">Authorized Signatory</div>
+  </div>
+</div>
+
+</body>
+</html>

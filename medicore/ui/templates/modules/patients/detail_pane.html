@@ -99,6 +99,14 @@
             class="py-2.5 px-2.5 transition-colors flex-shrink-0">
       Labs
     </button>
+    <button @click="tab = 'billing'" 
+            hx-get="/billing/patient/{{ patient.id }}/summary"
+            hx-target="#tab-billing-content"
+            hx-trigger="click"
+            :class="tab === 'billing' ? 'border-b-2 border-teal-600 text-teal-600 font-semibold' : 'text-muted hover:text-main'"
+            class="py-2.5 px-2.5 transition-colors flex-shrink-0">
+      Billing
+    </button>
     <button @click="tab = 'custom'" 
             :class="tab === 'custom' ? 'border-b-2 border-teal-600 text-teal-600 font-semibold' : 'text-muted hover:text-main'"
             class="py-2.5 px-2.5 transition-colors flex items-center gap-1 flex-shrink-0">
@@ -180,6 +188,14 @@
       <div class="p-4 text-center text-muted">
         <i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto mb-1"></i>
         <span>Loading laboratory investigation history...</span>
+      </div>
+    </div>
+
+    <!-- Billing Tab -->
+    <div x-show="tab === 'billing'" id="tab-billing-content" class="text-xs">
+      <div class="p-4 text-center text-muted">
+        <i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto mb-1"></i>
+        <span>Loading patient billing & dues summary...</span>
       </div>
     </div>
 

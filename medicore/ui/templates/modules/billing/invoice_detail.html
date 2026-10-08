@@ -1,0 +1,578 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice {{ invoice.invoice_no }}{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950" x-data="{
+  showPaymentModal: false,
+  showDiscountModal: false,
+  showManualLineModal: false,
+  showCreditNoteModal: false,
+  showDepositModal: false,
+  isSplit: false,
+  cashAmt: 0,
+  cardAmt: 0,
+  mobileAmt: 0
+}">
+
+  <!-- Header -->
+  <header class="surface-bg border-b border-subtle px-6 py-3.5 flex items-center justify-between flex-shrink-0 shadow-xs">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-teal-600/10 text-teal-600 flex items-center justify-center font-bold">
+        <i data-lucide="receipt" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold text-main font-mono">{{ invoice.invoice_no }}</h1>
+          <span class="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold
+            {% if invoice.status == 'paid' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300
+            {% elif invoice.status == 'partially_paid' %}bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300
+            {% elif invoice.status == 'credit_note_issued' %}bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300
+            {% elif invoice.status == 'finalized' %}bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300
+            {% else %}bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300{% endif %}">
+            {{ invoice.status.replace('_', ' ') }}
+          </span>
+          {% if invoice.is_finalized %}
+          <span class="text-[10px] text-muted flex items-center gap-1 font-sans">
+            <i data-lucide="lock" class="w-3 h-3 text-muted"></i> Immutable
+          </span>
+          {% endif %}
+        </div>
+        <p class="text-xs text-muted">Patient: <strong>{{ invoice.patient_name }}</strong> ({{ invoice.patient_mrn }}) • Category: {{ invoice.patient_category.title() }}</p>
+      </div>
+    </div>
+
+    <!-- Action Toolbar -->
+    <div class="flex items-center gap-2">
+      <!-- Printable HTML -->
+      <a href="/billing/invoice/{{ invoice.id }}/print" target="_blank"
+         class="px-3 py-1.5 rounded-lg surface-bg hover:surface-hover border border-subtle text-main text-xs font-semibold flex items-center gap-1.5 transition-colors">
+        <i data-lucide="printer" class="w-4 h-4"></i>
+        <span>Print</span>
+      </a>
+
+      <!-- Download PDF -->
+      <a href="/billing/invoice/{{ invoice.id }}/pdf"
+         class="px-3 py-1.5 rounded-lg surface-bg hover:surface-hover border border-subtle text-teal-600 hover:text-teal-700 text-xs font-semibold flex items-center gap-1.5 transition-colors">
+        <i data-lucide="download" class="w-4 h-4"></i>
+        <span>PDF</span>
+      </a>
+
+      <!-- Finalize Invoice Button (if Draft) -->
+      {% if not invoice.is_finalized %}
+      <form method="POST" action="/billing/invoice/{{ invoice.id }}/finalize" onsubmit="return confirm('Finalize this invoice? It will become immutable and auto-generate insurance claims if applicable.');">
+        <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors">
+          <i data-lucide="check-check" class="w-4 h-4"></i>
+          <span>Finalize Invoice</span>
+        </button>
+      </form>
+      {% endif %}
+
+      <!-- Pay Button (if Balance Due > 0) -->
+      {% if invoice.balance_due > 0 %}
+      <button type="button" @click="showPaymentModal = true"
+              class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors">
+        <i data-lucide="circle-dollar-sign" class="w-4 h-4"></i>
+        <span>Receive Payment (${{ "%.2f"|format(invoice.balance_due) }})</span>
+      </button>
+      {% endif %}
+
+      <!-- Credit Note Button (if Finalized and not already credited) -->
+      {% if invoice.is_finalized and not invoice.has_credit_note %}
+      <button type="button" @click="showCreditNoteModal = true"
+              class="px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center gap-1.5 transition-colors">
+        <i data-lucide="file-minus" class="w-4 h-4"></i>
+        <span>Issue Credit Note</span>
+      </button>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Credit Note Banner if issued -->
+  {% if credit_note %}
+  <div class="px-6 py-2.5 bg-rose-50 dark:bg-rose-950/30 border-b border-rose-200 dark:border-rose-900/50 flex items-center justify-between text-xs flex-shrink-0">
+    <div class="flex items-center gap-2 text-rose-800 dark:text-rose-200">
+      <i data-lucide="info" class="w-4 h-4 text-rose-600"></i>
+      <span>Credit Note <strong>{{ credit_note.credit_note_no }}</strong> issued on {{ credit_note.issued_at.strftime('%Y-%m-%d %H:%M') }} for <strong>${{ "%.2f"|format(credit_note.amount) }}</strong>. Reason: {{ credit_note.reason }}</span>
+    </div>
+    <a href="/billing/credit-note/{{ credit_note.id }}/print" target="_blank" class="text-rose-700 dark:text-rose-300 underline font-semibold flex items-center gap-1">
+      <i data-lucide="printer" class="w-3.5 h-3.5"></i> View Credit Note
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Main Content Layout -->
+  <div class="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Column 1 & 2: Line Items & Pricing Details -->
+    <div class="lg:col-span-2 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-bold text-main flex items-center gap-2">
+          <i data-lucide="list" class="w-4 h-4 text-teal-600"></i>
+          Invoice Line Items
+        </h2>
+
+        <!-- Action buttons if Draft -->
+        {% if not invoice.is_finalized %}
+        <div class="flex items-center gap-2">
+          <button type="button" @click="showManualLineModal = true"
+                  class="px-2.5 py-1 rounded surface-bg hover:surface-hover border border-subtle text-xs font-semibold text-main flex items-center gap-1">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Add Manual Charge</span>
+          </button>
+          <button type="button" @click="showDiscountModal = true"
+                  class="px-2.5 py-1 rounded surface-bg hover:surface-hover border border-subtle text-xs font-semibold text-main flex items-center gap-1">
+            <i data-lucide="percent" class="w-3.5 h-3.5"></i>
+            <span>Apply Discount</span>
+          </button>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Line Items Table -->
+      <div class="surface-bg rounded-xl border border-subtle overflow-hidden shadow-xs">
+        <table class="w-full text-xs text-left">
+          <thead class="bg-slate-100 dark:bg-slate-900 border-b border-subtle text-muted uppercase font-semibold text-[10px]">
+            <tr>
+              <th class="px-4 py-3">#</th>
+              <th class="px-3 py-3">Description</th>
+              <th class="px-3 py-3">Category</th>
+              <th class="px-3 py-3 text-right">Qty</th>
+              <th class="px-3 py-3 text-right">Unit Price</th>
+              <th class="px-4 py-3 text-right">Total Price</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-subtle">
+            {% for line in lines %}
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+              <td class="px-4 py-3 text-muted font-mono">{{ loop.index }}</td>
+              <td class="px-3 py-3 font-medium text-main">
+                <div>{{ line.description }}</div>
+                <div class="text-[10px] text-muted font-mono flex items-center gap-2">
+                  <span>Code: {{ line.service_code }}</span>
+                  {% if line.price_override_reason %}
+                  <span class="text-amber-600 font-sans">• Override: {{ line.price_override_reason }}</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td class="px-3 py-3">
+                <span class="px-2 py-0.5 rounded-full text-[10px] uppercase font-semibold border
+                  {% if line.category == 'consultation' %}bg-blue-100 text-blue-800 border-blue-200
+                  {% elif line.category == 'pharmacy' %}bg-emerald-100 text-emerald-800 border-emerald-200
+                  {% elif line.category == 'laboratory' %}bg-purple-100 text-purple-800 border-purple-200
+                  {% elif line.category == 'package' %}bg-indigo-100 text-indigo-800 border-indigo-200
+                  {% else %}bg-slate-100 text-slate-700 border-slate-200{% endif %}">
+                  {{ line.category }}
+                </span>
+              </td>
+              <td class="px-3 py-3 text-right font-mono">{{ line.quantity }}</td>
+              <td class="px-3 py-3 text-right font-mono text-muted">${{ "%.2f"|format(line.unit_price) }}</td>
+              <td class="px-4 py-3 text-right font-mono font-bold text-main">${{ "%.2f"|format(line.total_price) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Applied Discounts Section -->
+      {% if discounts %}
+      <div class="surface-bg rounded-xl border border-subtle p-4 shadow-xs space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-muted">Applied Discounts & Waivers</h3>
+        <div class="space-y-2">
+          {% for disc in discounts %}
+          <div class="p-2.5 rounded-lg border border-subtle flex items-center justify-between text-xs bg-slate-50 dark:bg-slate-900/40">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-mono font-bold text-main">{{ disc.discount_no }}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold
+                  {% if disc.is_approved %}bg-emerald-100 text-emerald-800{% else %}bg-amber-100 text-amber-800{% endif %}">
+                  {{ disc.status }}
+                </span>
+              </div>
+              <p class="text-muted text-[11px]">Reason: {{ disc.reason }} (by {{ disc.applied_by }})</p>
+            </div>
+            <div class="text-right">
+              <span class="font-mono font-bold text-rose-600">-${{ "%.2f"|format(disc.amount) }}</span>
+              {% if not disc.is_approved and can_approve_discount %}
+              <form method="POST" action="/billing/discounts/{{ disc.id }}/approve" class="mt-1">
+                <button type="submit" class="px-2 py-0.5 rounded bg-emerald-600 text-white font-semibold text-[10px]">
+                  Approve Waiver
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Payment Receipts History -->
+      <div class="surface-bg rounded-xl border border-subtle p-4 shadow-xs space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-muted flex items-center justify-between">
+          <span>Payment & Receipt Records</span>
+          <span class="text-muted font-mono">{{ payments|length }} payment(s)</span>
+        </h3>
+
+        {% if payments %}
+        <div class="space-y-2">
+          {% for pay in payments %}
+          <div class="p-2.5 rounded-lg border border-subtle flex items-center justify-between text-xs hover:bg-slate-50 dark:hover:bg-slate-900/40">
+            <div>
+              <div class="flex items-center gap-2">
+                <a href="/billing/receipt/{{ pay.id }}/print" target="_blank" class="font-mono font-bold text-main hover:text-teal-600">
+                  {{ pay.receipt_no }}
+                </a>
+                <span class="px-1.5 py-0.2 rounded text-[9px] uppercase font-bold bg-slate-200 dark:bg-slate-800 text-muted">
+                  {{ pay.payment_method }}
+                </span>
+              </div>
+              <p class="text-muted text-[11px]">{{ pay.received_at.strftime('%Y-%m-%d %H:%M') }} • Cashier: {{ pay.collected_by }}</p>
+            </div>
+            <div class="text-right flex items-center gap-3">
+              <span class="font-mono font-bold text-emerald-600">${{ "%.2f"|format(pay.amount) }}</span>
+              <a href="/billing/receipt/{{ pay.id }}/pdf" class="text-teal-600 hover:text-teal-700" title="Download Receipt PDF">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-xs text-muted">No payments recorded for this invoice yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Column 3: Totals, Balance Due & Deposit Adjustments -->
+    <div class="space-y-4">
+      <div class="surface-bg rounded-xl border border-subtle p-4 shadow-xs space-y-4">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-muted">Financial Breakdown</h3>
+
+        <div class="space-y-2 text-xs divide-y divide-subtle">
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-muted">Subtotal:</span>
+            <span class="font-mono font-bold text-main">${{ "%.2f"|format(invoice.subtotal) }}</span>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <span class="text-muted">Discounts:</span>
+            <span class="font-mono text-rose-600 font-semibold">-${{ "%.2f"|format(invoice.discount_amount) }}</span>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <span class="text-muted">Tax (VAT 5%):</span>
+            <span class="font-mono text-muted">${{ "%.2f"|format(invoice.tax_amount) }}</span>
+          </div>
+
+          <div class="flex items-center justify-between pt-2 font-semibold">
+            <span class="text-main">Total Billed:</span>
+            <span class="font-mono text-main font-bold text-sm">${{ "%.2f"|format(invoice.total_amount) }}</span>
+          </div>
+
+          {% if invoice.insurance_covered > 0 %}
+          <div class="flex items-center justify-between pt-2">
+            <span class="text-indigo-600">Insurance Claimed:</span>
+            <span class="font-mono text-indigo-600 font-semibold">${{ "%.2f"|format(invoice.insurance_covered) }}</span>
+          </div>
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-main">Patient Co-Pay Share:</span>
+            <span class="font-mono font-bold text-main">${{ "%.2f"|format(invoice.patient_payable) }}</span>
+          </div>
+          {% endif %}
+
+          <div class="flex items-center justify-between pt-2">
+            <span class="text-muted">Deposit Applied:</span>
+            <span class="font-mono text-muted">-${{ "%.2f"|format(invoice.deposit_applied) }}</span>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <span class="text-muted">Amount Paid:</span>
+            <span class="font-mono text-emerald-600 font-bold">${{ "%.2f"|format(invoice.paid_amount) }}</span>
+          </div>
+
+          <div class="flex items-center justify-between pt-3 text-sm">
+            <span class="font-bold text-main">Outstanding Due:</span>
+            <span class="font-mono font-bold {% if invoice.balance_due > 0 %}text-rose-600 text-lg{% else %}text-emerald-600{% endif %}">
+              ${{ "%.2f"|format(invoice.balance_due) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Apply Deposit Option if Patient has deposits and invoice has balance due -->
+        {% if deposits and invoice.balance_due > 0 %}
+        <div class="pt-2 border-t border-subtle">
+          <button type="button" @click="showDepositModal = true"
+                  class="w-full py-1.5 rounded-lg surface-bg hover:surface-hover border border-subtle text-xs font-semibold text-teal-600 flex items-center justify-center gap-1.5 transition-colors">
+            <i data-lucide="wallet" class="w-3.5 h-3.5"></i>
+            <span>Adjust Advance Deposit</span>
+          </button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL: Process Payment (Split Payment Support) -->
+  <div x-show="showPaymentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" x-cloak>
+    <div class="surface-bg rounded-xl border border-subtle shadow-xl w-full max-w-md overflow-hidden p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-main flex items-center gap-2">
+          <i data-lucide="circle-dollar-sign" class="w-4 h-4 text-emerald-600"></i>
+          Receive Payment
+        </h3>
+        <button type="button" @click="showPaymentModal = false" class="text-muted hover:text-main">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form method="POST" action="/billing/invoice/{{ invoice.id }}/pay" class="space-y-4 text-xs">
+        <input type="hidden" name="cash_session_id" value="{{ active_session.id if active_session else '' }}" />
+
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Total Payment Amount ($)</label>
+          <input type="number" step="0.01" name="amount" value="{{ invoice.balance_due }}" max="{{ invoice.balance_due }}" required
+                 class="w-full px-3 py-2 rounded-lg border border-subtle surface-bg text-main font-mono text-sm font-bold" />
+        </div>
+
+        <!-- Split Payment Toggle -->
+        <div class="p-3 rounded-lg bg-slate-100 dark:bg-slate-900 space-y-3">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="is_split" value="true" x-model="isSplit"
+                   class="rounded border-subtle text-teal-600 focus:ring-teal-500" />
+            <span class="font-semibold text-main">Split Payment across multiple modes</span>
+          </label>
+
+          <div x-show="!isSplit">
+            <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Payment Method</label>
+            <select name="payment_method" class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs">
+              <option value="cash">Cash</option>
+              <option value="card">Credit / Debit Card</option>
+              <option value="mobile_banking">Mobile Banking / UPI</option>
+              <option value="bank_transfer">Bank Wire Transfer</option>
+              <option value="cheque">Cheque</option>
+            </select>
+          </div>
+
+          <div x-show="isSplit" class="space-y-2 pt-2 border-t border-subtle">
+            <div>
+              <span class="text-muted block text-[10px]">Cash Portion ($)</span>
+              <input type="number" step="0.01" name="cash_amount" x-model="cashAmt" class="w-full px-2 py-1 rounded border border-subtle surface-bg text-xs font-mono" />
+            </div>
+            <div>
+              <span class="text-muted block text-[10px]">Card Portion ($)</span>
+              <input type="number" step="0.01" name="card_amount" x-model="cardAmt" class="w-full px-2 py-1 rounded border border-subtle surface-bg text-xs font-mono" />
+            </div>
+            <div>
+              <span class="text-muted block text-[10px]">Mobile Banking Portion ($)</span>
+              <input type="number" step="0.01" name="mobile_amount" x-model="mobileAmt" class="w-full px-2 py-1 rounded border border-subtle surface-bg text-xs font-mono" />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Reference / Auth # (Card slip, Transaction ID)</label>
+          <input type="text" name="reference_number" placeholder="e.g. TXN-89102"
+                 class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs" />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" @click="showPaymentModal = false" class="px-3 py-1.5 rounded-lg border border-subtle text-muted text-xs font-semibold">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs">
+            Confirm Payment & Issue Receipt
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Apply Discount -->
+  <div x-show="showDiscountModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" x-cloak>
+    <div class="surface-bg rounded-xl border border-subtle shadow-xl w-full max-w-md overflow-hidden p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-main flex items-center gap-2">
+          <i data-lucide="percent" class="w-4 h-4 text-teal-600"></i>
+          Apply Discount / Waiver
+        </h3>
+        <button type="button" @click="showDiscountModal = false" class="text-muted hover:text-main">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form method="POST" action="/billing/invoice/{{ invoice.id }}/discount" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Discount Type</label>
+          <select name="discount_type" class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs">
+            <option value="percentage">Percentage (%)</option>
+            <option value="fixed_amount">Fixed Amount ($)</option>
+            <option value="waiver">Total Charity Waiver</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Discount Value (% or $)</label>
+          <input type="number" step="0.01" name="value" required
+                 class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main font-mono text-xs" />
+          <span class="text-[10px] text-muted block mt-1">Discounts &gt; 10% or &gt; $50 require manager authorization.</span>
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Clinical / Administrative Reason</label>
+          <textarea name="reason" rows="2" required placeholder="State reason for concession or charity waiver..."
+                    class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" @click="showDiscountModal = false" class="px-3 py-1.5 rounded-lg border border-subtle text-muted text-xs font-semibold">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs shadow-xs">
+            Apply
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Add Manual Line -->
+  <div x-show="showManualLineModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" x-cloak>
+    <div class="surface-bg rounded-xl border border-subtle shadow-xl w-full max-w-md overflow-hidden p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-main flex items-center gap-2">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-teal-600"></i>
+          Add Manual Line Charge
+        </h3>
+        <button type="button" @click="showManualLineModal = false" class="text-muted hover:text-main">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form method="POST" action="/billing/invoice/{{ invoice.id }}/add-line" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Predefined Service or Custom Code</label>
+          <input type="text" name="service_code" placeholder="e.g. PROC-DRESSING" required
+                 class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main font-mono text-xs" />
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Description</label>
+          <input type="text" name="description" placeholder="e.g. Wound Dressing & Disinfection" required
+                 class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Category</label>
+            <select name="category" class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs">
+              <option value="procedure">Procedure</option>
+              <option value="nursing">Nursing Care</option>
+              <option value="bed_charge">Bed Charge</option>
+              <option value="laboratory">Laboratory</option>
+              <option value="radiology">Radiology</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Quantity</label>
+            <input type="number" step="1" name="quantity" value="1" required
+                   class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main font-mono text-xs" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Unit Price ($)</label>
+          <input type="number" step="0.01" name="unit_price" required
+                 class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main font-mono text-xs font-bold" />
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Price Override Justification (Audited)</label>
+          <input type="text" name="price_override_reason" placeholder="State reason if modifying default tariff..."
+                 class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs" />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" @click="showManualLineModal = false" class="px-3 py-1.5 rounded-lg border border-subtle text-muted text-xs font-semibold">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs shadow-xs">
+            Add Charge
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Issue Credit Note -->
+  <div x-show="showCreditNoteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" x-cloak>
+    <div class="surface-bg rounded-xl border border-subtle shadow-xl w-full max-w-md overflow-hidden p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-main flex items-center gap-2">
+          <i data-lucide="file-minus" class="w-4 h-4 text-rose-600"></i>
+          Issue Official Credit Note
+        </h3>
+        <button type="button" @click="showCreditNoteModal = false" class="text-muted hover:text-main">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form method="POST" action="/billing/invoice/{{ invoice.id }}/credit-note" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Credit Note Amount ($)</label>
+          <input type="number" step="0.01" name="amount" value="{{ invoice.total_amount }}" max="{{ invoice.total_amount }}" required
+                 class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main font-mono text-xs font-bold" />
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Mandatory Correction Reason</label>
+          <textarea name="reason" rows="2" required placeholder="Explain why credit note is issued (e.g. duplicate billing, clinical service cancel)..."
+                    class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" @click="showCreditNoteModal = false" class="px-3 py-1.5 rounded-lg border border-subtle text-muted text-xs font-semibold">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-xs">
+            Issue Credit Note
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Adjust Deposit -->
+  <div x-show="showDepositModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" x-cloak>
+    <div class="surface-bg rounded-xl border border-subtle shadow-xl w-full max-w-md overflow-hidden p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-main flex items-center gap-2">
+          <i data-lucide="wallet" class="w-4 h-4 text-teal-600"></i>
+          Adjust Advance Deposit
+        </h3>
+        <button type="button" @click="showDepositModal = false" class="text-muted hover:text-main">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form method="POST" action="/billing/invoice/{{ invoice.id }}/deposit/apply" class="space-y-4 text-xs">
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Select Available Deposit</label>
+          <select name="deposit_id" class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs">
+            {% for dep in deposits %}
+            <option value="{{ dep.id }}">{{ dep.deposit_no }} - Available: ${{ "%.2f"|format(dep.balance_amount) }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase font-semibold text-muted mb-1">Adjustment Amount ($)</label>
+          <input type="number" step="0.01" name="amount" value="{{ invoice.balance_due }}" required
+                 class="w-full px-3 py-1.5 rounded-lg border border-subtle surface-bg text-main font-mono text-xs font-bold" />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" @click="showDepositModal = false" class="px-3 py-1.5 rounded-lg border border-subtle text-muted text-xs font-semibold">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs shadow-xs">
+            Apply Deposit Adjustment
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

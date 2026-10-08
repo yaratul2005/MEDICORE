@@ -17,7 +17,7 @@
   <a href="https://htmx.org/"><img src="https://img.shields.io/badge/HTMX-1.9.12-336699" alt="HTMX"></a>
   <a href="https://alpinejs.dev/"><img src="https://img.shields.io/badge/Alpine.js-3.13+-77C1D2?logo=alpinedotjs&logoColor=white" alt="Alpine.js"></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white" alt="Docker"></a>
-  <a href="#-testing--verification"><img src="https://img.shields.io/badge/Tests-51%20Passed-success" alt="Tests"></a>
+  <a href="#-testing--verification"><img src="https://img.shields.io/badge/Tests-67%20Passed-success" alt="Tests"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License"></a>
 </p>
 
@@ -180,6 +180,28 @@ Built on CSS variable design tokens (`tokens.css`). Supports **Light** and **Dar
 
 ---
 
+### 💳 6. Billing, Cashier Desk & Financial Accounts (`medicore.modules.billing`)
+
+- **Event-Driven Charge Capture**: Strictly idempotent charges ledger capturing fees automatically from asynchronous domain events without direct module coupling:
+  - `encounter.completed` ➔ Outpatient consultation fee based on doctor specialty/department tariff.
+  - `dispense.completed` ➔ Pharmacy medication lines at batch MRP.
+  - `lab.charge` ➔ Laboratory diagnostic panels and individual test charges.
+  - `order.placed` ➔ Imaging and procedural charges (skips duplicate lab orders).
+  - Guaranteed double-billing prevention via unique indexed `source_event_id`.
+- **Patient Billing Desk**: Consolidated view of unbilled pending charges, running bill total, manual line additions with price override justification, discount application, multi-split payments, and outstanding balance tracking.
+- **Invoice Immutability & Credit Notes**: Sequence numbering configured via settings registry (`INV-YYYY-NNNNN`). Once finalized, invoices are locked and immutable. Corrections, cancellations, or reversals are performed strictly via audited Credit Notes (`CN-YYYY-NNNNN`).
+- **Advance Deposits & Balance Adjustments**: Collect patient security deposits (`DEP-YYYY-NNNNN`), apply advance balances against invoice dues, and process balance refunds upon discharge.
+- **Clinical Packages & Bundles**: Pre-packaged bundled care (Maternity Normal Delivery, Cataract Surgery, Executive Wellness) with fixed rates and included service tracking. Excess usage beyond bundle limits is automatically billed separately.
+- **Insurance Coverage, Co-pay & Claims Engine**: Multi-provider policy management (`MEDISHIELD`, `STARHLTH`, `BUPA`, `GREENLIFE`, `RELIANCE`), co-pay percentage calculation, deductibles, per-service caps, and automated claim submission (`CLM-YYYY-NNNNN`) tracking (`submitted` ➔ `approved` ➔ `settled`).
+- **Tariff & Multi-Tier Price Lists**: Dynamic category tariffs (`GENERAL`, `STAFF` with 20% discount, `INSURED` with agreed rates, and `VIP` executive rates) with effective date windows.
+- **Cashier Workflow & Till Reconciliation**: Cashier session management (`CS-YYYY-NNNNN`), opening float, multi-channel payment collection (Cash, Credit/Debit Card, Mobile Banking, Advance Deposit), actual drawer cash counting, and variance discrepancy auditing.
+- **Manager Approval Gate**: Configurable discount and refund thresholds. Discounts exceeding limits (e.g. >10% or >$50) require manager authorization before being applied.
+- **Official Branded Printables**: High-fidelity PDF and web documents for Invoices, Money Receipts, and Credit Notes featuring hospital branding, amount in formal English words, and verification QR codes.
+- **Financial Analytics & CSV Exports**: Instant export of Departmental Revenue, Outstanding Dues Ledger, Daily Cashier Collections, and Insurance Aging (0-30, 31-60, 61-90, 90+ days).
+- **Patient 360 Billing Integration**: Dedicated Billing & Accounts tab in the patient profile for inspecting invoice histories, deposit balances, and claims status.
+
+---
+
 ## 🚀 Quickstart Guide
 
 ### Option A: Running with Docker (Recommended)
@@ -226,7 +248,7 @@ alembic upgrade head
 ```
 
 #### 4. Seed Clinical Data
-Populate realistic hospital data (200 patients, 5 doctors across 5 departments, 100 appointments, 150 clinical encounters with SOAP notes, vitals, prescriptions, ICD-10 reference data, 300 pharmacy items, 403 batches, 514 stock movements, 80 dispenses, 69 lab tests with 182 parameters, 200 lab orders, and default RBAC roles):
+Populate realistic hospital data (200 patients, 5 doctors across 5 departments, 132 appointments, 196 clinical encounters with SOAP notes, vitals, prescriptions, ICD-10 reference data, 356 pharmacy items, 485 batches, 603 stock movements, 113 dispenses, 78 lab tests with 195 parameters, 237 lab orders, 300 clinical invoices, 4 price lists, 5 insurance providers, and default RBAC roles):
 ```bash
 python -m medicore.seed.seeder
 ```
@@ -240,7 +262,7 @@ uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 ## 🧪 Testing & Verification
 
-MediCore includes a comprehensive test suite covering core infrastructure, scheduling concurrency, duplicate patient prevention, clinical safety rules, encounter lifecycles, pharmacy FEFO & stock ledgers, and laboratory diagnostic workflows:
+MediCore includes a comprehensive test suite covering core infrastructure, scheduling concurrency, duplicate patient prevention, clinical safety rules, encounter lifecycles, pharmacy FEFO & stock ledgers, laboratory diagnostic workflows, and financial billing & till reconciliation:
 
 ```bash
 uv run --extra dev pytest -v
@@ -248,58 +270,74 @@ uv run --extra dev pytest -v
 
 ```text
 ============================= test session starts =============================
-medicore/tests/test_appointments.py::test_doctor_slot_generation PASSED        [ 1%]
-medicore/tests/test_appointments.py::test_booking_conflict_detection PASSED   [ 3%]
-medicore/tests/test_appointments.py::test_status_transitions_and_events PASSED[ 5%]
-medicore/tests/test_appointments.py::test_walkin_registration_and_queue_token PASSED [ 7%]
-medicore/tests/test_appointments.py::test_waiting_room_display_endpoints PASSED [ 9%]
-medicore/tests/test_appointments.py::test_reschedule_with_conflict_guard PASSED [11%]
-medicore/tests/test_appointments.py::test_appointment_reminders_and_stats PASSED [13%]
-medicore/tests/test_appointments.py::test_concurrent_double_booking_protection PASSED [15%]
-medicore/tests/test_consultations.py::test_vitals_math_and_clinical_warnings PASSED [17%]
-medicore/tests/test_consultations.py::test_soap_text_shortcuts_expansion PASSED [19%]
-medicore/tests/test_consultations.py::test_quantity_calculation_from_frequency PASSED [21%]
-medicore/tests/test_consultations.py::test_icd10_and_drug_search PASSED    [23%]
-medicore/tests/test_consultations.py::test_pluggable_safety_rules_engine PASSED [25%]
-medicore/tests/test_consultations.py::test_start_consultation_lifecycle PASSED [27%]
-medicore/tests/test_consultations.py::test_soap_note_autosave_signing_and_addenda PASSED [29%]
-medicore/tests/test_consultations.py::test_prescription_safety_warning_and_override_enforcement PASSED [31%]
-medicore/tests/test_consultations.py::test_order_placement_and_event_emission PASSED [33%]
-medicore/tests/test_consultations.py::test_encounter_completion_and_billing_event PASSED [35%]
-medicore/tests/test_consultations.py::test_pdf_visit_summary_generation PASSED [37%]
-medicore/tests/test_consultations.py::test_patient_360_clinical_tabs_wired PASSED [39%]
-medicore/tests/test_core.py::test_config_profiles PASSED                   [41%]
-medicore/tests/test_core.py::test_password_hashing PASSED                  [43%]
-medicore/tests/test_core.py::test_event_bus PASSED                         [45%]
-medicore/tests/test_core.py::test_settings_registry PASSED                 [47%]
-medicore/tests/test_core.py::test_module_registry PASSED                   [ 49%]
-medicore/tests/test_laboratory.py::test_tat_deadline_and_breach_detection PASSED [ 50%]
-medicore/tests/test_laboratory.py::test_specimen_flow_lifecycle PASSED   [ 52%]
-medicore/tests/test_laboratory.py::test_reference_range_evaluation PASSED [ 54%]
-medicore/tests/test_laboratory.py::test_calculated_parameters_engine PASSED [ 56%]
-medicore/tests/test_laboratory.py::test_two_step_workflow_and_amendments PASSED [ 58%]
-medicore/tests/test_laboratory.py::test_critical_value_and_acknowledgement PASSED [ 60%]
-medicore/tests/test_laboratory.py::test_instrument_csv_import PASSED     [ 62%]
-medicore/tests/test_laboratory.py::test_order_placed_event_subscription PASSED [ 64%]
-medicore/tests/test_laboratory.py::test_lab_report_pdf_generation PASSED [ 66%]
-medicore/tests/test_patients.py::test_patients_index_page PASSED         [ 68%]
-medicore/tests/test_patients.py::test_patients_table_partial PASSED      [ 70%]
-medicore/tests/test_patients.py::test_patient_detail_pane PASSED         [ 72%]
-medicore/tests/test_patients.py::test_duplicate_patient_detection PASSED [ 74%]
-medicore/tests/test_patients.py::test_create_patient_and_audit_event PASSED [ 76%]
-medicore/tests/test_patients.py::test_server_enforced_duplicate_prevention_and_override PASSED [ 78%]
-medicore/tests/test_pharmacy.py::test_fefo_batch_picking_and_expired_blocking PASSED [80%]
-medicore/tests/test_pharmacy.py::test_immutable_stock_movement_ledger PASSED [82%]
-medicore/tests/test_pharmacy.py::test_low_stock_and_expiry_alerts_and_quarantine PASSED [84%]
-medicore/tests/test_pharmacy.py::test_prescription_signed_event_creates_dispense_queue PASSED [86%]
-medicore/tests/test_pharmacy.py::test_dispense_order_completion_and_domain_event PASSED [88%]
-medicore/tests/test_pharmacy.py::test_partial_dispensing_and_generic_substitution PASSED [90%]
-medicore/tests/test_pharmacy.py::test_counter_otc_sales_flow PASSED        [92%]
-medicore/tests/test_pharmacy.py::test_multi_store_transfers PASSED         [94%]
-medicore/tests/test_pharmacy.py::test_pharmacy_returns_approval_workflow PASSED [96%]
-medicore/tests/test_pharmacy.py::test_reports_csv_exports PASSED           [98%]
+medicore/tests/test_appointments.py::test_doctor_slot_generation PASSED  [  1%]
+medicore/tests/test_appointments.py::test_booking_conflict_detection PASSED [  2%]
+medicore/tests/test_appointments.py::test_status_transitions_and_events PASSED [  4%]
+medicore/tests/test_appointments.py::test_walkin_registration_and_queue_token PASSED [  5%]
+medicore/tests/test_appointments.py::test_waiting_room_display_endpoints PASSED [  7%]
+medicore/tests/test_appointments.py::test_reschedule_with_conflict_guard PASSED [  8%]
+medicore/tests/test_appointments.py::test_appointment_reminders_and_stats PASSED [ 10%]
+medicore/tests/test_appointments.py::test_concurrent_double_booking_protection PASSED [ 11%]
+medicore/tests/test_billing.py::test_encounter_completed_charge_capture_idempotent PASSED [ 13%]
+medicore/tests/test_billing.py::test_dispense_completed_charge_capture_idempotent PASSED [ 14%]
+medicore/tests/test_billing.py::test_lab_charge_capture_idempotent PASSED [ 16%]
+medicore/tests/test_billing.py::test_order_placed_ignores_lab_to_prevent_duplicate_billing PASSED [ 17%]
+medicore/tests/test_billing.py::test_price_list_category_tariffs PASSED  [ 19%]
+medicore/tests/test_billing.py::test_insurance_split_calculation PASSED  [ 20%]
+medicore/tests/test_billing.py::test_invoice_finalization_immutability PASSED [ 22%]
+medicore/tests/test_billing.py::test_credit_note_issuance PASSED         [ 23%]
+medicore/tests/test_billing.py::test_partial_and_split_payments PASSED   [ 25%]
+medicore/tests/test_billing.py::test_advance_deposit_adjustment PASSED   [ 26%]
+medicore/tests/test_billing.py::test_cash_session_till_reconciliation_variance PASSED [ 28%]
+medicore/tests/test_billing.py::test_apply_package_bundle_to_invoice PASSED [ 29%]
+medicore/tests/test_billing.py::test_discount_gating_and_approval PASSED [ 31%]
+medicore/tests/test_billing.py::test_amount_to_words_utility PASSED      [ 32%]
+medicore/tests/test_billing.py::test_qr_code_generation PASSED           [ 34%]
+medicore/tests/test_billing.py::test_pdf_generators PASSED               [ 35%]
+medicore/tests/test_consultations.py::test_vitals_math_and_clinical_warnings PASSED [ 37%]
+medicore/tests/test_consultations.py::test_soap_text_shortcuts_expansion PASSED [ 38%]
+medicore/tests/test_consultations.py::test_quantity_calculation_from_frequency PASSED [ 40%]
+medicore/tests/test_consultations.py::test_icd10_and_drug_search PASSED  [ 41%]
+medicore/tests/test_consultations.py::test_pluggable_safety_rules_engine PASSED [ 43%]
+medicore/tests/test_consultations.py::test_start_consultation_lifecycle PASSED [ 44%]
+medicore/tests/test_consultations.py::test_soap_note_autosave_signing_and_addenda PASSED [ 46%]
+medicore/tests/test_consultations.py::test_prescription_safety_warning_and_override_enforcement PASSED [ 47%]
+medicore/tests/test_consultations.py::test_order_placement_and_event_emission PASSED [ 49%]
+medicore/tests/test_consultations.py::test_encounter_completion_and_billing_event PASSED [ 50%]
+medicore/tests/test_consultations.py::test_pdf_visit_summary_generation PASSED [ 52%]
+medicore/tests/test_consultations.py::test_patient_360_clinical_tabs_wired PASSED [ 53%]
+medicore/tests/test_core.py::test_config_profiles PASSED                 [ 55%]
+medicore/tests/test_core.py::test_password_hashing PASSED                [ 56%]
+medicore/tests/test_core.py::test_event_bus PASSED                       [ 58%]
+medicore/tests/test_core.py::test_settings_registry PASSED               [ 59%]
+medicore/tests/test_core.py::test_module_registry PASSED                 [ 61%]
+medicore/tests/test_laboratory.py::test_tat_deadline_and_breach_detection PASSED [ 62%]
+medicore/tests/test_laboratory.py::test_specimen_flow_lifecycle PASSED   [ 64%]
+medicore/tests/test_laboratory.py::test_reference_range_evaluation PASSED [ 65%]
+medicore/tests/test_laboratory.py::test_calculated_parameters_engine PASSED [ 67%]
+medicore/tests/test_laboratory.py::test_two_step_workflow_and_amendments PASSED [ 68%]
+medicore/tests/test_laboratory.py::test_critical_value_and_acknowledgement PASSED [ 70%]
+medicore/tests/test_laboratory.py::test_instrument_csv_import PASSED     [ 71%]
+medicore/tests/test_laboratory.py::test_order_placed_event_subscription PASSED [ 73%]
+medicore/tests/test_laboratory.py::test_lab_report_pdf_generation PASSED [ 74%]
+medicore/tests/test_patients.py::test_patients_index_page PASSED         [ 76%]
+medicore/tests/test_patients.py::test_patients_table_partial PASSED      [ 77%]
+medicore/tests/test_patients.py::test_patient_detail_pane PASSED         [ 79%]
+medicore/tests/test_patients.py::test_duplicate_patient_detection PASSED [ 80%]
+medicore/tests/test_patients.py::test_create_patient_and_audit_event PASSED [ 82%]
+medicore/tests/test_patients.py::test_server_enforced_duplicate_prevention_and_override PASSED [ 83%]
+medicore/tests/test_pharmacy.py::test_fefo_batch_picking_and_expired_blocking PASSED [ 85%]
+medicore/tests/test_pharmacy.py::test_immutable_stock_movement_ledger PASSED [ 86%]
+medicore/tests/test_pharmacy.py::test_low_stock_and_expiry_alerts_and_quarantine PASSED [ 88%]
+medicore/tests/test_pharmacy.py::test_prescription_signed_event_creates_dispense_queue PASSED [ 89%]
+medicore/tests/test_pharmacy.py::test_dispense_order_completion_and_domain_event PASSED [ 91%]
+medicore/tests/test_pharmacy.py::test_partial_dispensing_and_generic_substitution PASSED [ 92%]
+medicore/tests/test_pharmacy.py::test_counter_otc_sales_flow PASSED      [ 94%]
+medicore/tests/test_pharmacy.py::test_multi_store_transfers PASSED       [ 95%]
+medicore/tests/test_pharmacy.py::test_pharmacy_returns_approval_workflow PASSED [ 97%]
+medicore/tests/test_pharmacy.py::test_reports_csv_exports PASSED         [ 98%]
 medicore/tests/test_pharmacy.py::test_pharmacy_ui_and_widget_endpoints PASSED [100%]
-============================== 51 passed in 41.52s ==============================
+================== 67 passed, 1 warning in 61.35s (0:01:01) ===================
 ```
 
 ---
@@ -314,7 +352,20 @@ medicore/tests/test_pharmacy.py::test_pharmacy_ui_and_widget_endpoints PASSED [1
 | **`/consultations/encounter/{id}/pdf`** | Downloadable clinical visit summary PDF with hospital header & branding |
 | **`/appointments`** | Day/Week calendar, appointments table, queue management desk |
 | **`/appointments/display`** | Full-screen waiting room TV display with live 5s auto-refresh |
-| **`/patients`** | Master patient directory, Patient 360 (Visits, Vitals, Prescriptions, Labs) |
+| **`/patients`** | Master patient directory, Patient 360 (Visits, Vitals, Prescriptions, Labs, Billing) |
+| **`/billing`** | Billing desk workspace, active cashier session indicator, and quick metrics |
+| **`/billing/invoices`** | Complete invoices directory with status badges and patient search |
+| **`/billing/patient/{id}`** | Patient billing workspace: pending charges ledger, manual line addition, payment collection |
+| **`/billing/invoice/{id}`** | Detailed invoice inspect view, payment history, credit notes, and claims |
+| **`/billing/invoice/{id}/pdf`** | Official branded printable invoice PDF with amount in words and verification QR |
+| **`/billing/receipt/{id}/pdf`** | Official printable money receipt PDF with hospital header and cashier signature line |
+| **`/billing/credit-note/{id}/pdf`** | Official printable credit note PDF for audited tariff adjustments |
+| **`/billing/deposits`** | Advance security deposits collection, balances, and refund terminal |
+| **`/billing/sessions`** | Cashier cash session management, till reconciliation, and variance reporting |
+| **`/billing/packages`** | Clinical service packages (Maternity Delivery, Cataract, Executive Screening) |
+| **`/billing/insurance`** | Insurance providers, patient policies, and insurance claims adjudicator |
+| **`/billing/pricelists`** | Multi-tier category tariffs (General, Staff, Insured, VIP) with rate multipliers |
+| **`/billing/reports`** | Financial analytics: Departmental Revenue, Dues Ledger, Till Summary, Aging + CSV |
 | **`/laboratory`** | Diagnostic worklist, STAT/Urgent priority filters, TAT breach monitoring |
 | **`/laboratory/order/{id}/results`** | Analyte result entry grid, automated reference flags, delta trends, calculated parameters |
 | **`/laboratory/order/{id}/report`** | Diagnostic laboratory report view with pathologist verification & amendments |
@@ -347,6 +398,8 @@ medicore/tests/test_pharmacy.py::test_pharmacy_ui_and_widget_endpoints PASSED [1
 | `pathologist.victor` | `path123` | **Pathologist** | Result review, two-step authorization, clinical amendments, critical ack |
 | `pharmacist.lisa` | `pharmacy123` | **Pharmacist** | Prescription dispensing, FEFO picking, generic substitutions, OTC sales |
 | `storekeeper.dan` | `store123` | **StoreKeeper** | Stock movements, warehouse purchases, goods receipt, inter-store transfers |
+| `cashier.emma` | `cashier123` | **Cashier** | Billing counter, split payments, receipts, deposits, till session |
+| `manager.robert` | `manager123` | **BillingManager** | Discount/refund authorizations, credit notes, tariffs, insurance claims |
 
 ---
 

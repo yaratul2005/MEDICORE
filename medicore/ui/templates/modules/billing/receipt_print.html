@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Money Receipt {{ payment.receipt_no }} - {{ hospital.name }}</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 30px;
+      color: #0f172a;
+      background: #ffffff;
+      font-size: 13px;
+    }
+    .receipt-card {
+      max-width: 600px;
+      margin: 0 auto;
+      border: 1px solid #e2e8f0;
+      padding: 24px;
+      border-radius: 8px;
+    }
+    .header-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    .hospital-title { font-size: 16px; font-weight: bold; color: #0d9488; }
+    .doc-title { font-size: 18px; font-weight: 800; color: #0f172a; text-align: right; }
+    .hr-line { border-top: 2px solid #0d9488; margin: 12px 0 16px 0; }
+    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .info-table td { padding: 6px 4px; border-bottom: 1px solid #f1f5f9; }
+    .amt-box {
+      background: #f0fdfa;
+      border: 1px solid #0d9488;
+      border-radius: 6px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .amt-val { font-size: 20px; font-weight: bold; color: #0d9488; font-family: monospace; }
+    .words-box { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 24px; }
+    .signatures { display: flex; justify-content: space-between; margin-top: 30px; }
+    .sig-line { border-top: 1px solid #94a3b8; width: 160px; text-align: center; padding-top: 4px; font-size: 11px; color: #475569; }
+    @media print { body { padding: 0; } .receipt-card { border: none; padding: 0; } .no-print { display: none; } }
+  </style>
+</head>
+<body>
+
+<div class="no-print" style="max-width: 600px; margin: 0 auto 15px auto; text-align: right;">
+  <button onclick="window.print()" style="padding: 6px 14px; background: #0d9488; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+    Print Money Receipt
+  </button>
+</div>
+
+<div class="receipt-card">
+  <table class="header-table">
+    <tr>
+      <td style="vertical-align: top;">
+        <div class="hospital-title">{{ hospital.name }}</div>
+        <div style="font-size: 11px; color: #64748b;">{{ hospital.address }} • Tel: {{ hospital.phone }}</div>
+      </td>
+      <td style="text-align: right; vertical-align: top;">
+        <div class="doc-title">MONEY RECEIPT</div>
+        <div style="font-family: monospace; font-weight: bold;">{{ payment.receipt_no }}</div>
+        <div style="font-size: 11px; color: #64748b;">{{ payment.received_at.strftime('%Y-%m-%d %H:%M') }}</div>
+        {% if qr_uri %}
+        <div style="margin-top: 6px;"><img src="{{ qr_uri }}" alt="QR" style="width: 50px; height: 50px;" /></div>
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+
+  <div class="hr-line"></div>
+
+  <table class="info-table">
+    <tr>
+      <td style="color: #64748b; width: 140px;">Received From:</td>
+      <td><strong>{{ patient.first_name }} {{ patient.last_name }}</strong></td>
+    </tr>
+    <tr>
+      <td style="color: #64748b;">Patient MRN:</td>
+      <td style="font-family: monospace;">{{ payment.patient_mrn }}</td>
+    </tr>
+    <tr>
+      <td style="color: #64748b;">Payment Method:</td>
+      <td style="text-transform: capitalize;">{{ payment.payment_method.replace('_', ' ') }}</td>
+    </tr>
+    <tr>
+      <td style="color: #64748b;">Reference / Auth #:</td>
+      <td style="font-family: monospace;">{{ payment.reference_number or 'N/A' }}</td>
+    </tr>
+    <tr>
+      <td style="color: #64748b;">Cashier:</td>
+      <td>{{ payment.collected_by }}</td>
+    </tr>
+  </table>
+
+  <div class="amt-box">
+    <span style="font-weight: bold; font-size: 12px; color: #0f172a;">AMOUNT RECEIVED:</span>
+    <span class="amt-val">${{ "%.2f"|format(payment.amount) }}</span>
+  </div>
+
+  <div class="words-box">
+    <strong>In Words:</strong> {{ amount_in_words }}
+  </div>
+
+  <div class="signatures">
+    <div class="sig-line">Customer Acknowledgment</div>
+    <div class="sig-line">Cashier Signature</div>
+  </div>
+</div>
+
+</body>
+</html>
