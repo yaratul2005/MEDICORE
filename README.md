@@ -21,6 +21,10 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License"></a>
 </p>
 
+<p align="center">
+  <img src="media/ss/doctor-queue.png" alt="MediCore OPD Doctor Queue & Clinical Workspace" width="94%" />
+</p>
+
 ---
 
 ## 📋 Overview
@@ -28,6 +32,34 @@
 **MediCore** is a high-performance, modular monolith Hospital Information System (HIS) and Electronic Medical Record (EMR) built for modern healthcare facilities. It pairs desktop-dense, keyboard-friendly clinical interfaces with high development velocity, dynamic schema-driven views, and strict security and domain isolation.
 
 Designed with **FastAPI**, **SQLModel**, **Alembic**, **Jinja2**, **HTMX**, and **Alpine.js**, MediCore operates with zero heavy client-side build steps while providing lightning-fast, reactive SPA-like responsiveness.
+
+---
+
+## 📸 Interface Showcase
+
+<table width="100%">
+  <tr>
+    <td align="center">
+      <strong>🩺 Outpatient (OPD) Doctor Queue & EMR</strong><br><br>
+      <img src="media/ss/doctor-queue.png" alt="Doctor Queue & EMR" width="100%" /><br>
+      <em>Real-time intake queue, live status counters (Waiting, In Consultation, Completed), and 1-click consultation initiation.</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <strong>📅 Appointments & Live Queue Control Desk</strong><br><br>
+      <img src="media/ss/appointments-queue.png" alt="Appointments & Scheduling Queue Desk" width="100%" /><br>
+      <em>Departmental token calling (<code>PED-01</code>, <code>CARD-01</code>), waiting room TV synchronization, and intake management.</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <strong>👥 Patients Directory & Patient 360 (Dark Mode)</strong><br><br>
+      <img src="media/ss/patients-dark.png" alt="Patients Directory & Patient 360 Dark Mode" width="100%" /><br>
+      <em>High-density master-detail split pane, multi-field clinical filtering, and Patient 360 history tabs in dark theme.</em>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -60,6 +92,11 @@ Built on CSS variable design tokens (`tokens.css`). Supports **Light** and **Dar
 ## 📦 Implemented Clinical Modules
 
 ### 🩺 1. OPD Consultations & EMR (`medicore.modules.consultations`)
+
+<p align="center">
+  <img src="media/ss/doctor-queue.png" alt="Outpatient Doctor Queue & EMR" width="95%" />
+</p>
+
 - **Active Doctor Queue**: Launch consultations directly from checked-in appointments. Automatically shifts status to `In-Consultation` and initiates clinical encounters.
 - **Three-Pane Clinical Workspace**:
   1. *Left Pane*: Patient 360 timeline, previous encounters, active allergy flags, and vitals trend sparklines.
@@ -78,7 +115,14 @@ Built on CSS variable design tokens (`tokens.css`). Supports **Light** and **Dar
 - **Printable & PDF Visit Summaries**: Standardized clinical summary document with hospital branding, physician signature lines, and one-click PDF generation via ReportLab.
 - **Patient 360 Clinical Tabs**: Deeply wired **Visits**, **Vitals History**, and **Prescriptions History** tabs directly inside the patient profile.
 
+---
+
 ### 📅 2. Appointments & Scheduling (`medicore.modules.appointments`)
+
+<p align="center">
+  <img src="media/ss/appointments-queue.png" alt="Appointments Live Queue Desk" width="95%" />
+</p>
+
 - **Doctor Schedules**: Weekly working templates, custom exceptions, slot durations, and clinician leave days.
 - **Day & Week Calendar**: Drag-and-drop interactive calendar with Day view (hourly slots) and Week view (multi-clinician grid), color-coded by clinical status.
 - **Concurrency & Double-Booking Guard**: Database-level unique constraint (`uq_appointment_doctor_time`) plus application-level conflict validation preventing overlapping bookings.
@@ -88,11 +132,19 @@ Built on CSS variable design tokens (`tokens.css`). Supports **Light** and **Dar
 - **Automated Reminders**: Background APScheduler job scanning 24–48h upcoming bookings.
 - **Wait-Time & No-Show Analytics**: Real-time dashboard widget tracking average wait times and attendance rates.
 
+---
+
 ### 👥 3. Patients Directory (`medicore.modules.patients`)
+
+<p align="center">
+  <img src="media/ss/patients-dark.png" alt="Patients Directory Dark Mode" width="95%" />
+</p>
+
 - **Master-Detail Split-Pane**: Dense patient list with quick-filter toolbar and slide-out patient summary.
 - **Server-Enforced Duplicate Detection**: Multi-field matching on save (phone, full name, date of birth) with audible warning, override justification requirements, and audit logging.
 - **Sequential MRN Generator**: Automatic generation of hospital medical record numbers (`MC-YYYY-NNNNN`).
 - **Allergy & Medical Alert Badges**: Critical allergy banners visible at all stages of care.
+- **Full Theme & Density Support**: Seamless Light/Dark theme switching and Compact/Comfortable density settings.
 
 ---
 
