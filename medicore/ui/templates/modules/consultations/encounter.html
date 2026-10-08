@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Encounter #{{ encounter.id }} - {{ patient.full_name }} | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col overflow-hidden">
+
+  <!-- Top Consultation Navigation & Patient Banner Bar -->
+  <header class="h-14 border-b border-subtle surface-bg px-4 flex items-center justify-between flex-shrink-0 z-10 shadow-xs">
+    
+    <!-- Left: Patient Details & Allergy Alert -->
+    <div class="flex items-center gap-3">
+      <a href="/consultations" class="p-1.5 rounded-lg border border-subtle surface-hover text-muted hover:text-main transition-colors" title="Back to Doctor Queue">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <span class="px-2 py-0.5 rounded font-mono font-bold text-xs bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+          {{ patient.mrn }}
+        </span>
+        <h1 class="text-sm font-bold text-main tracking-tight">{{ patient.full_name }}</h1>
+        <span class="text-xs text-muted font-mono">({{ patient.gender }}, {{ patient.date_of_birth|age }})</span>
+      </div>
+
+      <!-- Prominent Allergy Alert Chip -->
+      {% if patient.allergies %}
+      <div class="px-2.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 flex items-center gap-1.5 text-xs text-rose-700 dark:text-rose-300 font-bold animate-pulse">
+        <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-600"></i>
+        <span>Allergy: {{ patient.allergies }}</span>
+      </div>
+      {% endif %}
+
+      <div class="hidden md:flex items-center gap-2 pl-3 border-l border-subtle text-xs text-secondary">
+        <span>Dr. {{ encounter.doctor_name }}</span>
+        <span>•</span>
+        <span class="text-muted">{{ encounter.department }}</span>
+      </div>
+    </div>
+
+    <!-- Right: Status, Print/PDF & Complete Consultation Actions -->
+    <div class="flex items-center gap-2">
+      
+      <!-- Status Badge -->
+      {% if encounter.status == 'In-Progress' %}
+      <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+        <span>In Consultation</span>
+      </span>
+      {% else %}
+      <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+        {{ encounter.status }}
+      </span>
+      {% endif %}
+
+      <!-- Printable View -->
+      <a href="/consultations/encounter/{{ encounter.id }}/summary" target="_blank"
+         class="px-2.5 py-1.5 rounded-lg border border-subtle surface-hover text-xs font-medium text-secondary hover:text-main transition-colors flex items-center gap-1.5">
+        <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline">Print Summary</span>
+      </a>
+
+      <!-- Download Branded PDF -->
+      <a href="/consultations/encounter/{{ encounter.id }}/pdf"
+         class="px-2.5 py-1.5 rounded-lg border border-subtle surface-hover text-xs font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 transition-colors flex items-center gap-1.5">
+        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline">PDF</span>
+      </a>
+
+      <!-- Complete Encounter Button -->
+      {% if encounter.status == 'In-Progress' and can_complete %}
+      <form method="POST" action="/consultations/encounter/{{ encounter.id }}/complete"
+            onsubmit="return confirm('Complete this clinical encounter? This will finalize the visit, discharge the patient, and notify billing.')">
+        <button type="submit"
+                class="px-3.5 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold shadow-xs transition-colors flex items-center gap-1.5">
+          <i data-lucide="check-circle" class="w-4 h-4"></i>
+          <span>Complete Visit</span>
+        </button>
+      </form>
+      {% endif %}
+    </div>
+
+  </header>
+
+  <!-- Main 3-Pane Clinical Workspace -->
+  <main class="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden app-bg">
+    
+    <!-- PANE 1: Patient Timeline & Vitals Sparklines (3 Cols) -->
+    <div class="md:col-span-3 h-full overflow-hidden">
+      {% include "modules/consultations/partials/pane_timeline.html" %}
+    </div>
+
+    <!-- PANE 2: SOAP Clinical Note Editor (5 Cols) -->
+    <div class="md:col-span-5 h-full overflow-hidden">
+      {% include "modules/consultations/partials/pane_soap.html" %}
+    </div>
+
+    <!-- PANE 3: Diagnoses, Prescriptions, Orders (4 Cols) -->
+    <div class="md:col-span-4 h-full overflow-hidden">
+      {% include "modules/consultations/partials/pane_orders_rx.html" %}
+    </div>
+
+  </main>
+
+  <!-- Vitals Entry Modal (Hidden by default) -->
+  {% include "modules/consultations/partials/vitals_modal.html" %}
+
+</div>
+<script>lucide.createIcons();</script>
+{% endblock %}

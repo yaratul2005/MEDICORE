@@ -1,0 +1,222 @@
+[
+  {
+    "brand_name": "Amoxil",
+    "generic_name": "Amoxicillin",
+    "form": "Capsule",
+    "strength": "500 mg",
+    "route": "Oral",
+    "class": "Penicillin",
+    "default_frequency": "TID",
+    "default_duration_days": 7,
+    "default_instructions": "Take after meals with plenty of water. Finish full course."
+  },
+  {
+    "brand_name": "Augmentin",
+    "generic_name": "Amoxicillin / Clavulanate",
+    "form": "Tablet",
+    "strength": "625 mg",
+    "route": "Oral",
+    "class": "Penicillin",
+    "default_frequency": "BID",
+    "default_duration_days": 7,
+    "default_instructions": "Take at the start of a meal to reduce GI discomfort."
+  },
+  {
+    "brand_name": "Tylenol / Panadol",
+    "generic_name": "Paracetamol",
+    "form": "Tablet",
+    "strength": "500 mg",
+    "route": "Oral",
+    "class": "Analgesic",
+    "default_frequency": "TID",
+    "default_duration_days": 3,
+    "default_instructions": "Take as needed for fever or pain. Do not exceed 4000 mg in 24 hours."
+  },
+  {
+    "brand_name": "Advil / Motrin",
+    "generic_name": "Ibuprofen",
+    "form": "Tablet",
+    "strength": "400 mg",
+    "route": "Oral",
+    "class": "NSAID",
+    "default_frequency": "TID",
+    "default_duration_days": 5,
+    "default_instructions": "Take with food or milk to prevent stomach upset."
+  },
+  {
+    "brand_name": "Glucophage",
+    "generic_name": "Metformin",
+    "form": "Tablet",
+    "strength": "500 mg",
+    "route": "Oral",
+    "class": "Biguanide",
+    "default_frequency": "BID",
+    "default_duration_days": 30,
+    "default_instructions": "Take with morning and evening meals."
+  },
+  {
+    "brand_name": "Norvasc",
+    "generic_name": "Amlodipine",
+    "form": "Tablet",
+    "strength": "5 mg",
+    "route": "Oral",
+    "class": "Calcium Channel Blocker",
+    "default_frequency": "OD",
+    "default_duration_days": 30,
+    "default_instructions": "Take once daily in the morning with or without food."
+  },
+  {
+    "brand_name": "Lipitor",
+    "generic_name": "Atorvastatin",
+    "form": "Tablet",
+    "strength": "20 mg",
+    "route": "Oral",
+    "class": "Statin",
+    "default_frequency": "QHS",
+    "default_duration_days": 30,
+    "default_instructions": "Take once daily at bedtime."
+  },
+  {
+    "brand_name": "Prilosec",
+    "generic_name": "Omeprazole",
+    "form": "Capsule",
+    "strength": "20 mg",
+    "route": "Oral",
+    "class": "PPI",
+    "default_frequency": "OD",
+    "default_duration_days": 14,
+    "default_instructions": "Take 30 minutes before the first meal of the day."
+  },
+  {
+    "brand_name": "Zestril",
+    "generic_name": "Lisinopril",
+    "form": "Tablet",
+    "strength": "10 mg",
+    "route": "Oral",
+    "class": "ACE Inhibitor",
+    "default_frequency": "OD",
+    "default_duration_days": 30,
+    "default_instructions": "Take once daily in the morning. Monitor BP."
+  },
+  {
+    "brand_name": "Cozaar",
+    "generic_name": "Losartan",
+    "form": "Tablet",
+    "strength": "50 mg",
+    "route": "Oral",
+    "class": "ARB",
+    "default_frequency": "OD",
+    "default_duration_days": 30,
+    "default_instructions": "Take once daily with or without food."
+  },
+  {
+    "brand_name": "Zithromax",
+    "generic_name": "Azithromycin",
+    "form": "Tablet",
+    "strength": "500 mg",
+    "route": "Oral",
+    "class": "Macrolide",
+    "default_frequency": "OD",
+    "default_duration_days": 3,
+    "default_instructions": "Take 1 hour before or 2 hours after meals."
+  },
+  {
+    "brand_name": "Cipro",
+    "generic_name": "Ciprofloxacin",
+    "form": "Tablet",
+    "strength": "500 mg",
+    "route": "Oral",
+    "class": "Fluoroquinolone",
+    "default_frequency": "BID",
+    "default_duration_days": 7,
+    "default_instructions": "Avoid dairy products or antacids within 2 hours of dose."
+  },
+  {
+    "brand_name": "Coumadin",
+    "generic_name": "Warfarin",
+    "form": "Tablet",
+    "strength": "5 mg",
+    "route": "Oral",
+    "class": "Anticoagulant",
+    "default_frequency": "OD",
+    "default_duration_days": 30,
+    "default_instructions": "Take at the same time every evening. Regular INR monitoring mandatory."
+  },
+  {
+    "brand_name": "Ecotrin",
+    "generic_name": "Aspirin",
+    "form": "Tablet",
+    "strength": "81 mg",
+    "route": "Oral",
+    "class": "Antiplatelet",
+    "default_frequency": "OD",
+    "default_duration_days": 30,
+    "default_instructions": "Take with a glass of water after food."
+  },
+  {
+    "brand_name": "Plavix",
+    "generic_name": "Clopidogrel",
+    "form": "Tablet",
+    "strength": "75 mg",
+    "route": "Oral",
+    "class": "Antiplatelet",
+    "default_frequency": "OD",
+    "default_duration_days": 30,
+    "default_instructions": "Take once daily with or without food."
+  },
+  {
+    "brand_name": "Synthroid",
+    "generic_name": "Levothyroxine",
+    "form": "Tablet",
+    "strength": "50 mcg",
+    "route": "Oral",
+    "class": "Thyroid Hormone",
+    "default_frequency": "OD",
+    "default_duration_days": 30,
+    "default_instructions": "Take early in the morning on an empty stomach with a full glass of water, 30 min before breakfast."
+  },
+  {
+    "brand_name": "Ventolin",
+    "generic_name": "Salbutamol",
+    "form": "Inhaler",
+    "strength": "100 mcg/actuation",
+    "route": "Inhalation",
+    "class": "Bronchodilator",
+    "default_frequency": "PRN",
+    "default_duration_days": 30,
+    "default_instructions": "1-2 puffs as needed for acute wheezing or shortness of breath."
+  },
+  {
+    "brand_name": "Zyrtec",
+    "generic_name": "Cetirizine",
+    "form": "Tablet",
+    "strength": "10 mg",
+    "route": "Oral",
+    "class": "Antihistamine",
+    "default_frequency": "OD",
+    "default_duration_days": 10,
+    "default_instructions": "Take once daily at bedtime."
+  },
+  {
+    "brand_name": "Zofran",
+    "generic_name": "Ondansetron",
+    "form": "Tablet",
+    "strength": "4 mg",
+    "route": "Oral",
+    "class": "Antiemetic",
+    "default_frequency": "TID",
+    "default_duration_days": 3,
+    "default_instructions": "Take 30 minutes before meals as needed for nausea."
+  },
+  {
+    "brand_name": "Rocephin",
+    "generic_name": "Ceftriaxone",
+    "form": "Injection",
+    "strength": "1 g",
+    "route": "IV",
+    "class": "Cephalosporin",
+    "default_frequency": "OD",
+    "default_duration_days": 3,
+    "default_instructions": "Reconstitute and administer slow IV over 30 minutes."
+  }
+]

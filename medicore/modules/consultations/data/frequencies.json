@@ -1,0 +1,13 @@
+[
+  {"code": "OD", "label": "OD - Once daily", "times_per_day": 1, "description": "Every 24 hours"},
+  {"code": "BID", "label": "BID - Twice daily", "times_per_day": 2, "description": "Every 12 hours / Morning and Evening"},
+  {"code": "TID", "label": "TID - Three times daily", "times_per_day": 3, "description": "Every 8 hours with meals"},
+  {"code": "QDS", "label": "QDS - Four times daily", "times_per_day": 4, "description": "Every 6 hours"},
+  {"code": "QHS", "label": "QHS - At bedtime", "times_per_day": 1, "description": "Every night before sleeping"},
+  {"code": "PRN", "label": "PRN - As needed", "times_per_day": 1, "description": "As required for symptoms"},
+  {"code": "STAT", "label": "STAT - Immediate single dose", "times_per_day": 1, "description": "Give once immediately"},
+  {"code": "Q4H", "label": "Q4H - Every 4 hours", "times_per_day": 6, "description": "Every 4 hours around the clock"},
+  {"code": "Q6H", "label": "Q6H - Every 6 hours", "times_per_day": 4, "description": "Every 6 hours"},
+  {"code": "Q8H", "label": "Q8H - Every 8 hours", "times_per_day": 3, "description": "Every 8 hours"},
+  {"code": "Q12H", "label": "Q12H - Every 12 hours", "times_per_day": 2, "description": "Every 12 hours"}
+]

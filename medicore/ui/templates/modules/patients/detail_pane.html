@@ -61,15 +61,39 @@
   </div>
 
   <!-- Navigation Tabs -->
-  <div class="flex border-b border-subtle px-4 text-xs font-medium select-none bg-slate-50/30 dark:bg-slate-900/20">
+  <div class="flex border-b border-subtle px-4 text-xs font-medium select-none bg-slate-50/30 dark:bg-slate-900/20 overflow-x-auto">
     <button @click="tab = 'demographics'" 
             :class="tab === 'demographics' ? 'border-b-2 border-teal-600 text-teal-600 font-semibold' : 'text-muted hover:text-main'"
-            class="py-2.5 px-3 transition-colors">
+            class="py-2.5 px-2.5 transition-colors flex-shrink-0">
       Demographics
+    </button>
+    <button @click="tab = 'visits'" 
+            hx-get="/consultations/patient/{{ patient.id }}/visits"
+            hx-target="#tab-visits-content"
+            hx-trigger="click"
+            :class="tab === 'visits' ? 'border-b-2 border-teal-600 text-teal-600 font-semibold' : 'text-muted hover:text-main'"
+            class="py-2.5 px-2.5 transition-colors flex-shrink-0">
+      Visits
+    </button>
+    <button @click="tab = 'vitals'" 
+            hx-get="/consultations/patient/{{ patient.id }}/vitals"
+            hx-target="#tab-vitals-content"
+            hx-trigger="click"
+            :class="tab === 'vitals' ? 'border-b-2 border-teal-600 text-teal-600 font-semibold' : 'text-muted hover:text-main'"
+            class="py-2.5 px-2.5 transition-colors flex-shrink-0">
+      Vitals
+    </button>
+    <button @click="tab = 'prescriptions'" 
+            hx-get="/consultations/patient/{{ patient.id }}/prescriptions"
+            hx-target="#tab-prescriptions-content"
+            hx-trigger="click"
+            :class="tab === 'prescriptions' ? 'border-b-2 border-teal-600 text-teal-600 font-semibold' : 'text-muted hover:text-main'"
+            class="py-2.5 px-2.5 transition-colors flex-shrink-0">
+      Prescriptions
     </button>
     <button @click="tab = 'custom'" 
             :class="tab === 'custom' ? 'border-b-2 border-teal-600 text-teal-600 font-semibold' : 'text-muted hover:text-main'"
-            class="py-2.5 px-3 transition-colors flex items-center gap-1">
+            class="py-2.5 px-2.5 transition-colors flex items-center gap-1 flex-shrink-0">
       Custom Fields
       {% if patient.custom_fields %}
       <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
@@ -77,7 +101,7 @@
     </button>
     <button @click="tab = 'audit'" 
             :class="tab === 'audit' ? 'border-b-2 border-teal-600 text-teal-600 font-semibold' : 'text-muted hover:text-main'"
-            class="py-2.5 px-3 transition-colors">
+            class="py-2.5 px-2.5 transition-colors flex-shrink-0">
       Audit Trail
     </button>
   </div>
@@ -116,6 +140,30 @@
           <span class="font-mono text-secondary ml-1">({{ patient.emergency_contact_phone }})</span>
           {% endif %}
         </div>
+      </div>
+    </div>
+
+    <!-- Visits Tab -->
+    <div x-show="tab === 'visits'" id="tab-visits-content" class="text-xs">
+      <div class="p-4 text-center text-muted">
+        <i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto mb-1"></i>
+        <span>Loading clinical visits...</span>
+      </div>
+    </div>
+
+    <!-- Vitals Tab -->
+    <div x-show="tab === 'vitals'" id="tab-vitals-content" class="text-xs">
+      <div class="p-4 text-center text-muted">
+        <i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto mb-1"></i>
+        <span>Loading vitals records...</span>
+      </div>
+    </div>
+
+    <!-- Prescriptions Tab -->
+    <div x-show="tab === 'prescriptions'" id="tab-prescriptions-content" class="text-xs">
+      <div class="p-4 text-center text-muted">
+        <i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto mb-1"></i>
+        <span>Loading patient medications...</span>
       </div>
     </div>
 

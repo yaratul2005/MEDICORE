@@ -1,0 +1,78 @@
+{
+  "notice": "DEMO DATA ONLY - NOT CLINICALLY VALIDATED FOR ACTUAL MEDICAL PRACTICE",
+  "disclaimer": "This dataset is intended solely for software demonstration and simulation purposes within the MediCore hospital management prototype. Real-world medical practice requires verified clinical decision support databases (e.g. First Databank, Lexicomp, Micromedex).",
+  "drug_drug_interactions": [
+    {
+      "drug_a": "Warfarin",
+      "drug_b": "Aspirin",
+      "severity": "Major",
+      "effect": "Severe Bleeding Risk",
+      "mechanism": "Additive anticoagulant and antiplatelet inhibition, coupled with direct gastric mucosal erosion. Extreme risk of major gastrointestinal and intracranial hemorrhage."
+    },
+    {
+      "drug_a": "Warfarin",
+      "drug_b": "Ibuprofen",
+      "severity": "Major",
+      "effect": "Severe Bleeding & Renal Impairment",
+      "mechanism": "NSAIDs inhibit platelet cyclooxygenase and can displace warfarin from albumin binding sites, prolonging prothrombin time and causing gastric hemorrhage."
+    },
+    {
+      "drug_a": "Lisinopril",
+      "drug_b": "Potassium",
+      "severity": "Moderate",
+      "effect": "Severe Hyperkalemia",
+      "mechanism": "ACE inhibitors reduce aldosterone production, impairing renal potassium excretion. Co-administration increases danger of lethal cardiac dysrhythmias."
+    },
+    {
+      "drug_a": "Clopidogrel",
+      "drug_b": "Omeprazole",
+      "severity": "Moderate",
+      "effect": "Decreased Antiplatelet Efficacy",
+      "mechanism": "Omeprazole inhibits hepatic CYP2C19, blocking the bio-activation of clopidogrel and increasing the risk of recurrent thrombotic events."
+    },
+    {
+      "drug_a": "Metformin",
+      "drug_b": "Contrast Dye / Iodine",
+      "severity": "Major",
+      "effect": "Fatal Lactic Acidosis",
+      "mechanism": "Iodinated intravascular radiocontrast media can induce acute renal failure, precipitating toxic accumulation of metformin and severe lactic acidosis."
+    },
+    {
+      "drug_a": "Ciprofloxacin",
+      "drug_b": "Theophylline",
+      "severity": "Major",
+      "effect": "Theophylline Toxicity",
+      "mechanism": "Ciprofloxacin potently inhibits hepatic CYP1A2, drastically reducing theophylline clearance and causing refractory seizures and ventricular tachycardia."
+    },
+    {
+      "drug_a": "Amlodipine",
+      "drug_b": "Simvastatin",
+      "severity": "Moderate",
+      "effect": "Rhabdomyolysis Risk",
+      "mechanism": "Amlodipine inhibits CYP3A4-mediated metabolism of simvastatin, elevating statin blood levels and increasing risk of severe myopathy and rhabdomyolysis."
+    },
+    {
+      "drug_a": "Lisinopril",
+      "drug_b": "Losartan",
+      "severity": "Major",
+      "effect": "Dual Renin-Angiotensin Blockade",
+      "mechanism": "Concomitant use of ACE inhibitor and ARB does not confer additional benefit and substantially elevates risk of syncope, hyperkalemia, and acute renal failure."
+    }
+  ],
+  "drug_allergy_classes": {
+    "Penicillin": ["Amoxicillin", "Ampicillin", "Augmentin", "Penicillin V", "Piperacillin"],
+    "Sulfa drugs": ["Sulfamethoxazole", "Bactrim", "Sulfasalazine", "Hydrochlorothiazide"],
+    "Aspirin & NSAIDs": ["Aspirin", "Ibuprofen", "Naproxen", "Diclofenac", "Ketorolac", "Meloxicam"],
+    "Contrast Dye / Iodine": ["Contrast Dye", "Iodine", "Iohexol", "Iopamidol", "Iodinated Radiocontrast"],
+    "Amoxicillin": ["Amoxicillin", "Augmentin"],
+    "Ciprofloxacin": ["Ciprofloxacin", "Levofloxacin"]
+  },
+  "duplicate_therapy_classes": {
+    "NSAIDs": ["Ibuprofen", "Naproxen", "Diclofenac", "Meloxicam", "Ketorolac"],
+    "Statins": ["Atorvastatin", "Simvastatin", "Rosuvastatin", "Pravastatin"],
+    "ACE Inhibitors": ["Lisinopril", "Enalapril", "Ramipril"],
+    "ARBs": ["Losartan", "Valsartan", "Telmisartan"],
+    "PPIs": ["Omeprazole", "Pantoprazole", "Esomeprazole", "Rabeprazole"],
+    "Antiplatelets": ["Aspirin", "Clopidogrel", "Ticagrelor"]
+  }
+}
