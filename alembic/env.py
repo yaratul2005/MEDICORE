@@ -20,6 +20,36 @@ from medicore.core.models import (
     UserRoleLink,
 )
 from medicore.modules.patients.models import Patient
+from medicore.modules.appointments.models import Appointment, Doctor, QueueToken
+from medicore.modules.consultations.models import (
+    ClinicalNote,
+    Diagnosis,
+    Encounter,
+    FollowUp,
+    Order,
+    Prescription,
+    PrescriptionItem,
+    Referral,
+    Vitals,
+)
+from medicore.modules.pharmacy.models import (
+    Batch,
+    Dispense,
+    DispenseLine,
+    GoodsReceipt,
+    GoodsReceiptLine,
+    Item,
+    PharmacyReturn,
+    PharmacyReturnLine,
+    PharmacyStore,
+    PurchaseOrder,
+    PurchaseOrderLine,
+    StockMovement,
+    StockTransferLine,
+    StockTransferRequest,
+    Supplier,
+)
+
 
 # Alembic Config object
 config = context.config

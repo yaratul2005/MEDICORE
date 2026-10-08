@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Pharmacy & Dispensing{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+
+  <!-- Top Module Header Bar -->
+  <header class="surface-bg border-b border-subtle px-6 py-3.5 flex items-center justify-between flex-shrink-0 shadow-xs">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-teal-600/10 text-teal-600 flex items-center justify-center font-bold">
+        <i data-lucide="pill" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <h1 class="text-base font-bold text-main flex items-center gap-2">
+          Pharmacy & Dispensing
+          <span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-teal-950 text-teal-400 border border-teal-800">FEFO Enabled</span>
+        </h1>
+        <p class="text-xs text-muted">Outpatient prescription fulfillment, stock ledger, and supply chain</p>
+      </div>
+    </div>
+
+    <!-- Quick Navigation Hub -->
+    <div class="flex items-center gap-2">
+      <a href="/pharmacy/otc"
+         class="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs">
+        <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+        <span>Counter Sale (OTC)</span>
+      </a>
+      <a href="/pharmacy/inventory"
+         class="px-3 py-1.5 rounded-lg surface-bg hover:surface-hover border border-subtle text-main text-xs font-semibold flex items-center gap-1.5 transition-colors">
+        <i data-lucide="boxes" class="w-4 h-4"></i>
+        <span>Inventory</span>
+      </a>
+      <a href="/pharmacy/purchasing"
+         class="px-3 py-1.5 rounded-lg surface-bg hover:surface-hover border border-subtle text-main text-xs font-semibold flex items-center gap-1.5 transition-colors">
+        <i data-lucide="truck" class="w-4 h-4"></i>
+        <span>Purchasing</span>
+      </a>
+      <a href="/pharmacy/transfers"
+         class="px-3 py-1.5 rounded-lg surface-bg hover:surface-hover border border-subtle text-main text-xs font-semibold flex items-center gap-1.5 transition-colors">
+        <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+        <span>Transfers</span>
+      </a>
+      <a href="/pharmacy/returns"
+         class="px-3 py-1.5 rounded-lg surface-bg hover:surface-hover border border-subtle text-main text-xs font-semibold flex items-center gap-1.5 transition-colors">
+        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        <span>Returns</span>
+      </a>
+      <a href="/pharmacy/reports"
+         class="px-3 py-1.5 rounded-lg surface-bg hover:surface-hover border border-subtle text-main text-xs font-semibold flex items-center gap-1.5 transition-colors">
+        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+        <span>Reports</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Summary KPI Bar -->
+  <div class="px-6 py-3 border-b border-subtle surface-bg grid grid-cols-2 md:grid-cols-5 gap-3 flex-shrink-0">
+    <div class="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 flex items-center justify-between">
+      <div>
+        <span class="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-400 block">Pending Queue</span>
+        <span class="text-xl font-mono font-bold text-amber-900 dark:text-amber-200">{{ pending_count }}</span>
+      </div>
+      <i data-lucide="clock" class="w-5 h-5 text-amber-500"></i>
+    </div>
+
+    <div class="p-3 rounded-lg bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/50 flex items-center justify-between">
+      <div>
+        <span class="text-[10px] uppercase font-bold text-sky-700 dark:text-sky-400 block">In Progress</span>
+        <span class="text-xl font-mono font-bold text-sky-900 dark:text-sky-200">{{ in_progress_count }}</span>
+      </div>
+      <i data-lucide="loader-2" class="w-5 h-5 text-sky-500"></i>
+    </div>
+
+    <div class="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 flex items-center justify-between">
+      <div>
+        <span class="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block">Dispensed Today</span>
+        <span class="text-xl font-mono font-bold text-emerald-900 dark:text-emerald-200">{{ dispensed_today_count }}</span>
+      </div>
+      <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
+    </div>
+
+    <a href="/pharmacy/inventory?low_stock_only=true" class="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 flex items-center justify-between hover:border-rose-400 transition-colors">
+      <div>
+        <span class="text-[10px] uppercase font-bold text-rose-700 dark:text-rose-400 block">Low Stock Alerts</span>
+        <span class="text-xl font-mono font-bold text-rose-900 dark:text-rose-200">{{ low_stock_count }}</span>
+      </div>
+      <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-500"></i>
+    </a>
+
+    <a href="/pharmacy/reports?report_type=expiry" class="p-3 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/50 flex items-center justify-between hover:border-purple-400 transition-colors">
+      <div>
+        <span class="text-[10px] uppercase font-bold text-purple-700 dark:text-purple-400 block">Near Expiry / Expired</span>
+        <span class="text-xl font-mono font-bold text-purple-900 dark:text-purple-200">{{ near_expiry_count }} <span class="text-xs font-normal text-rose-600">({{ expired_count }} exp)</span></span>
+      </div>
+      <i data-lucide="calendar-x" class="w-5 h-5 text-purple-500"></i>
+    </a>
+  </div>
+
+  <!-- Main Work Area -->
+  <main class="flex-1 flex flex-col min-h-0 px-6 py-4 space-y-3">
+
+    <!-- Queue Controls & Filter Bar -->
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Status Tabs -->
+      <div class="flex items-center gap-1.5 p-1 rounded-lg bg-slate-200/60 dark:bg-slate-900/60 text-xs font-semibold">
+        <a href="/pharmacy?status_filter=pending"
+           class="px-3 py-1.5 rounded-md transition-colors {% if status_filter == 'pending' %}bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 shadow-xs{% else %}text-muted hover:text-main{% endif %}">
+          Pending ({{ pending_count }})
+        </a>
+        <a href="/pharmacy?status_filter=in_progress"
+           class="px-3 py-1.5 rounded-md transition-colors {% if status_filter == 'in_progress' %}bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 shadow-xs{% else %}text-muted hover:text-main{% endif %}">
+          In Progress ({{ in_progress_count }})
+        </a>
+        <a href="/pharmacy?status_filter=dispensed"
+           class="px-3 py-1.5 rounded-md transition-colors {% if status_filter == 'dispensed' %}bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 shadow-xs{% else %}text-muted hover:text-main{% endif %}">
+          Dispensed
+        </a>
+        <a href="/pharmacy?status_filter=partial"
+           class="px-3 py-1.5 rounded-md transition-colors {% if status_filter == 'partial' %}bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 shadow-xs{% else %}text-muted hover:text-main{% endif %}">
+          Partial
+        </a>
+        <a href="/pharmacy?status_filter=rejected"
+           class="px-3 py-1.5 rounded-md transition-colors {% if status_filter == 'rejected' %}bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 shadow-xs{% else %}text-muted hover:text-main{% endif %}">
+          Rejected
+        </a>
+        <a href="/pharmacy?status_filter=all"
+           class="px-3 py-1.5 rounded-md transition-colors {% if status_filter == 'all' %}bg-white dark:bg-slate-800 text-teal-700 dark:text-teal-300 shadow-xs{% else %}text-muted hover:text-main{% endif %}">
+          All Orders
+        </a>
+      </div>
+
+      <!-- Search Box with HTMX Auto-filtering -->
+      <div class="relative w-72">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-muted"></i>
+        <input type="text"
+               name="q"
+               value="{{ q }}"
+               placeholder="Search Dispense #, Patient, MRN..."
+               hx-get="/pharmacy/queue/table"
+               hx-params="*"
+               hx-trigger="keyup changed delay:250ms"
+               hx-target="#queue-table-container"
+               hx-include="[name='status_filter']"
+               class="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg surface-bg border border-subtle text-main focus:outline-none focus:border-teal-500 shadow-xs">
+        <input type="hidden" name="status_filter" value="{{ status_filter }}">
+      </div>
+    </div>
+
+    <!-- Table Container -->
+    <div id="queue-table-container" class="flex-1 overflow-y-auto surface-bg border border-subtle rounded-xl shadow-xs">
+      {% include "modules/pharmacy/partials/queue_table.html" %}
+    </div>
+
+  </main>
+</div>
+{% endblock %}

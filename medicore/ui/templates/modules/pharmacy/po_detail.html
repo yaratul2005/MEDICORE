@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Purchase Order {{ po.po_no }}{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+
+  <!-- Header Bar -->
+  <header class="surface-bg border-b border-subtle px-6 py-3.5 flex items-center justify-between flex-shrink-0 shadow-xs">
+    <div class="flex items-center gap-3">
+      <a href="/pharmacy/purchasing" class="p-1.5 rounded-lg border border-subtle surface-hover text-muted hover:text-main">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+      </a>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold text-main font-mono">{{ po.po_no }}</h1>
+          <span class="text-xs px-2 py-0.5 rounded-full font-bold
+            {% if po.status == 'received' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300
+            {% elif po.status == 'partial_received' %}bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300
+            {% else %}bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300{% endif %}">
+            {{ po.status|upper }}
+          </span>
+        </div>
+        <p class="text-xs text-muted">Supplier: {{ supplier.name if supplier else 'Vendor' }}</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Summary Box -->
+  <main class="flex-1 overflow-y-auto px-6 py-5 space-y-4 max-w-5xl mx-auto w-full">
+    <div class="surface-bg border border-subtle rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs shadow-xs">
+      <div>
+        <span class="text-[10px] uppercase font-bold text-muted block">Supplier</span>
+        <span class="font-bold text-main">{{ supplier.name if supplier else '-' }}</span>
+        <span class="text-muted block text-[11px]">{{ supplier.email if supplier else '' }}</span>
+      </div>
+      <div>
+        <span class="text-[10px] uppercase font-bold text-muted block">Order Date</span>
+        <span class="font-semibold text-main">{{ po.order_date.strftime('%Y-%m-%d') }}</span>
+      </div>
+      <div>
+        <span class="text-[10px] uppercase font-bold text-muted block">Payment Terms</span>
+        <span class="font-semibold text-main">{{ supplier.payment_terms if supplier else 'Net 30' }}</span>
+      </div>
+      <div class="text-right">
+        <span class="text-[10px] uppercase font-bold text-muted block">Total Order Valuation</span>
+        <span class="text-base font-bold font-mono text-teal-600 dark:text-teal-400">${{ "%.2f"|format(po.total_amount) }}</span>
+      </div>
+    </div>
+
+    <!-- Lines Table -->
+    <div class="surface-bg border border-subtle rounded-xl overflow-hidden shadow-xs">
+      <div class="p-3 border-b border-subtle bg-slate-100/60 dark:bg-slate-900/60">
+        <h3 class="text-xs font-bold text-main uppercase tracking-wider">Ordered Items & Fulfillment</h3>
+      </div>
+      <table class="w-full text-left text-xs border-collapse">
+        <thead>
+          <tr class="border-b border-subtle text-muted uppercase text-[10px] font-semibold bg-slate-50 dark:bg-slate-900/40">
+            <th class="py-2.5 px-3">Item Name</th>
+            <th class="py-2.5 px-3">Requested Qty</th>
+            <th class="py-2.5 px-3">Received Qty</th>
+            <th class="py-2.5 px-3">Unit Cost ($)</th>
+            <th class="py-2.5 px-3 text-right">Line Total ($)</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-subtle">
+          {% for l in lines %}
+          <tr class="surface-hover">
+            <td class="py-2.5 px-3 font-semibold text-main">{{ l.item_name }}</td>
+            <td class="py-2.5 px-3 font-mono font-bold">{{ l.requested_qty }}</td>
+            <td class="py-2.5 px-3 font-mono font-bold {% if l.received_qty >= l.requested_qty %}text-emerald-600{% else %}text-amber-600{% endif %}">
+              {{ l.received_qty }} / {{ l.requested_qty }}
+            </td>
+            <td class="py-2.5 px-3 font-mono text-muted">${{ "%.2f"|format(l.unit_cost) }}</td>
+            <td class="py-2.5 px-3 font-mono font-bold text-main text-right">${{ "%.2f"|format(l.line_total) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+{% endblock %}

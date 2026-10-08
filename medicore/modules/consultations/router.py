@@ -586,6 +586,43 @@ def sign_soap_note(
     )
 
     encounter = session.get(Encounter, encounter_id)
+
+    # Check if encounter has an active prescription with items, and emit prescription.signed for Pharmacy
+    rx = session.exec(select(Prescription).where(Prescription.encounter_id == encounter_id)).first()
+    if rx:
+        rx_items = session.exec(select(PrescriptionItem).where(PrescriptionItem.prescription_id == rx.id)).all()
+        if rx_items:
+            event_bus.emit(
+                "prescription.signed",
+                {
+                    "prescription_id": rx.id,
+                    "encounter_id": encounter_id,
+                    "patient_id": encounter.patient_id if encounter else None,
+                    "patient_mrn": encounter.patient_mrn if encounter else None,
+                    "patient_name": encounter.patient_name if encounter else None,
+                    "doctor_id": encounter.doctor_id if encounter else None,
+                    "doctor_name": encounter.doctor_name if encounter else None,
+                    "safety_overrides": rx.safety_overrides,
+                    "items": [
+                        {
+                            "id": item.id,
+                            "drug_name": item.drug_name,
+                            "generic_name": item.generic_name,
+                            "dose": item.dose,
+                            "frequency": item.frequency,
+                            "duration": item.duration,
+                            "route": item.route,
+                            "quantity": item.quantity,
+                            "instructions": item.instructions,
+                        }
+                        for item in rx_items
+                    ],
+                    "signed_at": note.signed_at.isoformat(),
+                },
+                user_id=user.id,
+                username=user.username,
+            )
+
     can_write_notes = user_has_permission(user, "consultations.notes.write", session)
     can_sign_notes = user_has_permission(user, "consultations.notes.sign", session)
 
@@ -1384,6 +1421,42 @@ def complete_encounter(
                 session.add(token)
 
     session.commit()
+
+    # Ensure prescription.signed is emitted for Pharmacy
+    rx = session.exec(select(Prescription).where(Prescription.encounter_id == encounter.id)).first()
+    if rx:
+        rx_items = session.exec(select(PrescriptionItem).where(PrescriptionItem.prescription_id == rx.id)).all()
+        if rx_items:
+            event_bus.emit(
+                "prescription.signed",
+                {
+                    "prescription_id": rx.id,
+                    "encounter_id": encounter.id,
+                    "patient_id": encounter.patient_id,
+                    "patient_mrn": encounter.patient_mrn,
+                    "patient_name": encounter.patient_name,
+                    "doctor_id": encounter.doctor_id,
+                    "doctor_name": encounter.doctor_name,
+                    "safety_overrides": rx.safety_overrides,
+                    "items": [
+                        {
+                            "id": item.id,
+                            "drug_name": item.drug_name,
+                            "generic_name": item.generic_name,
+                            "dose": item.dose,
+                            "frequency": item.frequency,
+                            "duration": item.duration,
+                            "route": item.route,
+                            "quantity": item.quantity,
+                            "instructions": item.instructions,
+                        }
+                        for item in rx_items
+                    ],
+                    "signed_at": encounter.completed_at.isoformat() if encounter.completed_at else utc_now().isoformat(),
+                },
+                user_id=user.id,
+                username=user.username,
+            )
 
     # Emit domain event so Billing and future modules can subscribe!
     event_bus.emit(

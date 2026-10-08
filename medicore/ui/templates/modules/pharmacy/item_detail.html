@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.name }} - Stock Batches & Ledger{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+
+  <!-- Header Bar -->
+  <header class="surface-bg border-b border-subtle px-6 py-3.5 flex items-center justify-between flex-shrink-0 shadow-xs">
+    <div class="flex items-center gap-3">
+      <a href="/pharmacy/inventory?store_id={{ store_id }}" class="p-1.5 rounded-lg border border-subtle surface-hover text-muted hover:text-main">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+      </a>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold text-main">{{ item.name }}</h1>
+          <span class="font-mono text-xs px-2 py-0.5 rounded bg-teal-950 text-teal-400 border border-teal-800">{{ item.code }}</span>
+          <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">{{ item.category }}</span>
+        </div>
+        <p class="text-xs text-muted">Generic: <strong>{{ item.generic_name }}</strong> • Form: {{ item.form }} • Unit: {{ item.unit }}</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      {% if can_approve %}
+      <button onclick="document.getElementById('adjust-modal').classList.remove('hidden')"
+              class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 text-xs font-semibold flex items-center gap-1.5 transition-colors">
+        <i data-lucide="sliders" class="w-4 h-4"></i>
+        <span>Stock Take Adjustment</span>
+      </button>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Stock Summary Banner -->
+  <div class="px-6 py-3 border-b border-subtle surface-bg grid grid-cols-2 md:grid-cols-4 gap-4 flex-shrink-0 text-xs">
+    <div class="p-3 rounded-lg border border-subtle surface-hover">
+      <span class="text-[10px] uppercase font-bold text-muted block">Usable Physical Stock</span>
+      <span class="text-xl font-mono font-bold {% if stock_sum.usable_stock <= item.reorder_level %}text-rose-600{% else %}text-teal-600 dark:text-teal-400{% endif %}">
+        {{ stock_sum.usable_stock }} <span class="text-xs font-normal text-muted">{{ item.unit }}s</span>
+      </span>
+      {% if stock_sum.usable_stock <= item.reorder_level %}
+      <span class="text-[10px] text-rose-500 font-bold block mt-0.5">⚠️ Below Reorder Level ({{ item.reorder_level }})</span>
+      {% endif %}
+    </div>
+
+    <div class="p-3 rounded-lg border border-subtle surface-hover">
+      <span class="text-[10px] uppercase font-bold text-muted block">Active FEFO Batches</span>
+      <span class="text-xl font-mono font-bold text-main">{{ stock_sum.active_batches_count }}</span>
+      <span class="text-[10px] text-muted block mt-0.5">{{ stock_sum.near_expiry_count }} near expiry (within 60d)</span>
+    </div>
+
+    <div class="p-3 rounded-lg border border-subtle surface-hover">
+      <span class="text-[10px] uppercase font-bold text-muted block">Pricing Matrix</span>
+      <div class="font-mono text-sm font-bold text-main mt-1">Cost: ${{ "%.2f"|format(item.cost_price) }}</div>
+      <div class="font-mono text-xs text-muted">MRP: ${{ "%.2f"|format(item.unit_price) }}</div>
+    </div>
+
+    <div class="p-3 rounded-lg border border-subtle surface-hover">
+      <span class="text-[10px] uppercase font-bold text-muted block">Replenishment Profile</span>
+      <div class="text-xs text-main mt-1">Reorder Level: <strong class="font-mono">{{ item.reorder_level }}</strong></div>
+      <div class="text-[11px] text-muted">Suggested Order Qty: <strong class="font-mono">{{ item.reorder_quantity }}</strong></div>
+    </div>
+  </div>
+
+  <!-- Main Scrollable Area: Batches + Ledger -->
+  <main class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+
+    <!-- Active Batches Table -->
+    <div class="surface-bg border border-subtle rounded-xl overflow-hidden shadow-xs">
+      <div class="p-3 border-b border-subtle bg-slate-100/60 dark:bg-slate-900/60 flex items-center justify-between">
+        <h3 class="text-xs font-bold text-main uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="layers" class="w-4 h-4 text-teal-600"></i>
+          Physical Batches (Sorted FEFO)
+        </h3>
+        <span class="text-[11px] text-muted">Strict FEFO batch allocation enforced at dispensing</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b border-subtle text-muted uppercase text-[10px] font-semibold bg-slate-50 dark:bg-slate-900/40">
+              <th class="py-2.5 px-3">Lot / Batch #</th>
+              <th class="py-2.5 px-3">Expiry Date</th>
+              <th class="py-2.5 px-3">Remaining Qty</th>
+              <th class="py-2.5 px-3">Cost Price</th>
+              <th class="py-2.5 px-3">MRP</th>
+              <th class="py-2.5 px-3">Quarantine Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-subtle">
+            {% for b in batches %}
+            <tr class="surface-hover">
+              <td class="py-2.5 px-3 font-mono font-bold text-main">{{ b.lot_no }}</td>
+              <td class="py-2.5 px-3 font-mono font-semibold">
+                {% if b.expiry_date < date.today() %}
+                  <span class="text-rose-600 dark:text-rose-400">⛔ EXPIRED ({{ b.expiry_date.strftime('%Y-%m-%d') }})</span>
+                {% elif b.expiry_date <= (date.today() + timedelta(days=60)) %}
+                  <span class="text-amber-600 dark:text-amber-400">⚠️ {{ b.expiry_date.strftime('%Y-%m-%d') }} (Near Expiry)</span>
+                {% else %}
+                  <span class="text-emerald-600 dark:text-emerald-400">{{ b.expiry_date.strftime('%Y-%m-%d') }}</span>
+                {% endif %}
+              </td>
+              <td class="py-2.5 px-3 font-mono font-bold text-main">{{ b.quantity_remaining }}</td>
+              <td class="py-2.5 px-3 font-mono text-muted">${{ "%.2f"|format(b.cost_price) }}</td>
+              <td class="py-2.5 px-3 font-mono font-semibold text-main">${{ "%.2f"|format(b.unit_price or b.mrp) }}</td>
+              <td class="py-2.5 px-3">
+                {% if b.is_quarantined %}
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                    🔒 Quarantined: {{ b.quarantine_reason or 'Locked' }}
+                  </span>
+                {% else %}
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                    Active & Available
+                  </span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="py-6 text-center text-muted">No batches recorded for this item.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Immutable Stock Movements Ledger -->
+    <div class="surface-bg border border-subtle rounded-xl overflow-hidden shadow-xs">
+      <div class="p-3 border-b border-subtle bg-slate-100/60 dark:bg-slate-900/60 flex items-center justify-between">
+        <h3 class="text-xs font-bold text-main uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="file-text" class="w-4 h-4 text-teal-600"></i>
+          Immutable Stock Ledger (Movement History)
+        </h3>
+        <span class="text-[11px] text-muted">Permanent audit trail of all transactions</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b border-subtle text-muted uppercase text-[10px] font-semibold bg-slate-50 dark:bg-slate-900/40">
+              <th class="py-2.5 px-3">Timestamp</th>
+              <th class="py-2.5 px-3">Movement Type</th>
+              <th class="py-2.5 px-3">Reason Code</th>
+              <th class="py-2.5 px-3">Qty Change</th>
+              <th class="py-2.5 px-3">Balance After</th>
+              <th class="py-2.5 px-3">Reference</th>
+              <th class="py-2.5 px-3">Actor / Approver</th>
+              <th class="py-2.5 px-3">Notes</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-subtle">
+            {% for m in movements %}
+            <tr class="surface-hover">
+              <td class="py-2.5 px-3 font-mono text-[11px] text-muted">{{ m.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+              <td class="py-2.5 px-3 font-semibold uppercase text-[10px]">
+                <span class="px-2 py-0.5 rounded
+                  {% if m.movement_type in ['receipt', 'return', 'transfer_in'] %}bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300
+                  {% elif m.movement_type in ['dispense', 'wastage', 'transfer_out'] %}bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300
+                  {% else %}bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300{% endif %}">
+                  {{ m.movement_type }}
+                </span>
+              </td>
+              <td class="py-2.5 px-3 font-mono text-[11px] text-main">{{ m.reason_code }}</td>
+              <td class="py-2.5 px-3 font-mono font-bold {% if m.quantity > 0 %}text-emerald-600{% elif m.quantity < 0 %}text-rose-600{% else %}text-muted{% endif %}">
+                {% if m.quantity > 0 %}+{% endif %}{{ m.quantity }}
+              </td>
+              <td class="py-2.5 px-3 font-mono font-bold text-main">{{ m.balance_after }}</td>
+              <td class="py-2.5 px-3 font-mono text-muted text-[11px]">{{ m.reference_id or '-' }}</td>
+              <td class="py-2.5 px-3 text-muted text-[11px]">{{ m.created_by or 'system' }}</td>
+              <td class="py-2.5 px-3 text-muted text-[11px] truncate max-w-xs">{{ m.notes or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="8" class="py-6 text-center text-muted">No movements recorded.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Stock Adjustment Modal -->
+<div id="adjust-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+  <div class="surface-bg border border-subtle rounded-xl p-5 max-w-md w-full space-y-4 text-left shadow-2xl">
+    <div class="flex items-center justify-between">
+      <h4 class="text-sm font-bold text-main flex items-center gap-1.5">
+        <i data-lucide="sliders" class="w-4 h-4 text-teal-600"></i>
+        Record Stock Take Adjustment
+      </h4>
+      <button type="button" onclick="document.getElementById('adjust-modal').classList.add('hidden')" class="text-muted hover:text-main">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <form method="POST" action="/pharmacy/inventory/adjust">
+      <input type="hidden" name="item_id" value="{{ item.id }}">
+      <input type="hidden" name="store_id" value="{{ store_id }}">
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-muted mb-1">Target Batch (Optional)</label>
+          <select name="batch_id" class="w-full px-3 py-1.5 rounded border border-subtle surface-bg text-main font-mono">
+            <option value="">General Adjustment (No Specific Batch)</option>
+            {% for b in batches %}
+            <option value="{{ b.id }}">{{ b.lot_no }} • Exp: {{ b.expiry_date }} (Current: {{ b.quantity_remaining }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-muted mb-1">Adjustment Quantity Change (+ or -)</label>
+          <input type="number"
+                 name="adjustment_qty"
+                 required
+                 placeholder="e.g. +10 or -5"
+                 class="w-full px-3 py-1.5 rounded border border-subtle surface-bg text-main font-mono font-bold focus:outline-none focus:border-teal-500">
+          <span class="text-[10px] text-muted block mt-0.5">Use positive for found stock, negative for shrinkage / damage.</span>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-muted mb-1">Mandatory Justification Reason</label>
+          <textarea name="reason"
+                    required
+                    rows="2"
+                    placeholder="e.g. Physical inventory count variance / broken ampoule during ward delivery"
+                    class="w-full p-2.5 rounded border border-subtle surface-bg text-main focus:outline-none focus:border-teal-500"></textarea>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3">
+        <button type="button"
+                onclick="document.getElementById('adjust-modal').classList.add('hidden')"
+                class="px-3 py-1.5 rounded-lg border border-subtle text-xs font-semibold">
+          Cancel
+        </button>
+        <button type="submit"
+                class="px-4 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-xs">
+          Apply Adjustment & Audit
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

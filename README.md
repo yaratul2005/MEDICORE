@@ -17,7 +17,7 @@
   <a href="https://htmx.org/"><img src="https://img.shields.io/badge/HTMX-1.9.12-336699" alt="HTMX"></a>
   <a href="https://alpinejs.dev/"><img src="https://img.shields.io/badge/Alpine.js-3.13+-77C1D2?logo=alpinedotjs&logoColor=white" alt="Alpine.js"></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white" alt="Docker"></a>
-  <a href="#-testing--verification"><img src="https://img.shields.io/badge/Tests-31%20Passed-success" alt="Tests"></a>
+  <a href="#-testing--verification"><img src="https://img.shields.io/badge/Tests-42%20Passed-success" alt="Tests"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License"></a>
 </p>
 
@@ -148,6 +148,22 @@ Built on CSS variable design tokens (`tokens.css`). Supports **Light** and **Dar
 
 ---
 
+### 💊 4. Pharmacy & Dispensing (`medicore.modules.pharmacy`)
+
+- **Event-Driven Dispensing Queue**: Automatically populated from signed clinical prescriptions via `prescription.signed` domain events. Track statuses from `Pending` ➔ `In-Progress` ➔ `Dispensed` / `Partial` / `Rejected`.
+- **Safety-First Clinical Dispense Screen**: Inspect full prescription details, active patient allergy banners, and prescriber drug-interaction override justifications.
+- **Automated FEFO Batch Picking**: Automatically suggests earliest-expiring active batches (First-Expiry-First-Out) with hard blocking of expired or quarantined batches.
+- **Partial Dispensing & Generic Substitution**: Full support for dispensing partial quantities and generic medication substitutions with mandatory logged clinical justification.
+- **Immutable Stock Ledger (`StockMovement`)**: Complete auditability where every physical stock movement (receipts, dispenses, returns, adjustments, transfers, wastage, quarantine locks) is recorded with immutable reason codes. Current balances are derived without direct quantity overwrites.
+- **Real-Time Inventory Alerts & Quarantine**: Live tracking of low stock levels (below reorder threshold), near-expiry risk (<60 days), and 1-click batch quarantine with reason logging.
+- **Purchasing & Goods Receipt (GRN)**: Automated reorder suggestions based on actual consumption, purchase order lifecycle (`draft` ➔ `ordered` ➔ `partial_received` ➔ `received`), and goods receipts with lot and expiry tracking.
+- **Over-the-Counter (OTC) POS Terminal**: Walk-in counter sales without prescription, barcode/SKU auto-search, cash/card handling, and immediate stock ledger deduction.
+- **Multi-Store & Sub-Store Transfers**: Multi-location support (Central Main Pharmacy, Inpatient Ward Sub-Store, Operating Theater Satellite, Emergency Trauma Sub-Store) with structured inter-store transfer requests and approvals.
+- **Returns with Dual Authorization**: Patient medication returns and supplier returns with approval workflows and ledger reversals.
+- **Comprehensive Analytical CSV Reports**: On-demand stock valuation, near-expiry risk, immutable movement ledger, and top-consumed medications with 1-click CSV download.
+
+---
+
 ## 🚀 Quickstart Guide
 
 ### Option A: Running with Docker (Recommended)
@@ -194,7 +210,7 @@ alembic upgrade head
 ```
 
 #### 4. Seed Clinical Data
-Populate realistic hospital data (200 patients, 5 doctors across 5 departments, 100 appointments, 150 clinical encounters with SOAP notes, vitals, prescriptions, ICD-10 reference data, and default RBAC roles):
+Populate realistic hospital data (200 patients, 5 doctors across 5 departments, 100 appointments, 150 clinical encounters with SOAP notes, vitals, prescriptions, ICD-10 reference data, 300 pharmacy items, 403 batches, 514 stock movements, 80 dispenses, and default RBAC roles):
 ```bash
 python -m medicore.seed.seeder
 ```
@@ -241,13 +257,24 @@ medicore/tests/test_core.py::test_password_hashing PASSED                  [70%]
 medicore/tests/test_core.py::test_event_bus PASSED                         [74%]
 medicore/tests/test_core.py::test_settings_registry PASSED                 [77%]
 medicore/tests/test_core.py::test_module_registry PASSED                   [80%]
-medicore/tests/test_patients.py::test_patients_index_page PASSED           [83%]
-medicore/tests/test_patients.py::test_patients_table_partial PASSED        [87%]
-medicore/tests/test_patient_detail_pane PASSED                           [90%]
-medicore/tests/test_duplicate_patient_detection PASSED                   [93%]
-medicore/tests/test_create_patient_and_audit_event PASSED                 [96%]
-medicore/tests/test_server_enforced_duplicate_prevention_and_override PASSED [100%]
-============================== 31 passed in 14.24s ==============================
+medicore/tests/test_patients.py::test_patients_index_page PASSED           [ 61%]
+medicore/tests/test_patients.py::test_patients_table_partial PASSED        [ 64%]
+medicore/tests/test_patient_detail_pane PASSED                           [ 66%]
+medicore/tests/test_duplicate_patient_detection PASSED                   [ 69%]
+medicore/tests/test_create_patient_and_audit_event PASSED                 [ 71%]
+medicore/tests/test_server_enforced_duplicate_prevention_and_override PASSED [ 73%]
+medicore/tests/test_pharmacy.py::test_fefo_batch_picking_and_expired_blocking PASSED [ 76%]
+medicore/tests/test_pharmacy.py::test_immutable_stock_movement_ledger PASSED [ 78%]
+medicore/tests/test_pharmacy.py::test_low_stock_and_expiry_alerts_and_quarantine PASSED [ 80%]
+medicore/tests/test_pharmacy.py::test_prescription_signed_event_creates_dispense_queue PASSED [ 83%]
+medicore/tests/test_pharmacy.py::test_dispense_order_completion_and_domain_event PASSED [ 85%]
+medicore/tests/test_partial_dispensing_and_generic_substitution PASSED     [ 88%]
+medicore/tests/test_pharmacy.py::test_counter_otc_sales_flow PASSED        [ 90%]
+medicore/tests/test_pharmacy.py::test_multi_store_transfers PASSED         [ 92%]
+medicore/tests/test_pharmacy.py::test_pharmacy_returns_approval_workflow PASSED [ 95%]
+medicore/tests/test_pharmacy.py::test_reports_csv_exports PASSED           [ 97%]
+medicore/tests/test_pharmacy.py::test_pharmacy_ui_and_widget_endpoints PASSED [100%]
+============================== 42 passed in 37.80s ==============================
 ```
 
 ---
@@ -263,6 +290,14 @@ medicore/tests/test_server_enforced_duplicate_prevention_and_override PASSED [10
 | **`/appointments`** | Day/Week calendar, appointments table, queue management desk |
 | **`/appointments/display`** | Full-screen waiting room TV display with live 5s auto-refresh |
 | **`/patients`** | Master patient directory, Patient 360 (Visits, Vitals, Prescriptions) |
+| **`/pharmacy`** | Prescription dispensing queue, quick stats, inventory alert widgets |
+| **`/pharmacy/dispense/{id}`** | Safety-first clinical dispense workspace (FEFO batch picking, allergy banner, overrides) |
+| **`/pharmacy/otc`** | Rapid Over-the-Counter POS terminal for counter medication sales |
+| **`/pharmacy/inventory`** | Multi-store inventory balances, batch lots, and immutable movement ledger |
+| **`/pharmacy/purchasing`** | Purchase order management, reorder suggestions, and goods receipts (GRN) |
+| **`/pharmacy/transfers`** | Multi-store stock transfer requests and authorization workflow |
+| **`/pharmacy/returns`** | Patient and supplier medication returns with pharmacist approval |
+| **`/pharmacy/reports`** | Valuation, near-expiry risk, stock ledger, and top-consumed drugs + CSV exports |
 | **`/settings`** | System settings, hospital profile, departments, MRN prefixes |
 | **`/audit`** | Comprehensive clinical and administrative audit trail |
 
@@ -276,6 +311,8 @@ medicore/tests/test_server_enforced_duplicate_prevention_and_override PASSED [10
 | `dr.sarah` | `doctor123` | **Doctor** | Clinical OPD encounters, SOAP notes, e-prescribing, order placement |
 | `nurse.john` | `nurse123` | **Nurse** | Vitals recording, triage assessment, waiting room queue control |
 | `receptionist.mary` | `reception123` | **Receptionist** | Front-desk intake, appointment scheduling, walk-in tokens |
+| `pharmacist.lisa` | `pharmacy123` | **Pharmacist** | Prescription dispensing, FEFO picking, generic substitutions, OTC sales |
+| `storekeeper.dan` | `store123` | **StoreKeeper** | Stock movements, warehouse purchases, goods receipt, inter-store transfers |
 
 ---
 

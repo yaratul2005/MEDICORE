@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Counter Sales & OTC POS - MediCore Pharmacy{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950" x-data="otcApp()">
+
+  <!-- Header Bar -->
+  <header class="surface-bg border-b border-subtle px-6 py-3.5 flex items-center justify-between flex-shrink-0 shadow-xs">
+    <div class="flex items-center gap-3">
+      <a href="/pharmacy" class="p-1.5 rounded-lg border border-subtle surface-hover text-muted hover:text-main">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+      </a>
+      <div>
+        <h1 class="text-base font-bold text-main flex items-center gap-2">
+          <span>Point-of-Sale / Counter Sales (OTC)</span>
+          <span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-purple-950 text-purple-400 border border-purple-800">Walk-in</span>
+        </h1>
+        <p class="text-xs text-muted">Over-the-counter dispensing without prescription requirements</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-xs text-muted font-mono" id="live-time"></span>
+    </div>
+  </header>
+
+  <!-- POS Split Area -->
+  <main class="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-subtle">
+
+    <!-- Left 2 Cols: Search & Medication Selection -->
+    <div class="lg:col-span-2 flex flex-col h-full overflow-hidden p-6 space-y-4">
+      
+      <!-- Customer & Store Selection Bar -->
+      <div class="surface-bg border border-subtle rounded-xl p-3.5 grid grid-cols-1 md:grid-cols-2 gap-3 shadow-xs">
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-muted mb-1">Customer / Walk-in Patient</label>
+          <input type="text"
+                 x-model="customerName"
+                 placeholder="Walk-in Customer"
+                 class="w-full px-3 py-1.5 text-xs rounded-lg border border-subtle surface-bg text-main focus:outline-none focus:border-teal-500">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase text-muted mb-1">Dispensing Store</label>
+          <select x-model="storeId" class="w-full px-3 py-1.5 text-xs rounded-lg border border-subtle surface-bg text-main focus:outline-none focus:border-teal-500">
+            {% for s in stores %}
+            <option value="{{ s.id }}">{{ s.name }} ({{ s.code }})</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- Barcode / SKU Scan & Autocomplete Search -->
+      <div class="relative">
+        <label class="block text-[11px] font-bold uppercase text-muted mb-1 flex items-center justify-between">
+          <span>Barcode Scan or Drug Search</span>
+          <span class="text-[10px] font-mono text-teal-600">Scan Barcode / Press Enter</span>
+        </label>
+        <div class="relative">
+          <i data-lucide="scan-barcode" class="w-5 h-5 absolute left-3 top-2.5 text-teal-600"></i>
+          <input type="text"
+                 id="barcode-input"
+                 placeholder="Scan barcode or type medication / SKU (e.g. MED-1001, Panadol)..."
+                 hx-get="/pharmacy/items/search"
+                 hx-trigger="keyup changed delay:200ms"
+                 hx-target="#search-results-dropdown"
+                 hx-include="[name='store_id']"
+                 name="q"
+                 class="w-full pl-10 pr-4 py-2 text-sm rounded-xl surface-bg border border-teal-500/50 text-main font-mono focus:outline-none focus:ring-2 focus:ring-teal-500/20 shadow-xs">
+        </div>
+
+        <!-- Live Results Dropdown -->
+        <div id="search-results-dropdown" class="absolute top-full left-0 right-0 mt-1 z-30"></div>
+      </div>
+
+      <!-- Quick Fast-Moving OTC Pills Shortcuts -->
+      <div class="space-y-1.5">
+        <span class="text-[10px] uppercase font-bold text-muted block">Frequent Over-The-Counter Items:</span>
+        <div class="flex flex-wrap gap-2 text-xs">
+          <button type="button" @click="quickAdd('MED-1026', 'Paracetamol 500mg', 5.00)" class="px-2.5 py-1 rounded-lg surface-bg hover:surface-hover border border-subtle text-main font-medium shadow-2xs">
+            💊 Paracetamol 500mg ($5.00)
+          </button>
+          <button type="button" @click="quickAdd('MED-1028', 'Ibuprofen 400mg', 8.00)" class="px-2.5 py-1 rounded-lg surface-bg hover:surface-hover border border-subtle text-main font-medium shadow-2xs">
+            💊 Ibuprofen 400mg ($8.00)
+          </button>
+          <button type="button" @click="quickAdd('MED-1080', 'ORS Sachets', 4.00)" class="px-2.5 py-1 rounded-lg surface-bg hover:surface-hover border border-subtle text-main font-medium shadow-2xs">
+            💧 ORS Sachet ($4.00)
+          </button>
+          <button type="button" @click="quickAdd('MED-1081', 'Antacid Suspension', 22.00)" class="px-2.5 py-1 rounded-lg surface-bg hover:surface-hover border border-subtle text-main font-medium shadow-2xs">
+            🧪 Antacid Liquid ($22.00)
+          </button>
+          <button type="button" @click="quickAdd('MED-1123', 'Vitamin C 500mg', 8.00)" class="px-2.5 py-1 rounded-lg surface-bg hover:surface-hover border border-subtle text-main font-medium shadow-2xs">
+            🍊 Vitamin C 500mg ($8.00)
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Col: Cart & Checkout Payment -->
+    <div class="flex flex-col h-full surface-bg p-6 justify-between">
+      <div class="space-y-4 flex-1 overflow-y-auto">
+        <div class="flex items-center justify-between pb-2 border-b border-subtle">
+          <h3 class="text-sm font-bold text-main flex items-center gap-2">
+            <i data-lucide="shopping-cart" class="w-4 h-4 text-teal-600"></i>
+            Current Cart (<span x-text="cart.length"></span>)
+          </h3>
+          <button type="button" @click="cart = []" class="text-[11px] text-rose-500 hover:underline">Clear</button>
+        </div>
+
+        <!-- Items Table -->
+        <template x-if="cart.length === 0">
+          <div class="py-12 text-center text-muted">
+            <i data-lucide="scan" class="w-10 h-10 mx-auto mb-2 text-slate-400"></i>
+            <p class="text-xs">Scan or select items to populate cart</p>
+          </div>
+        </template>
+
+        <div class="space-y-2">
+          <template x-for="(item, index) in cart" :key="item.code">
+            <div class="p-2.5 rounded-lg border border-subtle surface-hover flex items-center justify-between text-xs">
+              <div class="flex-1 pr-2">
+                <div class="font-bold text-main" x-text="item.name"></div>
+                <div class="font-mono text-[10px] text-muted" x-text="'$' + item.price.toFixed(2) + ' each'"></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="flex items-center border border-subtle rounded surface-bg">
+                  <button type="button" @click="decreaseQty(index)" class="px-2 py-0.5 text-muted hover:text-main">-</button>
+                  <span class="px-2 font-mono font-bold text-main" x-text="item.qty"></span>
+                  <button type="button" @click="increaseQty(index)" class="px-2 py-0.5 text-muted hover:text-main">+</button>
+                </div>
+                <div class="w-14 text-right font-mono font-bold text-main" x-text="'$' + (item.price * item.qty).toFixed(2)"></div>
+                <button type="button" @click="removeItem(index)" class="text-rose-500 hover:text-rose-700">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Checkout Summary & Action -->
+      <div class="pt-4 border-t border-subtle space-y-3 mt-4">
+        <div class="flex items-center justify-between text-sm font-bold text-main">
+          <span>Subtotal</span>
+          <span class="font-mono" x-text="'$' + totalAmount.toFixed(2)"></span>
+        </div>
+        <div class="flex items-center justify-between text-lg font-black text-teal-600 dark:text-teal-400">
+          <span>Total Due</span>
+          <span class="font-mono" x-text="'$' + totalAmount.toFixed(2)"></span>
+        </div>
+
+        <form method="POST" action="/pharmacy/otc/checkout" @submit="submitCheckout($event)">
+          <input type="hidden" name="customer_name" :value="customerName">
+          <input type="hidden" name="store_id" :value="storeId">
+          <input type="hidden" name="cart_items" :value="JSON.stringify(cart)">
+
+          <button type="submit"
+                  :disabled="cart.length === 0"
+                  class="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-40 text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors shadow-md shadow-teal-900/20">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>Complete OTC Dispense & Print Receipt</span>
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<script>
+function otcApp() {
+  return {
+    customerName: 'Walk-in Customer',
+    storeId: 1,
+    cart: [],
+    get totalAmount() {
+      return this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    },
+    quickAdd(code, name, price) {
+      const existing = this.cart.find(i => i.code === code);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        this.cart.push({ item_id: 1, code: code, name: name, price: price, qty: 1 });
+      }
+    },
+    increaseQty(index) {
+      this.cart[index].qty += 1;
+    },
+    decreaseQty(index) {
+      if (this.cart[index].qty > 1) {
+        this.cart[index].qty -= 1;
+      } else {
+        this.removeItem(index);
+      }
+    },
+    removeItem(index) {
+      this.cart.splice(index, 1);
+    },
+    submitCheckout(e) {
+      if (this.cart.length === 0) {
+        e.preventDefault();
+        alert('Cart cannot be empty');
+      }
+    }
+  }
+}
+
+window.addOtcItem = function(id, name, code, price, stock) {
+  const alpine = Alpine.$data(document.querySelector('[x-data]'));
+  const existing = alpine.cart.find(i => i.item_id === id);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    alpine.cart.push({ item_id: id, code: code, name: name, price: price, qty: 1 });
+  }
+  document.getElementById('search-results-dropdown').innerHTML = '';
+  document.getElementById('barcode-input').value = '';
+  document.getElementById('barcode-input').focus();
+};
+</script>
+{% endblock %}

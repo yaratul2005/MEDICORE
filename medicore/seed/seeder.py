@@ -1,8 +1,10 @@
+import json
+from pathlib import Path
 import random
 from datetime import date, datetime, timedelta, timezone
 from faker import Faker
-from sqlmodel import Session, select
-from medicore.core.database import engine
+from sqlmodel import Session, col, select
+from medicore.core.database import engine, init_db
 from medicore.core.models import (
     AuditLog,
     CustomFieldDefinition,
@@ -29,13 +31,33 @@ from medicore.modules.consultations.models import (
 )
 from medicore.modules.consultations.service import calculate_bmi, calculate_bsa
 from medicore.modules.patients.models import Patient
+from medicore.modules.pharmacy.models import (
+    Batch,
+    Dispense,
+    DispenseLine,
+    GoodsReceipt,
+    GoodsReceiptLine,
+    Item,
+    PharmacyReturn,
+    PharmacyReturnLine,
+    PharmacyStore,
+    PurchaseOrder,
+    PurchaseOrderLine,
+    StockMovement,
+    StockTransferLine,
+    StockTransferRequest,
+    Supplier,
+)
+from medicore.modules.pharmacy.service import record_stock_movement
 
 fake = Faker()
 Faker.seed(42)
 random.seed(42)
 
 
+
 def seed_database():
+    init_db()
     with Session(engine) as session:
         print("[1/7] Seeding core settings...")
         settings_registry.init_defaults(session)
@@ -68,6 +90,14 @@ def seed_database():
             ("consultations.prescription.write", "consultations", "prescription", "write", "Issue e-prescriptions and override safety alerts"),
             ("consultations.orders.create", "consultations", "orders", "create", "Place laboratory and diagnostic imaging orders"),
             ("consultations.encounter.complete", "consultations", "encounter", "complete", "Finalize clinical encounter and discharge"),
+            ("pharmacy.dispense.read", "pharmacy", "dispense", "read", "View pharmacy queue, prescriptions, and stock levels"),
+            ("pharmacy.dispense.process", "pharmacy", "dispense", "process", "Dispense prescriptions and counter OTC sales"),
+            ("pharmacy.stock.read", "pharmacy", "stock", "read", "View pharmacy inventory and stock ledger"),
+            ("pharmacy.stock.manage", "pharmacy", "stock", "manage", "Receive shipments, initiate store transfers, and quarantine stock"),
+            ("pharmacy.stock.approve", "pharmacy", "stock", "approve", "Authorize stock adjustments, write-offs, and returns"),
+            ("pharmacy.po.create", "pharmacy", "purchase_order", "create", "Draft and submit purchase orders"),
+            ("pharmacy.po.manage", "pharmacy", "purchase_order", "manage", "Manage supplier purchase orders and goods receipts"),
+            ("pharmacy.reports.read", "pharmacy", "reports", "read", "Access pharmacy reports and analytics"),
             ("core.settings.view", "core", "settings", "view", "View system configuration"),
             ("core.settings.edit", "core", "settings", "edit", "Modify hospital and module settings"),
             ("core.audit.view", "core", "audit", "view", "Inspect clinical audit trail logs"),
@@ -103,6 +133,14 @@ def seed_database():
                 "appointments.appointment.update", "appointments.queue.manage",
                 "consultations.encounter.read"
             ]),
+            ("Pharmacist", "Licensed pharmacy staff dispensing medications and reviewing prescriptions", [
+                "pharmacy.dispense.read", "pharmacy.dispense.process", "pharmacy.stock.read", "pharmacy.stock.manage",
+                "pharmacy.reports.read", "patients.patient.read", "core.audit.view",
+            ]),
+            ("StoreKeeper", "Inventory storekeeper managing purchasing, goods receipt, and warehouse transfers", [
+                "pharmacy.stock.read", "pharmacy.stock.manage", "pharmacy.po.create", "pharmacy.po.manage",
+                "pharmacy.reports.read", "core.audit.view",
+            ]),
         ]
 
         db_roles = {}
@@ -134,6 +172,8 @@ def seed_database():
             ("dr.sarah", "sarah.chen@medicore.health", "Dr. Sarah Chen, MD", "doctor123", False, "Doctor"),
             ("receptionist.mary", "mary.jones@medicore.health", "Mary Jones (Receptionist)", "reception123", False, "Receptionist"),
             ("nurse.john", "john.miller@medicore.health", "Nurse John Miller, RN", "nurse123", False, "Nurse"),
+            ("pharmacist.lisa", "lisa.wong@medicore.health", "Lisa Wong, PharmD", "pharmacy123", False, "Pharmacist"),
+            ("storekeeper.dan", "dan.miller@medicore.health", "Dan Miller (Storekeeper)", "store123", False, "StoreKeeper"),
         ]
 
         seeded_users = {}
@@ -754,10 +794,541 @@ def seed_database():
 
             session.commit()
 
+        # Step 9: Seed Pharmacy
+        seed_pharmacy_data(session)
+
         total_appts = len(session.exec(select(Appointment)).all())
         total_tokens = len(session.exec(select(QueueToken)).all())
         total_encounters = len(session.exec(select(Encounter)).all())
-        print(f"Seeding completed successfully! 200 patients, 5 doctors, {total_appts} appointments, {total_tokens} queue tokens, and {total_encounters} clinical encounters ready.")
+        total_items = len(session.exec(select(Item)).all())
+        total_batches = len(session.exec(select(Batch)).all())
+        total_dispenses = len(session.exec(select(Dispense)).all())
+        print(f"Seeding completed successfully! 200 patients, 5 doctors, {total_appts} appointments, {total_tokens} queue tokens, {total_encounters} encounters, {total_items} pharmacy items, {total_batches} batches, and {total_dispenses} dispenses ready.")
+
+
+def seed_pharmacy_data(session: Session):
+    print("[9/9] Seeding Pharmacy module (stores, suppliers, 300 items, batches, ledger, dispenses)...")
+
+    # 1. Stores
+    store_defs = [
+        ("MAIN", "Central Main Pharmacy", True, "Ground Floor, Central Wing"),
+        ("WARD", "Inpatient Ward Sub-Store", False, "Level 2, Nursing Station A"),
+        ("OT", "Operating Theater Satellite Store", False, "Level 3, Surgical Suite"),
+        ("ER", "Emergency Trauma Sub-Store", False, "Ground Floor, Acute Care"),
+    ]
+    db_stores = {}
+    for code, name, is_main, loc in store_defs:
+        st = session.exec(select(PharmacyStore).where(PharmacyStore.code == code)).first()
+        if not st:
+            st = PharmacyStore(code=code, name=name, is_main=is_main, location=loc)
+            session.add(st)
+            session.commit()
+            session.refresh(st)
+        db_stores[code] = st
+
+    main_store = db_stores["MAIN"]
+
+    # 2. Suppliers
+    supplier_defs = [
+        ("SUP-001", "Apex BioPharm Distributors", "John Apex", "orders@apexbiopharm.com", "+1-555-0101", "742 Evergreen Terrace, Springfield", "Net 30", 4.9),
+        ("SUP-002", "Novis Healthcare Supplies", "Sarah Novis", "contact@novishealth.com", "+1-555-0102", "100 Medical Center Blvd, Chicago", "Net 45", 4.7),
+        ("SUP-003", "Global MedTech Pharma", "Marcus Vance", "supply@globalmedtech.com", "+1-555-0103", "500 Pharma Way, Boston", "Net 30", 4.8),
+        ("SUP-004", "Lifeline Generics Ltd.", "Elena Rostova", "sales@lifelinegenerics.com", "+1-555-0104", "12 BioPark Ave, Durham", "Net 60", 4.5),
+        ("SUP-005", "Vanguard Therapeutics", "David Chen", "b2b@vanguardrx.com", "+1-555-0105", "88 Horizon Blvd, Cambridge", "Net 30", 4.9),
+    ]
+    db_suppliers = {}
+    for scode, sname, cpers, email, phone, addr, terms, rating in supplier_defs:
+        sup = session.exec(select(Supplier).where(Supplier.code == scode)).first()
+        if not sup:
+            sup = Supplier(
+                code=scode, name=sname, contact_person=cpers, email=email,
+                phone=phone, address=addr, payment_terms=terms, rating=rating
+            )
+            session.add(sup)
+            session.commit()
+            session.refresh(sup)
+        db_suppliers[scode] = sup
+
+    # 3. 300 Items from items.json
+    items_path = Path(__file__).parent.parent / "modules" / "pharmacy" / "data" / "items.json"
+    if items_path.exists():
+        with open(items_path, "r", encoding="utf-8") as f:
+            items_raw = json.load(f)
+    else:
+        items_raw = []
+
+    db_items = {it.code: it for it in session.exec(select(Item)).all()}
+    for row in items_raw:
+        code = row["code"]
+        if code not in db_items:
+            item = Item(
+                code=code,
+                name=row["name"],
+                generic_name=row["generic_name"],
+                brand_name=row.get("brand_name"),
+                category=row["category"],
+                form=row.get("form", "Tablet"),
+                strength=row.get("strength", ""),
+                unit=row.get("unit", "Tablet"),
+                cost_price=float(row.get("cost_price", 0.0)),
+                unit_price=float(row.get("unit_price", 0.0)),
+                reorder_level=int(row.get("reorder_level", 50)),
+                reorder_quantity=int(row.get("reorder_quantity", 150)),
+                is_prescription_required=bool(row.get("is_prescription_required", True)),
+                is_active=bool(row.get("is_active", True)),
+            )
+            session.add(item)
+            session.flush()
+            db_items[code] = item
+    session.commit()
+
+    all_items = list(db_items.values())
+
+    # 4. Batches & Stock Movements (Ledger)
+    today = date.today()
+    existing_batches = session.exec(select(Batch)).all()
+    if not existing_batches:
+        print("  - Seeding initial batches and immutable stock movements...")
+        for idx, it in enumerate(all_items):
+            # Batch in Main Store
+            lot_main = f"LOT-2026-{idx+1:04d}A"
+            if idx in [25, 45, 65, 85, 105]:
+                # Expired batches
+                exp_date = today - timedelta(days=random.randint(15, 60))
+                qty_rec = random.randint(30, 80)
+                quarantined = (idx in [25, 65])
+                q_reason = f"Automated quarantine: Expired on {exp_date}" if quarantined else None
+            elif idx in [10, 20, 30, 40, 50, 70, 90, 110, 130, 150]:
+                # Near-expiry batches (< 60 days)
+                exp_date = today + timedelta(days=random.randint(10, 45))
+                qty_rec = random.randint(40, 100)
+                quarantined = False
+                q_reason = None
+            elif idx % 23 == 0:
+                # Low stock item
+                exp_date = today + timedelta(days=random.randint(200, 500))
+                qty_rec = random.randint(5, 15)  # Below reorder level
+                quarantined = False
+                q_reason = None
+            else:
+                # Normal healthy batch
+                exp_date = today + timedelta(days=random.randint(180, 700))
+                qty_rec = random.randint(150, 400)
+                quarantined = False
+                q_reason = None
+
+            b_main = Batch(
+                item_id=it.id,
+                store_id=main_store.id,
+                lot_no=lot_main,
+                expiry_date=exp_date,
+                cost_price=it.cost_price,
+                mrp=it.unit_price,
+                unit_price=it.unit_price,
+                quantity_received=qty_rec,
+                quantity_remaining=qty_rec,
+                is_quarantined=quarantined,
+                quarantine_reason=q_reason,
+            )
+            session.add(b_main)
+            session.flush()
+
+            # Record initial receipt in immutable ledger
+            sm = StockMovement(
+                timestamp=datetime.now(timezone.utc) - timedelta(days=random.randint(30, 90)),
+                movement_type="receipt",
+                item_id=it.id,
+                batch_id=b_main.id,
+                store_id=main_store.id,
+                quantity=qty_rec,
+                balance_after=qty_rec,
+                unit_cost=it.cost_price,
+                reason_code="PO_RECEIPT",
+                reference_type="goods_receipt",
+                reference_id=f"INIT-{lot_main}",
+                notes="Initial stock intake from procurement receipt.",
+                created_by="storekeeper.dan",
+            )
+            session.add(sm)
+
+            # Extra batches in satellite stores for select items
+            if idx % 5 == 0 and "ER" in db_stores:
+                lot_er = f"LOT-2026-{idx+1:04d}E"
+                qty_er = random.randint(20, 50)
+                b_er = Batch(
+                    item_id=it.id,
+                    store_id=db_stores["ER"].id,
+                    lot_no=lot_er,
+                    expiry_date=today + timedelta(days=random.randint(150, 400)),
+                    cost_price=it.cost_price,
+                    mrp=it.unit_price,
+                    unit_price=it.unit_price,
+                    quantity_received=qty_er,
+                    quantity_remaining=qty_er,
+                )
+                session.add(b_er)
+                session.flush()
+                session.add(
+                    StockMovement(
+                        timestamp=datetime.now(timezone.utc) - timedelta(days=20),
+                        movement_type="receipt",
+                        item_id=it.id,
+                        batch_id=b_er.id,
+                        store_id=db_stores["ER"].id,
+                        quantity=qty_er,
+                        balance_after=qty_er,
+                        unit_cost=it.cost_price,
+                        reason_code="STORE_TRANSFER",
+                        reference_type="transfer",
+                        reference_id=f"INIT-{lot_er}",
+                        notes="Initial emergency satellite provisioning.",
+                        created_by="storekeeper.dan",
+                    )
+                )
+
+            if idx % 7 == 0 and "WARD" in db_stores:
+                lot_ward = f"LOT-2026-{idx+1:04d}W"
+                qty_ward = random.randint(25, 60)
+                b_ward = Batch(
+                    item_id=it.id,
+                    store_id=db_stores["WARD"].id,
+                    lot_no=lot_ward,
+                    expiry_date=today + timedelta(days=random.randint(150, 400)),
+                    cost_price=it.cost_price,
+                    mrp=it.unit_price,
+                    unit_price=it.unit_price,
+                    quantity_received=qty_ward,
+                    quantity_remaining=qty_ward,
+                )
+                session.add(b_ward)
+                session.flush()
+                session.add(
+                    StockMovement(
+                        timestamp=datetime.now(timezone.utc) - timedelta(days=20),
+                        movement_type="receipt",
+                        item_id=it.id,
+                        batch_id=b_ward.id,
+                        store_id=db_stores["WARD"].id,
+                        quantity=qty_ward,
+                        balance_after=qty_ward,
+                        unit_cost=it.cost_price,
+                        reason_code="STORE_TRANSFER",
+                        reference_type="transfer",
+                        reference_id=f"INIT-{lot_ward}",
+                        notes="Initial inpatient ward sub-store provisioning.",
+                        created_by="storekeeper.dan",
+                    )
+                )
+
+        session.commit()
+
+    # 5. Purchase Orders & Goods Receipts
+    existing_pos = session.exec(select(PurchaseOrder)).all()
+    if not existing_pos:
+        print("  - Seeding purchase orders and goods receipts...")
+        suppliers_list = list(db_suppliers.values())
+        po_statuses = [
+            ("PO-2026-00001", suppliers_list[0], "received", date.today() - timedelta(days=25), date.today() - timedelta(days=20)),
+            ("PO-2026-00002", suppliers_list[1], "received", date.today() - timedelta(days=15), date.today() - timedelta(days=10)),
+            ("PO-2026-00003", suppliers_list[2], "partial_received", date.today() - timedelta(days=7), date.today() + timedelta(days=2)),
+            ("PO-2026-00004", suppliers_list[3], "ordered", date.today() - timedelta(days=3), date.today() + timedelta(days=5)),
+            ("PO-2026-00005", suppliers_list[4], "ordered", date.today() - timedelta(days=1), date.today() + timedelta(days=7)),
+            ("PO-2026-00006", suppliers_list[0], "draft", date.today(), date.today() + timedelta(days=10)),
+        ]
+        for po_no, sup, status_po, odate, edate in po_statuses:
+            po = PurchaseOrder(
+                po_no=po_no,
+                supplier_id=sup.id,
+                store_id=main_store.id,
+                order_date=odate,
+                expected_date=edate,
+                status=status_po,
+                notes=f"Procurement order for quarterly replenishment with {sup.name}.",
+                created_by="storekeeper.dan",
+                approved_by="admin" if status_po != "draft" else None,
+            )
+            session.add(po)
+            session.flush()
+
+            sample_items = random.sample(all_items, 4)
+            po_total = 0.0
+            po_lines = []
+            for s_it in sample_items:
+                req_qty = random.randint(50, 150)
+                rec_qty = req_qty if status_po == "received" else (req_qty // 2 if status_po == "partial_received" else 0)
+                line_tot = round(req_qty * s_it.cost_price, 2)
+                po_total += line_tot
+                pline = PurchaseOrderLine(
+                    po_id=po.id,
+                    item_id=s_it.id,
+                    item_name=s_it.name,
+                    requested_qty=req_qty,
+                    received_qty=rec_qty,
+                    unit_cost=s_it.cost_price,
+                    line_total=line_tot,
+                )
+                session.add(pline)
+                po_lines.append((pline, s_it))
+            po.total_amount = po_total
+            session.add(po)
+            session.flush()
+
+            # For received POs, generate GRN
+            if status_po in ["received", "partial_received"]:
+                grn_no = f"GRN-2026-{po.id:05d}"
+                grn = GoodsReceipt(
+                    grn_no=grn_no,
+                    po_id=po.id,
+                    supplier_id=sup.id,
+                    store_id=main_store.id,
+                    received_date=edate if edate <= date.today() else date.today(),
+                    invoice_no=f"INV-{random.randint(10000, 99999)}",
+                    received_by="storekeeper.dan",
+                    status="received",
+                    total_amount=po_total if status_po == "received" else round(po_total / 2, 2),
+                    notes="Inspected and verified batch seals intact.",
+                )
+                session.add(grn)
+                session.flush()
+
+                for pline, s_it in po_lines:
+                    if pline.received_qty > 0:
+                        session.add(
+                            GoodsReceiptLine(
+                                goods_receipt_id=grn.id,
+                                item_id=s_it.id,
+                                lot_no=f"LOT-GRN-{pline.id:04d}",
+                                expiry_date=date.today() + timedelta(days=365),
+                                quantity=pline.received_qty,
+                                unit_cost=s_it.cost_price,
+                                mrp=s_it.unit_price,
+                                line_total=round(pline.received_qty * s_it.cost_price, 2),
+                            )
+                        )
+        session.commit()
+
+    # 6. Seed 80 Dispenses
+    current_dispenses_count = len(session.exec(select(Dispense)).all())
+    needed_dispenses = 80 - current_dispenses_count
+    if needed_dispenses > 0:
+        print(f"  - Seeding {needed_dispenses} dispenses (target: 80 total)...")
+        all_patients = session.exec(select(Patient)).all()
+        all_prescriptions = session.exec(select(Prescription)).all()
+
+        statuses = (
+            ["dispensed"] * 40 +
+            ["pending"] * 15 +
+            ["in_progress"] * 10 +
+            ["partial"] * 10 +
+            ["counter_otc"] * 5
+        )
+        if len(statuses) > needed_dispenses:
+            statuses = statuses[:needed_dispenses]
+        elif len(statuses) < needed_dispenses:
+            statuses.extend(["dispensed"] * (needed_dispenses - len(statuses)))
+
+        doctors_names = ["Dr. Sarah Chen, MD", "Dr. James Wilson, MD", "Dr. Elena Rostova, MD", "Dr. David Kim, MD"]
+
+        for idx, status_type in enumerate(statuses):
+            d_seq = current_dispenses_count + idx + 1
+            d_no = f"DSP-2026-{d_seq:05d}"
+            pt = all_patients[idx % len(all_patients)] if all_patients else None
+            rx = all_prescriptions[idx % len(all_prescriptions)] if all_prescriptions else None
+
+            is_otc = (status_type == "counter_otc")
+            real_status = "dispensed" if is_otc else status_type
+            dispense_type = "counter_otc" if is_otc else "prescription"
+
+            created_time = datetime.now(timezone.utc) - timedelta(days=random.randint(0, 14), hours=random.randint(1, 10))
+            is_completed = real_status in ["dispensed", "partial"]
+
+            allergy_warn = None
+            safety_override = None
+            if idx % 7 == 0 and not is_otc:
+                allergy_warn = "Warning: Patient allergic to Penicillin."
+                safety_override = json.dumps([{"interaction": "Mild potential drug-food interaction", "override_reason": "Patient advised to space doses 2 hours apart from calcium supplements."}])
+
+            disp = Dispense(
+                dispense_no=d_no,
+                dispense_type=dispense_type,
+                prescription_id=None if is_otc else (rx.id if rx else None),
+                encounter_id=None if is_otc else (rx.encounter_id if rx else None),
+                patient_id=None if is_otc else (pt.id if pt else None),
+                patient_name="Counter Walk-in Patient" if is_otc else (pt.first_name + " " + pt.last_name if pt else f"Patient #{idx+1}"),
+                patient_mrn=None if is_otc else (pt.mrn if pt else f"MRN-{idx+1:04d}"),
+                doctor_id=None if is_otc else 2,
+                doctor_name=None if is_otc else doctors_names[idx % len(doctors_names)],
+                store_id=main_store.id,
+                status=real_status,
+                allergy_warnings=allergy_warn,
+                safety_overrides=safety_override,
+                notes="Processed by outpatient pharmacy." if is_completed else ("Pending pharmacist review" if real_status == "pending" else "Under active review"),
+                dispensed_by="pharmacist.lisa" if is_completed else None,
+                created_at=created_time,
+                dispensed_at=created_time + timedelta(minutes=15) if is_completed else None,
+            )
+            session.add(disp)
+            session.flush()
+
+            disp_total = 0.0
+            selected_items = random.sample(all_items, random.randint(1, 3))
+
+            for s_idx, sel_item in enumerate(selected_items):
+                p_qty = random.randint(10, 30)
+                batch = session.exec(
+                    select(Batch)
+                    .where(
+                        Batch.item_id == sel_item.id,
+                        Batch.store_id == main_store.id,
+                        Batch.is_quarantined == False,
+                        Batch.expiry_date >= today,
+                    )
+                    .order_by(col(Batch.expiry_date).asc())
+                ).first()
+
+                is_sub = (real_status == "partial" and s_idx == 0)
+                sub_reason = "Generic substitution due to brand stockout; prescriber notified." if is_sub else None
+                orig_drug = f"Brand-{sel_item.generic_name}" if is_sub else None
+
+                if real_status == "partial":
+                    d_qty = max(1, p_qty // 2)
+                elif is_completed:
+                    d_qty = p_qty
+                else:
+                    d_qty = 0
+
+                unit_price = batch.unit_price if batch else sel_item.unit_price
+                line_total = round(unit_price * d_qty, 2) if is_completed else 0.0
+                disp_total += line_total
+
+                d_line = DispenseLine(
+                    dispense_id=disp.id,
+                    item_id=sel_item.id,
+                    item_name=sel_item.name,
+                    prescribed_item_name=sel_item.name,
+                    prescribed_qty=p_qty,
+                    dispensed_qty=d_qty,
+                    batch_id=batch.id if (batch and is_completed) else None,
+                    lot_no=batch.lot_no if (batch and is_completed) else None,
+                    expiry_date=batch.expiry_date if (batch and is_completed) else None,
+                    unit_price=unit_price,
+                    line_total=line_total,
+                    is_generic_substitution=is_sub,
+                    substitution_reason=sub_reason,
+                    original_drug_name=orig_drug,
+                )
+                session.add(d_line)
+                session.flush()
+
+                if is_completed and batch and d_qty > 0:
+                    batch.quantity_remaining = max(0, batch.quantity_remaining - d_qty)
+                    session.add(batch)
+
+                    session.add(
+                        StockMovement(
+                            timestamp=disp.dispensed_at or created_time,
+                            movement_type="dispense",
+                            item_id=sel_item.id,
+                            batch_id=batch.id,
+                            store_id=main_store.id,
+                            quantity=-d_qty,
+                            balance_after=batch.quantity_remaining,
+                            unit_cost=batch.cost_price,
+                            reason_code="OTC_SALE" if is_otc else "RX_DISPENSE",
+                            reference_type="dispense",
+                            reference_id=disp.dispense_no,
+                            notes=f"Dispensed to {disp.patient_name} ({'OTC' if is_otc else 'Rx'})",
+                            created_by="pharmacist.lisa",
+                        )
+                    )
+
+            disp.total_amount = disp_total
+            session.add(disp)
+
+        session.commit()
+
+    # 7. Stock Transfer Requests
+    existing_transfers = session.exec(select(StockTransferRequest)).all()
+    if not existing_transfers and "WARD" in db_stores and "ER" in db_stores:
+        print("  - Seeding multi-store stock transfers...")
+        transfers_data = [
+            ("TRF-2026-00001", main_store.id, db_stores["WARD"].id, "transferred", "pharmacist.lisa", "admin", "Urgent inpatient ward replenishment."),
+            ("TRF-2026-00002", main_store.id, db_stores["ER"].id, "transferred", "pharmacist.lisa", "admin", "Emergency trauma bay daily top-up."),
+            ("TRF-2026-00003", main_store.id, db_stores["OT"].id, "approved", "storekeeper.dan", "pharmacist.lisa", "Anesthesia and surgical pack stock transfer."),
+            ("TRF-2026-00004", main_store.id, db_stores["WARD"].id, "pending", "storekeeper.dan", None, "Weekly ward floor stock routine request."),
+        ]
+        for trf_no, from_id, to_id, trf_status, req_by, app_by, note in transfers_data:
+            trf = StockTransferRequest(
+                transfer_no=trf_no,
+                from_store_id=from_id,
+                to_store_id=to_id,
+                status=trf_status,
+                requested_by=req_by,
+                approved_by=app_by,
+                notes=note,
+                created_at=datetime.now(timezone.utc) - timedelta(days=2),
+                transferred_at=datetime.now(timezone.utc) - timedelta(days=1) if trf_status == "transferred" else None,
+            )
+            session.add(trf)
+            session.flush()
+
+            sample_t_items = random.sample(all_items, 2)
+            for t_it in sample_t_items:
+                t_qty = random.randint(10, 30)
+                session.add(
+                    StockTransferLine(
+                        transfer_id=trf.id,
+                        item_id=t_it.id,
+                        requested_qty=t_qty,
+                        transferred_qty=t_qty if trf_status == "transferred" else 0,
+                    )
+                )
+        session.commit()
+
+    # 8. Pharmacy Returns
+    existing_returns = session.exec(select(PharmacyReturn)).all()
+    if not existing_returns:
+        print("  - Seeding pharmacy returns with approvals...")
+        ret_data = [
+            ("RET-2026-00001", "patient_return", "approved", "pharmacist.lisa", "pharmacist.lisa", 45.0, "Patient discharged early; unopened medication returned in sealed packaging."),
+            ("RET-2026-00002", "patient_return", "pending", "pharmacist.lisa", None, 28.5, "Physician changed dose from 500mg to 250mg."),
+            ("RET-2026-00003", "supplier_return", "approved", "storekeeper.dan", "admin", 120.0, "Damaged secondary packaging delivered by supplier; replacement requested."),
+            ("RET-2026-00004", "patient_return", "rejected", "pharmacist.lisa", "pharmacist.lisa", 15.0, "Opened bottle; cold-chain temperature excursion violated return safety policy."),
+        ]
+        for r_no, r_type, r_status, c_by, a_by, tot, r_reason in ret_data:
+            ret = PharmacyReturn(
+                return_no=r_no,
+                return_type=r_type,
+                store_id=main_store.id,
+                status=r_status,
+                total_amount=tot,
+                reason=r_reason,
+                created_by=c_by,
+                approved_by=a_by,
+                created_at=datetime.now(timezone.utc) - timedelta(days=3),
+                approved_at=datetime.now(timezone.utc) - timedelta(days=2) if r_status == "approved" else None,
+            )
+            session.add(ret)
+            session.flush()
+
+            r_it = random.choice(all_items)
+            session.add(
+                PharmacyReturnLine(
+                    return_id=ret.id,
+                    item_id=r_it.id,
+                    quantity=random.randint(1, 5),
+                    unit_price=r_it.unit_price,
+                    line_total=tot,
+                    reason=r_reason,
+                )
+            )
+        session.commit()
+
+    total_items = len(session.exec(select(Item)).all())
+    total_batches = len(session.exec(select(Batch)).all())
+    total_movements = len(session.exec(select(StockMovement)).all())
+    total_dispenses = len(session.exec(select(Dispense)).all())
+    print(f"  [OK] Pharmacy seeded: {total_items} items, {total_batches} batches, {total_movements} stock ledger entries, {total_dispenses} dispenses.")
 
 
 if __name__ == "__main__":
