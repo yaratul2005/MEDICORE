@@ -21,6 +21,30 @@
           hx-target="#modal-container"
           hx-swap="outerHTML"
           class="flex-1 overflow-y-auto p-5 space-y-4">
+
+      {% if duplicate_warning_msg %}
+      <div class="p-3.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs space-y-2">
+        <div class="flex items-start gap-2 text-amber-900 dark:text-amber-200 font-bold">
+          <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5"></i>
+          <span>{{ duplicate_warning_msg }}</span>
+        </div>
+        <div class="pt-2 border-t border-amber-200 dark:border-amber-800 flex flex-col gap-2">
+          <label class="flex items-center gap-2 text-amber-900 dark:text-amber-200 cursor-pointer font-semibold">
+            <input type="checkbox" name="override_duplicate" value="true" required class="rounded text-amber-600 focus:ring-amber-500">
+            <span>Confirm distinct individual (Override duplicate block)</span>
+          </label>
+          <div>
+            <label class="block text-[11px] font-semibold text-secondary mb-1">Required Override Justification:</label>
+            <input type="text" 
+                   name="override_reason" 
+                   value="{{ form_override_reason|default('') }}"
+                   placeholder="e.g. Verified distinct national ID / different residential address / twin sibling" 
+                   required 
+                   class="w-full text-xs rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 p-2 text-main focus:outline-none focus:border-amber-500">
+          </div>
+        </div>
+      </div>
+      {% endif %}
       
       {% if patient %}
       <input type="hidden" name="id" value="{{ patient.id }}">

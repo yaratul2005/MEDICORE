@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  medicore:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medicore_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - MEDICORE_ENV=prod
+      - DEBUG=false
+    volumes:
+      - medicore_data:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/patients"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  medicore_data:

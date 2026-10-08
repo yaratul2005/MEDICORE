@@ -60,6 +60,11 @@ def test_duplicate_patient_detection(client):
 
 
 def test_create_patient_and_audit_event(client):
+    with Session(engine) as session:
+        for old in session.exec(select(Patient).where(Patient.phone == "+1 (555) 777-8899")).all():
+            session.delete(old)
+        session.commit()
+
     new_patient_payload = {
         "first_name": "Arthur",
         "last_name": "Pendelton",
@@ -98,3 +103,48 @@ def test_create_patient_and_audit_event(client):
         ).first()
         assert audit is not None
         assert audit.changes.get("full_name") == "Arthur Pendelton"
+
+
+def test_server_enforced_duplicate_prevention_and_override(client):
+    with Session(engine) as session:
+        for old in session.exec(select(Patient).where(Patient.first_name == "Copycat")).all():
+            session.delete(old)
+        session.commit()
+        existing = session.exec(select(Patient)).first()
+        assert existing is not None
+
+    dup_payload = {
+        "first_name": "Copycat",
+        "last_name": "Person",
+        "date_of_birth": "1992-04-01",
+        "gender": "Male",
+        "phone": existing.phone,
+    }
+
+    # 1. Attempt create without override: must be rejected with 409 Conflict
+    resp_blocked = client.post("/patients", data=dup_payload)
+    assert resp_blocked.status_code == 409
+    assert "Duplicate Record Alert" in resp_blocked.text
+
+    # 2. Attempt create with override and reason: must succeed with 200
+    dup_payload["override_duplicate"] = "true"
+    dup_payload["override_reason"] = "Distinct household member sharing telephone"
+    resp_allowed = client.post("/patients", data=dup_payload)
+    assert resp_allowed.status_code == 200
+
+    # 3. Verify override was recorded in AuditLog
+    with Session(engine) as session:
+        new_pt = session.exec(
+            select(Patient).where(Patient.first_name == "Copycat").order_by(col(Patient.id).desc())
+        ).first()
+        assert new_pt is not None
+
+        override_audit = session.exec(
+            select(AuditLog).where(
+                AuditLog.module == "patients",
+                AuditLog.entity_id == str(new_pt.id),
+                AuditLog.action == "DUPLICATE_OVERRIDE",
+            )
+        ).first()
+        assert override_audit is not None
+        assert override_audit.changes.get("reason") == "Distinct household member sharing telephone"

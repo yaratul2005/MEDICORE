@@ -19,7 +19,7 @@
         <div class="my-4 flex items-center justify-between">
           <div>
             <div class="text-6xl font-black font-mono tracking-tight text-white">{{ cur.token_number }}</div>
-            <div class="text-xl font-bold text-slate-200 mt-1">{{ cur.patient_name }}</div>
+            <div class="text-xl font-bold text-slate-200 mt-1">{{ cur.patient_name.split()[0] if cur.patient_name else '' }}</div>
             <div class="text-sm text-slate-400 font-mono">{{ cur.department }}</div>
           </div>
           <div class="text-right">
@@ -52,7 +52,7 @@
             <div class="p-3 rounded-xl bg-slate-900/60 border border-purple-500/30 flex items-center justify-between">
               <div>
                 <span class="text-2xl font-black font-mono text-purple-300">{{ s.token_number }}</span>
-                <span class="block text-xs text-slate-300 font-medium truncate max-w-[120px]">{{ s.patient_name }}</span>
+                <span class="block text-xs text-slate-300 font-medium truncate max-w-[120px]">{{ s.patient_name.split()[0] if s.patient_name else '' }}</span>
               </div>
               <div class="text-right font-mono">
                 <span class="text-[10px] text-slate-400 uppercase">Room</span>
@@ -90,7 +90,7 @@
           <thead>
             <tr class="text-xs uppercase text-slate-500 border-b border-slate-800 pb-2">
               <th class="py-2 px-3">Token</th>
-              <th class="py-2 px-3 font-sans">Patient</th>
+              <th class="py-2 px-3 font-sans">Patient (First Name)</th>
               <th class="py-2 px-3 font-sans">Department</th>
               <th class="py-2 px-3 font-sans">Assigned Clinician</th>
               <th class="py-2 px-3">Status</th>
@@ -104,7 +104,7 @@
                     {{ t.token_number }}
                   </span>
                 </td>
-                <td class="py-3 px-3 font-sans font-semibold">{{ t.patient_name }}</td>
+                <td class="py-3 px-3 font-sans font-semibold">{{ t.patient_name.split()[0] if t.patient_name else '' }}</td>
                 <td class="py-3 px-3 font-sans text-slate-300">{{ t.department }}</td>
                 <td class="py-3 px-3 font-sans text-slate-400">{{ t.doctor_name }} ({{ t.room_number or 'Exam 1' }})</td>
                 <td class="py-3 px-3">

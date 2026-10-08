@@ -488,9 +488,30 @@ async def create_appointment(
         source=source,
         notes=notes,
     )
-    session.add(appointment)
-    session.commit()
-    session.refresh(appointment)
+    try:
+        session.add(appointment)
+        session.commit()
+        session.refresh(appointment)
+    except Exception:
+        session.rollback()
+        doctors = session.exec(select(Doctor).where(Doctor.is_active == True).order_by(Doctor.name)).all()
+        patients = session.exec(select(Patient).order_by(col(Patient.id).desc()).limit(100)).all()
+        slots = generate_doctor_slots(doctor, date_str, session)
+        ctx = get_ui_context(
+            request,
+            user=user,
+            session=session,
+            pre_patient=patient,
+            patients=patients,
+            doctors=doctors,
+            selected_doctor_id=doctor.id,
+            default_date=date_str,
+            default_start_time=start_time,
+            default_end_time=end_time,
+            slots=slots,
+            conflict_error=f"Slot Collision: Dr. {doctor.name} was just booked for {start_time} on {date_str} by another concurrent user. Please choose another slot.",
+        )
+        return templates.TemplateResponse("modules/appointments/new_modal.html", ctx)
 
     # Emit domain event
     event_bus.emit(

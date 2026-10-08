@@ -276,6 +276,38 @@ async def create_patient(
     if not first_name or not last_name or not dob or not phone:
         raise HTTPException(status_code=400, detail="Missing required patient fields")
 
+    # Server-enforced duplicate detection guard
+    dup_clauses = []
+    if phone and len(phone) >= 7:
+        dup_clauses.append(Patient.phone == phone)
+    if first_name and last_name and dob:
+        dup_clauses.append(
+            (Patient.first_name.ilike(first_name))
+            & (Patient.last_name.ilike(last_name))
+            & (Patient.date_of_birth == dob)
+        )
+
+    override_duplicate = str(form.get("override_duplicate", "")).lower() in ("true", "1", "yes", "on")
+    override_reason = str(form.get("override_reason", "")).strip()
+
+    if dup_clauses:
+        dup_matches = session.exec(select(Patient).where(or_(*dup_clauses))).all()
+        if dup_matches and not (override_duplicate and override_reason):
+            match_str = ", ".join([f"{m.full_name} ({m.mrn}, Phone: {m.phone})" for m in dup_matches[:2]])
+            effective_schema = patient_schema.get_effective_schema(session, user)
+            ctx = get_ui_context(
+                request,
+                user=user,
+                session=session,
+                schema=effective_schema,
+                patient=None,
+                action_url="/patients",
+                modal_title="Register New Patient",
+                duplicate_warning_msg=f"Duplicate Record Alert: Matching patient record(s) found ({match_str}). Confirmation and reason are required to proceed.",
+                form_override_reason=override_reason,
+            )
+            return templates.TemplateResponse("modules/patients/form_modal.html", ctx, status_code=status.HTTP_409_CONFLICT)
+
     # Generate MRN
     mrn = settings_registry.generate_mrn()
 
@@ -311,6 +343,32 @@ async def create_patient(
     session.add(patient)
     session.commit()
     session.refresh(patient)
+
+    # If duplicate was overridden, write dedicated audit log
+    if dup_clauses and override_duplicate and override_reason:
+        existing_matches = session.exec(select(Patient).where(or_(*dup_clauses)).where(Patient.id != patient.id)).all()
+        if existing_matches:
+            audit = AuditLog(
+                user_id=user.id,
+                username=user.username,
+                module="patients",
+                entity="patient",
+                entity_id=str(patient.id),
+                action="DUPLICATE_OVERRIDE",
+                changes={
+                    "reason": override_reason,
+                    "matched_mrns": [m.mrn for m in existing_matches],
+                    "matched_ids": [m.id for m in existing_matches],
+                },
+            )
+            session.add(audit)
+            session.commit()
+            event_bus.emit(
+                "patient.duplicate_overridden",
+                {"id": patient.id, "reason": override_reason, "matched_mrns": [m.mrn for m in existing_matches]},
+                user_id=user.id,
+                username=user.username,
+            )
 
     # Emit event
     event_bus.emit(

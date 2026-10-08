@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from sqlalchemy import Column, JSON
+from sqlalchemy import Column, JSON, Index, text
 from sqlmodel import Field, SQLModel
 
 
@@ -37,6 +37,15 @@ class Doctor(SQLModel, table=True):
 
 class Appointment(SQLModel, table=True):
     __tablename__ = "appointments"
+    __table_args__ = (
+        Index(
+            "uq_appointment_doctor_slot",
+            "doctor_id", "appointment_date", "start_time",
+            unique=True,
+            sqlite_where=text("status != 'Cancelled'"),
+            postgresql_where=text("status != 'Cancelled'"),
+        ),
+    )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     patient_id: int = Field(index=True)

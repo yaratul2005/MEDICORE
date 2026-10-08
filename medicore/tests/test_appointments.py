@@ -108,6 +108,12 @@ def test_status_transitions_and_events(client: TestClient):
 
         start_dt = utc_now()
         end_dt = start_dt + timedelta(minutes=20)
+        today_date_str = start_dt.strftime("%Y-%m-%d")
+
+        for old in session.exec(select(Appointment).where(Appointment.doctor_id == doctor.id, Appointment.appointment_date == today_date_str, Appointment.start_time == "17:40")).all():
+            session.delete(old)
+        session.commit()
+
         appt = Appointment(
             patient_id=patient.id,
             patient_name=patient.full_name,
@@ -115,9 +121,9 @@ def test_status_transitions_and_events(client: TestClient):
             doctor_id=doctor.id,
             doctor_name=doctor.name,
             department=doctor.department,
-            appointment_date=start_dt.strftime("%Y-%m-%d"),
-            start_time="14:00",
-            end_time="14:20",
+            appointment_date=today_date_str,
+            start_time="17:40",
+            end_time="18:00",
             start_datetime=start_dt,
             end_datetime=end_dt,
             status="Booked",
@@ -209,6 +215,7 @@ def test_waiting_room_display_endpoints(client: TestClient):
     res_content = client.get("/appointments/display/content")
     assert res_content.status_code == 200
     assert "Waiting Room Queue" in res_content.text
+    assert "Patient (First Name)" in res_content.text
 
 
 def test_reschedule_with_conflict_guard(client: TestClient):
@@ -268,6 +275,11 @@ def test_appointment_reminders_and_stats():
 
         tomorrow_str = (date.today() + timedelta(days=1)).strftime("%Y-%m-%d")
         start_dt = utc_now() + timedelta(days=1)
+
+        for old in session.exec(select(Appointment).where(Appointment.doctor_id == doctor.id, Appointment.appointment_date == tomorrow_str, Appointment.start_time == "17:40")).all():
+            session.delete(old)
+        session.commit()
+
         appt = Appointment(
             patient_id=patient.id,
             patient_name=patient.full_name,
@@ -276,8 +288,8 @@ def test_appointment_reminders_and_stats():
             doctor_name=doctor.name,
             department=doctor.department,
             appointment_date=tomorrow_str,
-            start_time="10:00",
-            end_time="10:20",
+            start_time="17:40",
+            end_time="18:00",
             start_datetime=start_dt,
             end_datetime=start_dt + timedelta(minutes=20),
             status="Booked",
@@ -299,3 +311,83 @@ def test_appointment_reminders_and_stats():
         assert "total" in stats
         assert "no_show_rate" in stats
         assert "avg_wait_minutes" in stats
+
+
+def test_concurrent_double_booking_protection():
+    """Verify DB-level unique constraint prevents race conditions during concurrent bookings."""
+    import concurrent.futures
+
+    test_date = "2026-12-15"
+    test_time = "15:00"
+
+    with Session(engine) as session:
+        doctor = session.exec(select(Doctor)).first()
+        patients = session.exec(select(Patient).limit(5)).all()
+        assert doctor is not None
+        assert len(patients) >= 2
+
+        # Clean up any test records for this date/time
+        for old in session.exec(
+            select(Appointment).where(
+                Appointment.doctor_id == doctor.id,
+                Appointment.appointment_date == test_date,
+                Appointment.start_time == test_time,
+            )
+        ).all():
+            session.delete(old)
+        session.commit()
+
+        doc_id = doctor.id
+        doc_name = doctor.name
+        doc_dept = doctor.department
+        patient_data = [
+            {"id": p.id, "name": p.full_name, "mrn": p.mrn}
+            for p in patients[:4]
+        ]
+
+    def attempt_booking(p_info):
+        with Session(engine) as local_session:
+            start_dt = datetime.strptime(f"{test_date} {test_time}", "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
+            end_dt = start_dt + timedelta(minutes=20)
+            appt = Appointment(
+                patient_id=p_info["id"],
+                patient_name=p_info["name"],
+                patient_mrn=p_info["mrn"],
+                doctor_id=doc_id,
+                doctor_name=doc_name,
+                department=doc_dept,
+                appointment_date=test_date,
+                start_time=test_time,
+                end_time="15:20",
+                start_datetime=start_dt,
+                end_datetime=end_dt,
+                status="Booked",
+            )
+            try:
+                local_session.add(appt)
+                local_session.commit()
+                return ("SUCCESS", appt.id)
+            except Exception as exc:
+                local_session.rollback()
+                return ("FAILED_DB_CONSTRAINT", str(exc))
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        futures = [executor.submit(attempt_booking, p) for p in patient_data]
+        results = [f.result()[0] for f in concurrent.futures.as_completed(futures)]
+
+    successes = [r for r in results if r == "SUCCESS"]
+    failures = [r for r in results if r == "FAILED_DB_CONSTRAINT"]
+
+    assert len(successes) == 1, f"Expected exactly 1 success, got {len(successes)}"
+    assert len(failures) == 3, f"Expected 3 DB constraint rejections, got {len(failures)}"
+
+    with Session(engine) as session:
+        booked_appts = session.exec(
+            select(Appointment).where(
+                Appointment.doctor_id == doc_id,
+                Appointment.appointment_date == test_date,
+                Appointment.start_time == test_time,
+                Appointment.status != "Cancelled",
+            )
+        ).all()
+        assert len(booked_appts) == 1
