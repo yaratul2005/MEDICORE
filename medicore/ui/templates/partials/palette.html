@@ -1,0 +1,43 @@
+<div>
+  {% if actions %}
+  <div class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted">Commands & Navigation</div>
+  {% for action in actions %}
+  <a href="{{ action.url }}" 
+     class="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium surface-hover text-main transition-colors group">
+    <div class="flex items-center gap-2.5">
+      <i data-lucide="{{ action.icon|default('arrow-right') }}" class="w-4 h-4 text-teal-600"></i>
+      <span>{{ action.title }}</span>
+    </div>
+    {% if action.shortcut %}
+      <kbd class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-slate-100 dark:bg-slate-800 text-muted border border-subtle">{{ action.shortcut }}</kbd>
+    {% endif %}
+  </a>
+  {% endfor %}
+  {% endif %}
+
+  {% if search_results %}
+  <div class="mt-2 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted">Search Results</div>
+  {% for res in search_results %}
+  <a href="{{ res.url }}" 
+     class="flex items-center justify-between px-3 py-2 rounded-lg text-xs surface-hover transition-colors group">
+    <div class="flex items-center gap-2.5">
+      <i data-lucide="{{ res.icon|default('file-text') }}" class="w-4 h-4 text-teal-600"></i>
+      <div class="flex flex-col">
+        <span class="font-medium text-main">{{ res.title }}</span>
+        <span class="text-[11px] text-muted">{{ res.subtitle }}</span>
+      </div>
+    </div>
+    {% if res.badge %}
+      <span class="text-[10px] font-mono px-1.5 py-0.5 rounded border border-subtle text-secondary">{{ res.badge }}</span>
+    {% endif %}
+  </a>
+  {% endfor %}
+  {% endif %}
+
+  {% if not actions and not search_results %}
+  <div class="p-6 text-center text-xs text-muted">
+    No matching commands or clinical records found.
+  </div>
+  {% endif %}
+</div>
+<script>lucide.createIcons();</script>

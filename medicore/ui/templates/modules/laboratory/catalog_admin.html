@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Lab Test Catalog & LOINC Admin{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+  
+  <!-- Header -->
+  <header class="surface-bg border-b border-subtle px-6 py-3.5 flex items-center justify-between flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <a href="/laboratory" class="p-1.5 rounded-lg border border-subtle surface-hover text-muted hover:text-main">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+      </a>
+      <div>
+        <h1 class="text-base font-bold text-main flex items-center gap-2">
+          Laboratory Test Catalog
+          <span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-teal-950 text-teal-400 border border-teal-800">LOINC & FHIR Ready</span>
+        </h1>
+        <p class="text-xs text-muted">Test directories, parameters, formulas, and age/sex reference intervals</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filter bar -->
+  <div class="px-6 py-2.5 border-b border-subtle surface-bg flex items-center justify-between gap-4 flex-shrink-0">
+    <div class="flex items-center gap-3 flex-1">
+      <form action="/laboratory/catalog" method="GET" class="flex items-center gap-3 flex-1">
+        <select name="department" onchange="this.form.submit()" class="px-2.5 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs">
+          <option value="All" {% if current_department == 'All' %}selected{% endif %}>All Departments</option>
+          {% for d in departments %}
+          <option value="{{ d }}" {% if current_department == d %}selected{% endif %}>{{ d }}</option>
+          {% endfor %}
+        </select>
+
+        <div class="relative flex-1 max-w-sm">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-muted absolute left-2.5 top-2.5"></i>
+          <input type="text" name="search" value="{{ search }}" placeholder="Search tests by code, name, specimen..." class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-subtle surface-bg text-main text-xs">
+        </div>
+      </form>
+    </div>
+    <span class="text-xs text-muted font-mono">{{ tests|length }} tests loaded</span>
+  </div>
+
+  <!-- Tests Table -->
+  <div class="flex-1 overflow-auto p-6">
+    <div class="surface-bg rounded-xl border border-subtle shadow-xs overflow-hidden">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead class="surface-bg border-b border-subtle text-muted uppercase text-[10px] font-semibold">
+          <tr>
+            <th class="py-2.5 px-4">Code & Test Name</th>
+            <th class="py-2.5 px-4">Department</th>
+            <th class="py-2.5 px-4">Specimen Type</th>
+            <th class="py-2.5 px-4">Turnaround Time</th>
+            <th class="py-2.5 px-4">Parameters</th>
+            <th class="py-2.5 px-4 text-right">Price</th>
+            <th class="py-2.5 px-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-subtle">
+          {% for t in tests %}
+          <tr class="hover:surface-hover transition-colors">
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-2">
+                <span class="font-mono font-bold text-teal-600 dark:text-teal-400">{{ t.code }}</span>
+                <span class="font-semibold text-main">{{ t.name }}</span>
+              </div>
+              {% if t.description %}
+              <div class="text-[11px] text-muted truncate max-w-xs mt-0.5">{{ t.description }}</div>
+              {% endif %}
+            </td>
+            <td class="py-3 px-4">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-secondary border border-subtle">
+                {{ t.department }}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-secondary">{{ t.specimen_type }}</td>
+            <td class="py-3 px-4 font-mono text-muted">{{ t.tat_hours }} hours</td>
+            <td class="py-3 px-4 font-mono text-secondary">
+              <span class="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-main font-semibold">
+                {{ param_counts.get(t.id, 0) }} analytes
+              </span>
+            </td>
+            <td class="py-3 px-4 text-right font-mono font-semibold text-main">
+              ${{ "%.2f"|format(t.price) }}
+            </td>
+            <td class="py-3 px-4 text-right">
+              <a href="/laboratory/catalog/test/{{ t.id }}"
+                 class="px-2.5 py-1 rounded surface-bg hover:surface-hover border border-subtle text-main text-[11px] font-semibold transition-colors">
+                Configure LOINC & Ranges
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

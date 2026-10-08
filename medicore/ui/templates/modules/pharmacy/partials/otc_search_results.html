@@ -1,0 +1,28 @@
+<div class="surface-bg border border-subtle rounded-xl shadow-xl divide-y divide-subtle overflow-hidden max-h-72 overflow-y-auto">
+  {% for r in results %}
+  {% set it = r.item %}
+  {% set b = r.best_batch %}
+  <div class="p-2.5 surface-hover cursor-pointer flex items-center justify-between"
+       onclick="addOtcItem({{ it.id }}, '{{ it.name|replace("'", "\\'") }}', '{{ it.code }}', {{ b.unit_price if b else it.unit_price }}, {{ r.stock }})">
+    <div>
+      <div class="font-bold text-xs text-main flex items-center gap-1.5">
+        <span class="font-mono text-teal-600 dark:text-teal-400 font-semibold">{{ it.code }}</span>
+        <span>{{ it.name }}</span>
+      </div>
+      <div class="text-[11px] text-muted">
+        {{ it.generic_name }} • {{ it.category }} • {{ it.form }}
+      </div>
+    </div>
+    <div class="text-right">
+      <div class="font-mono font-bold text-xs text-teal-600 dark:text-teal-400">
+        ${{ "%.2f"|format(b.unit_price if b else it.unit_price) }}
+      </div>
+      <div class="text-[10px] {% if r.stock <= it.reorder_level %}text-rose-500 font-bold{% else %}text-muted{% endif %}">
+        Avail: {{ r.stock }} {{ it.unit }}s
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="p-3 text-center text-xs text-muted">No items found matching search.</div>
+  {% endfor %}
+</div>

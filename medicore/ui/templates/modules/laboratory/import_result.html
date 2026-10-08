@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Import Results{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+  <header class="surface-bg border-b border-subtle px-6 py-3.5 flex items-center justify-between flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <a href="/laboratory" class="p-1.5 rounded-lg border border-subtle surface-hover text-muted hover:text-main">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+      </a>
+      <h1 class="text-base font-bold text-main">Analyzer Import Report</h1>
+    </div>
+  </header>
+
+  <div class="flex-1 overflow-auto p-6 flex justify-center">
+    <div class="w-full max-w-xl surface-bg border border-subtle rounded-xl shadow-sm p-6 space-y-4 text-xs">
+      
+      <div class="grid grid-cols-2 gap-4">
+        <div class="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-center">
+          <span class="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-300 block">Successfully Imported</span>
+          <span class="text-2xl font-mono font-bold text-emerald-800 dark:text-emerald-200">{{ result.imported_count }}</span>
+        </div>
+        <div class="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-center">
+          <span class="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-300 block">Skipped / Ignored</span>
+          <span class="text-2xl font-mono font-bold text-amber-800 dark:text-amber-200">{{ result.skipped_count }}</span>
+        </div>
+      </div>
+
+      {% if result.errors %}
+      <div class="p-4 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800">
+        <span class="font-bold text-rose-700 dark:text-rose-300 block mb-2">Errors / Warnings Encountered:</span>
+        <ul class="space-y-1 text-[11px] text-rose-800 dark:text-rose-200 list-disc pl-4 font-mono">
+          {% for err in result.errors %}
+          <li>{{ err }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <div class="pt-4 border-t border-subtle flex justify-end gap-3">
+        <a href="/laboratory/import" class="px-4 py-2 rounded-lg border border-subtle text-secondary hover:surface-hover">Import Another</a>
+        <a href="/laboratory" class="px-5 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold shadow-xs">Go to Worklist</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

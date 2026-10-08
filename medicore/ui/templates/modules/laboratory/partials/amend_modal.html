@@ -1,0 +1,65 @@
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+  <div class="surface-bg rounded-xl border border-subtle shadow-xl max-w-xl w-full p-6 text-slate-800 dark:text-slate-100 max-h-[90vh] flex flex-col">
+    
+    <div class="flex items-center justify-between border-b border-subtle pb-3 mb-4 flex-shrink-0">
+      <div>
+        <h3 class="font-bold text-sm text-main flex items-center gap-1.5">
+          <i data-lucide="refresh-cw" class="w-4 h-4 text-amber-600"></i>
+          Amend Diagnostic Report (Version {{ report.version + 1 }})
+        </h3>
+        <p class="text-[11px] text-muted">Order: {{ order.order_no }} • Report: {{ report.report_no }}</p>
+      </div>
+      <button onclick="document.getElementById('global-modal').innerHTML = ''" class="text-muted hover:text-main text-xs">✕</button>
+    </div>
+
+    <form action="/laboratory/order/{{ order.id }}/amend" method="POST" class="flex-1 flex flex-col overflow-hidden space-y-4 text-xs">
+      
+      <!-- Amendment Reason -->
+      <div class="flex-shrink-0">
+        <label class="font-bold text-main block mb-1">Clinical Reason for Amendment *</label>
+        <textarea name="amendment_reason" required rows="2" placeholder="e.g. Dilution re-run confirms corrected platelet count; prior result clotted" class="w-full px-3 py-2 rounded-lg border border-subtle surface-bg text-main font-medium"></textarea>
+      </div>
+
+      <!-- Parameter Values Table -->
+      <div class="flex-1 overflow-auto border border-subtle rounded-lg">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="surface-bg sticky top-0 border-b border-subtle text-muted uppercase text-[10px] font-semibold">
+            <tr>
+              <th class="py-2 px-3">Parameter</th>
+              <th class="py-2 px-3">Unit</th>
+              <th class="py-2 px-3">Corrected Value</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-subtle">
+            {% for r in results %}
+            <tr class="hover:surface-hover">
+              <td class="py-2 px-3 font-medium text-main">{{ r.parameter_name }} ({{ r.parameter_code }})</td>
+              <td class="py-2 px-3 font-mono text-muted">{{ r.unit or '-' }}</td>
+              <td class="py-2 px-3">
+                <input type="text"
+                       name="param_{{ r.parameter_id }}"
+                       value="{{ r.value_text }}"
+                       class="w-full px-2 py-1 rounded border border-subtle surface-bg font-mono text-xs font-semibold">
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div class="pt-3 border-t border-subtle flex items-center justify-between flex-shrink-0">
+        <span class="text-[10px] text-muted italic">Corrected report notice will be appended to permanent EHR.</span>
+        <div class="flex gap-2">
+          <button type="button" onclick="document.getElementById('global-modal').innerHTML = ''" class="px-3 py-1.5 rounded-lg border border-subtle text-secondary">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold flex items-center gap-1 shadow-xs">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+            <span>Issue Corrected Report (v{{ report.version + 1 }})</span>
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>
+<script>lucide.createIcons();</script>

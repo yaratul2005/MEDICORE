@@ -1,0 +1,32 @@
+<div class="space-y-2 text-xs">
+  <div class="flex items-center justify-between pb-1">
+    <span class="font-bold text-main">Clinical Visits & Encounters</span>
+    <span class="text-[10px] font-mono text-muted">{{ encounters|length }} Visits</span>
+  </div>
+
+  {% for enc in encounters %}
+  <div class="p-2.5 rounded-lg border border-subtle app-bg hover:border-teal-500/40 transition-colors flex flex-col gap-1">
+    <div class="flex items-center justify-between">
+      <span class="font-mono font-bold text-teal-600 dark:text-teal-400">#{{ enc.id }} • {{ enc.started_at.strftime('%Y-%m-%d') }}</span>
+      <span class="px-1.5 py-0.2 rounded font-mono text-[10px] {% if enc.status == 'Completed' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300{% elif enc.status == 'In-Progress' %}bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300{% else %}bg-slate-100 text-slate-700{% endif %}">
+        {{ enc.status }}
+      </span>
+    </div>
+    <div class="font-semibold text-main">{{ enc.chief_complaint or 'Clinical Consultation' }}</div>
+    <div class="flex items-center justify-between text-[11px] text-muted">
+      <span>Dr. {{ enc.doctor_name }} ({{ enc.department }})</span>
+      <div class="flex items-center gap-1.5">
+        <a href="/consultations/encounter/{{ enc.id }}" class="text-teal-600 hover:underline font-medium">Open EMR</a>
+        <span>•</span>
+        <a href="/consultations/encounter/{{ enc.id }}/summary" target="_blank" class="text-secondary hover:underline">Summary</a>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="p-8 text-center text-muted">
+    <i data-lucide="calendar" class="w-8 h-8 opacity-40 mx-auto mb-1"></i>
+    <p>No consultation visits recorded for this patient yet.</p>
+  </div>
+  {% endfor %}
+</div>
+<script>lucide.createIcons();</script>

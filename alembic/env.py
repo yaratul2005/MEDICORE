@@ -49,6 +49,17 @@ from medicore.modules.pharmacy.models import (
     StockTransferRequest,
     Supplier,
 )
+from medicore.modules.laboratory.models import (
+    LabOrder,
+    LabOrderItem,
+    LabReport,
+    Parameter,
+    ReferenceRange,
+    Result,
+    Specimen,
+    TestCatalog,
+    TestPanel,
+)
 
 
 # Alembic Config object

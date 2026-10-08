@@ -1,0 +1,66 @@
+<div class="space-y-3 text-xs">
+  <div class="flex items-center justify-between pb-1">
+    <span class="font-bold text-main">Patient Vitals History & Trends</span>
+    <span class="text-[10px] font-mono text-muted">{{ vitals_list|length }} Records</span>
+  </div>
+
+  {% if latest_vitals %}
+  <div class="p-3 rounded-lg border border-subtle bg-teal-50/40 dark:bg-teal-950/20 space-y-2">
+    <div class="flex items-center justify-between">
+      <span class="text-[11px] font-bold text-teal-800 dark:text-teal-300">Latest Recorded Measurements</span>
+      <span class="text-[10px] font-mono text-muted">{{ latest_vitals.recorded_at.strftime('%Y-%m-%d %H:%M') }}</span>
+    </div>
+    <div class="grid grid-cols-4 gap-2 text-center">
+      <div class="p-1.5 rounded surface-bg border border-subtle">
+        <span class="text-[9px] uppercase text-muted block">BP</span>
+        <span class="font-mono font-bold text-main">{{ latest_vitals.systolic|default('-', true) }}/{{ latest_vitals.diastolic|default('-', true) }}</span>
+      </div>
+      <div class="p-1.5 rounded surface-bg border border-subtle">
+        <span class="text-[9px] uppercase text-muted block">Pulse</span>
+        <span class="font-mono font-bold text-main">{{ latest_vitals.pulse|default('-', true) }}</span>
+      </div>
+      <div class="p-1.5 rounded surface-bg border border-subtle">
+        <span class="text-[9px] uppercase text-muted block">SpO₂</span>
+        <span class="font-mono font-bold text-main">{{ latest_vitals.spo2|default('-', true) }}%</span>
+      </div>
+      <div class="p-1.5 rounded surface-bg border border-subtle">
+        <span class="text-[9px] uppercase text-muted block">BMI</span>
+        <span class="font-mono font-bold text-teal-600 dark:text-teal-400">{{ latest_vitals.bmi|default('-', true) }}</span>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Detailed Table -->
+  <div class="border border-subtle rounded-lg overflow-hidden">
+    <table class="w-full text-left text-xs">
+      <thead class="bg-slate-50 dark:bg-slate-900/40 border-b border-subtle text-muted font-semibold text-[11px]">
+        <tr>
+          <th class="p-2">Date</th>
+          <th class="p-2">BP</th>
+          <th class="p-2">HR</th>
+          <th class="p-2">Temp</th>
+          <th class="p-2">SpO₂</th>
+          <th class="p-2">BMI</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-subtle font-mono text-[11px]">
+        {% for v in vitals_list %}
+        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/20">
+          <td class="p-2 text-muted">{{ v.recorded_at.strftime('%Y-%m-%d') }}</td>
+          <td class="p-2 font-bold text-main">{{ v.systolic|default('-', true) }}/{{ v.diastolic|default('-', true) }}</td>
+          <td class="p-2 text-secondary">{{ v.pulse|default('-', true) }}</td>
+          <td class="p-2 text-secondary">{{ v.temp_c|default('-', true) }}°C</td>
+          <td class="p-2 text-secondary">{{ v.spo2|default('-', true) }}%</td>
+          <td class="p-2 text-teal-600 dark:text-teal-400 font-bold">{{ v.bmi|default('-', true) }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="p-6 text-center text-muted font-sans">No vitals history on file</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>lucide.createIcons();</script>

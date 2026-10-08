@@ -1,0 +1,78 @@
+<div class="overflow-x-auto">
+  <table class="w-full text-left text-xs border-collapse">
+    <thead>
+      <tr class="border-b border-subtle surface-hover text-muted uppercase text-[10px] font-semibold tracking-wider">
+        <th class="py-2.5 px-3">Dispense #</th>
+        <th class="py-2.5 px-3">Patient</th>
+        <th class="py-2.5 px-3">MRN</th>
+        <th class="py-2.5 px-3">Prescriber</th>
+        <th class="py-2.5 px-3">Type</th>
+        <th class="py-2.5 px-3">Status</th>
+        <th class="py-2.5 px-3">Total ($)</th>
+        <th class="py-2.5 px-3">Queued At</th>
+        <th class="py-2.5 px-3 text-right">Action</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-subtle">
+      {% for d in dispenses %}
+      <tr class="surface-hover transition-colors">
+        <td class="py-2.5 px-3 font-mono font-bold text-teal-600 dark:text-teal-400">
+          <a href="/pharmacy/dispense/{{ d.id }}" class="hover:underline">{{ d.dispense_no }}</a>
+        </td>
+        <td class="py-2.5 px-3 font-semibold text-main">
+          {{ d.patient_name }}
+          {% if d.allergy_warnings %}
+            <span class="ml-1 inline-flex items-center px-1 py-0.2 rounded text-[9px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">Allergy Alert</span>
+          {% endif %}
+        </td>
+        <td class="py-2.5 px-3 font-mono text-muted">{{ d.patient_mrn or '-' }}</td>
+        <td class="py-2.5 px-3 text-muted">{{ d.doctor_name or 'Walk-in' }}</td>
+        <td class="py-2.5 px-3">
+          {% if d.dispense_type == 'counter_otc' %}
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800">Counter OTC</span>
+          {% else %}
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">Prescription</span>
+          {% endif %}
+        </td>
+        <td class="py-2.5 px-3">
+          {% if d.status == 'pending' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Pending</span>
+          {% elif d.status == 'in_progress' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">In Progress</span>
+          {% elif d.status == 'dispensed' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Dispensed</span>
+          {% elif d.status == 'partial' %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">Partial</span>
+          {% else %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">Rejected</span>
+          {% endif %}
+        </td>
+        <td class="py-2.5 px-3 font-mono font-semibold text-main">${{ "%.2f"|format(d.total_amount) }}</td>
+        <td class="py-2.5 px-3 text-muted text-[11px]">{{ d.created_at.strftime('%H:%M • %b %d') }}</td>
+        <td class="py-2.5 px-3 text-right">
+          {% if d.status in ['pending', 'in_progress'] %}
+            <a href="/pharmacy/dispense/{{ d.id }}"
+               class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-teal-600 hover:bg-teal-700 text-white font-semibold text-[11px] transition-colors shadow-xs">
+              <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+              <span>Dispense</span>
+            </a>
+          {% else %}
+            <a href="/pharmacy/dispense/{{ d.id }}"
+               class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-main font-semibold text-[11px] transition-colors">
+              <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+              <span>View</span>
+            </a>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="9" class="py-8 text-center text-muted">
+          <i data-lucide="package-open" class="w-8 h-8 mx-auto mb-2 text-slate-400"></i>
+          <p class="font-medium">No dispense records matching criteria.</p>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

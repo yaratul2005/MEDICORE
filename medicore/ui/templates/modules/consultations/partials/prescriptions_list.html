@@ -1,0 +1,51 @@
+<div id="prescriptions-list" class="space-y-2">
+  {% if prescription and prescription.safety_override_reason %}
+  <div class="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-1.5">
+    <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5"></i>
+    <div>
+      <span class="font-bold">Safety Override on File:</span>
+      <span class="ml-1">{{ prescription.safety_override_reason }}</span>
+    </div>
+  </div>
+  {% endif %}
+
+  {% for it in prescription_items %}
+  <div class="p-2.5 rounded-lg border border-subtle surface-bg flex items-start justify-between text-xs hover:border-teal-500/40 transition-colors">
+    <div class="space-y-0.5">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-main">{{ it.drug_name }}</span>
+        {% if it.generic_name and it.generic_name != it.drug_name %}
+        <span class="text-secondary text-[11px]">({{ it.generic_name }})</span>
+        {% endif %}
+        <span class="font-mono text-teal-600 dark:text-teal-400 font-semibold text-[11px]">{{ it.dosage }}</span>
+      </div>
+      <div class="flex items-center gap-2 text-[11px] text-muted">
+        <span class="font-medium text-secondary">{{ it.frequency }}</span>
+        <span>•</span>
+        <span>{{ it.route }}</span>
+        <span>•</span>
+        <span>{{ it.duration_days }} days</span>
+        <span>•</span>
+        <span class="font-mono font-bold text-main">Qty: {{ it.quantity }}</span>
+      </div>
+      {% if it.instructions %}
+      <p class="text-[11px] text-secondary italic">Dir: {{ it.instructions }}</p>
+      {% endif %}
+    </div>
+
+    {% if can_prescribe %}
+    <button hx-delete="/consultations/encounter/{{ encounter.id }}/prescriptions/items/{{ it.id }}"
+            hx-target="#prescriptions-list"
+            hx-swap="outerHTML"
+            class="text-muted hover:text-rose-600 p-1 transition-colors">
+      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+    </button>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="p-3 text-center text-muted text-xs border border-dashed border-subtle rounded-lg">
+    No medications prescribed for this visit yet.
+  </div>
+  {% endfor %}
+</div>
+<script>lucide.createIcons();</script>

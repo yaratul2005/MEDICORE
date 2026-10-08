@@ -1,0 +1,189 @@
+<div id="worklist-container" class="flex-1 flex flex-col overflow-hidden">
+  <div class="flex-1 overflow-auto">
+    <table class="w-full text-left border-collapse text-xs">
+      <thead class="surface-bg sticky top-0 z-10 border-b border-subtle text-muted uppercase text-[10px] tracking-wider font-semibold">
+        <tr>
+          <th class="py-2.5 px-4">Priority & Order #</th>
+          <th class="py-2.5 px-4">Patient Demographics</th>
+          <th class="py-2.5 px-4">Department & Tests</th>
+          <th class="py-2.5 px-4">Specimen & Barcode</th>
+          <th class="py-2.5 px-4">TAT Status</th>
+          <th class="py-2.5 px-4">Requisition Status</th>
+          <th class="py-2.5 px-4 text-right">Clinical Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-subtle">
+        {% for order in orders %}
+        {% set specs = specimens_map.get(order.id, []) %}
+        <tr class="hover:surface-hover transition-colors {% if order.priority == 'STAT' %}bg-rose-50/30 dark:bg-rose-950/20{% elif order.is_tat_breached and order.status not in ['approved', 'cancelled'] %}bg-amber-50/20 dark:bg-amber-950/10{% endif %}">
+          
+          <!-- Priority & Order # -->
+          <td class="py-3 px-4">
+            <div class="flex items-center gap-2">
+              {% if order.priority == 'STAT' %}
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-600 text-white animate-pulse">STAT</span>
+              {% elif order.priority == 'Urgent' %}
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-white">URGENT</span>
+              {% else %}
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-200 dark:bg-slate-800 text-secondary">Routine</span>
+              {% endif %}
+              <span class="font-mono font-semibold text-main">{{ order.order_no }}</span>
+            </div>
+            <div class="text-[10px] text-muted mt-0.5">
+              Ordered: {{ order.ordered_at.strftime('%Y-%m-%d %H:%M') }}
+            </div>
+          </td>
+
+          <!-- Patient Demographics -->
+          <td class="py-3 px-4">
+            <div class="font-semibold text-main">{{ order.patient_name }}</div>
+            <div class="text-[10px] text-muted flex items-center gap-1.5 font-mono">
+              <span>MRN: <strong class="text-teal-600 dark:text-teal-400">{{ order.patient_mrn }}</strong></span>
+              <span>•</span>
+              <span>{{ order.patient_gender }}</span>
+            </div>
+            {% if order.doctor_name %}
+            <div class="text-[10px] text-muted">Dr. {{ order.doctor_name }}</div>
+            {% endif %}
+          </td>
+
+          <!-- Department & Tests -->
+          <td class="py-3 px-4">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-secondary border border-subtle">
+              {{ order.department }}
+            </span>
+            <div class="text-[11px] text-secondary mt-1 max-w-[200px] truncate" title="{{ order.clinical_notes }}">
+              {{ order.clinical_notes or 'Standard laboratory workup' }}
+            </div>
+          </td>
+
+          <!-- Specimen & Barcode -->
+          <td class="py-3 px-4">
+            {% if specs %}
+              {% for s in specs %}
+              <div class="flex items-center gap-1.5 mb-1 last:mb-0">
+                <span class="font-mono text-[11px] font-medium text-main">{{ s.barcode }}</span>
+                <button hx-get="/laboratory/specimen/{{ s.id }}/label"
+                        hx-target="#global-modal"
+                        class="p-1 hover:text-teal-600 text-muted transition-colors rounded hover:surface-hover"
+                        title="Print Barcode Label">
+                  <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                </button>
+                {% if s.status == 'rejected' %}
+                <span class="px-1.5 py-0.2 rounded text-[9px] bg-rose-100 dark:bg-rose-950 text-rose-600 font-bold">REJECTED</span>
+                {% endif %}
+              </div>
+              <div class="text-[10px] text-muted">{{ s.specimen_type }}</div>
+              {% endfor %}
+            {% else %}
+              <span class="text-muted text-[11px]">No specimen generated</span>
+            {% endif %}
+          </td>
+
+          <!-- TAT Status -->
+          <td class="py-3 px-4">
+            {% if order.status in ['approved', 'cancelled'] %}
+              <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Completed
+              </span>
+            {% elif order.is_tat_breached %}
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-600 border border-rose-300 dark:border-rose-800 flex items-center gap-1 w-fit">
+                <i data-lucide="alert-triangle" class="w-3 h-3"></i> TAT BREACHED
+              </span>
+              <div class="text-[9px] text-rose-500 mt-0.5 font-mono">Target: {{ order.tat_deadline.strftime('%H:%M') }}</div>
+            {% else %}
+              <div class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">On Schedule</div>
+              <div class="text-[9px] text-muted font-mono">Due: {{ order.tat_deadline.strftime('%Y-%m-%d %H:%M') }}</div>
+            {% endif %}
+          </td>
+
+          <!-- Requisition Status -->
+          <td class="py-3 px-4">
+            {% if order.status == 'ordered' %}
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300">Pending Collection</span>
+            {% elif order.status == 'specimen_collected' %}
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300">Sample Collected</span>
+            {% elif order.status in ['specimen_received', 'in_progress'] %}
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-100 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-300">Analyzing (In Lab)</span>
+            {% elif order.status == 'result_entered' %}
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-100 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300">Results Entered</span>
+            {% elif order.status == 'approved' %}
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300">Authorized & Signed</span>
+            {% else %}
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-200 dark:bg-slate-800 text-secondary">{{ order.status.title() }}</span>
+            {% endif %}
+          </td>
+
+          <!-- Actions -->
+          <td class="py-3 px-4 text-right">
+            <div class="flex items-center justify-end gap-1.5">
+              {% if order.status == 'ordered' and specs %}
+                <button hx-post="/laboratory/specimen/{{ specs[0].id }}/collect"
+                        hx-target="#worklist-container"
+                        hx-swap="outerHTML"
+                        class="px-2.5 py-1 rounded bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-semibold transition-colors flex items-center gap-1 shadow-xs">
+                  <i data-lucide="syringe" class="w-3.5 h-3.5"></i> Collect
+                </button>
+              {% elif order.status == 'specimen_collected' and specs %}
+                <button hx-post="/laboratory/specimen/{{ specs[0].id }}/receive"
+                        hx-target="#worklist-container"
+                        hx-swap="outerHTML"
+                        class="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold transition-colors flex items-center gap-1 shadow-xs">
+                  <i data-lucide="inbox" class="w-3.5 h-3.5"></i> Receive Lab
+                </button>
+              {% elif order.status in ['specimen_received', 'in_progress', 'result_entered'] %}
+                <a href="/laboratory/order{{ '/' ~ order.id ~ '/results' }}"
+                   class="px-2.5 py-1 rounded bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-semibold transition-colors flex items-center gap-1 shadow-xs">
+                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Results
+                </a>
+              {% elif order.status == 'approved' %}
+                <a href="/laboratory/order{{ '/' ~ order.id ~ '/report' }}"
+                   class="px-2.5 py-1 rounded surface-bg hover:surface-hover border border-subtle text-main text-[11px] font-semibold transition-colors flex items-center gap-1">
+                  <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Report
+                </a>
+                <a href="/laboratory/order{{ '/' ~ order.id ~ '/report/pdf' }}"
+                   target="_blank"
+                   class="p-1 rounded surface-bg hover:surface-hover border border-subtle text-muted hover:text-teal-600 transition-colors"
+                   title="Download Diagnostic PDF">
+                  <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                </a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="py-12 text-center text-muted">
+            <i data-lucide="flask-conical" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+            <p class="font-medium">No laboratory orders match current filters</p>
+            <p class="text-[11px] mt-1">Adjust priority, status, or search query above</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Bar -->
+  <div class="px-6 py-2.5 border-t border-subtle surface-bg flex items-center justify-between text-xs flex-shrink-0">
+    <span class="text-muted">Showing {{ orders|length }} of {{ total_matching }} orders</span>
+    <div class="flex items-center gap-2">
+      {% if page > 1 %}
+      <button hx-get="/laboratory/worklist/table?page={{ page - 1 }}&priority={{ current_priority }}&department={{ current_department }}&status={{ current_status }}&breached_only={{ breached_only|lower }}&search={{ search }}"
+              hx-target="#worklist-container"
+              class="px-2 py-1 rounded surface-bg border border-subtle hover:surface-hover text-secondary">
+        Previous
+      </button>
+      {% endif %}
+      <span class="font-mono text-muted text-[11px]">Page {{ page }} of {{ total_pages }}</span>
+      {% if page < total_pages %}
+      <button hx-get="/laboratory/worklist/table?page={{ page + 1 }}&priority={{ current_priority }}&department={{ current_department }}&status={{ current_status }}&breached_only={{ breached_only|lower }}&search={{ search }}"
+              hx-target="#worklist-container"
+              class="px-2 py-1 rounded surface-bg border border-subtle hover:surface-hover text-secondary">
+        Next
+      </button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<script>lucide.createIcons();</script>

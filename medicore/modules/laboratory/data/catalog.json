@@ -1,0 +1,3710 @@
+[
+  {
+    "code": "CBC",
+    "name": "Complete Blood Count (CBC) with Diff",
+    "department": "Hematology",
+    "specimen_type": "Whole Blood (EDTA)",
+    "tat_hours": 2,
+    "price": 25.0,
+    "description": "Full automated hemogram including differential leucocyte count, red cell indices, and platelets.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "HB",
+        "name": "Hemoglobin",
+        "unit": "g/dL",
+        "loinc_code": "718-7",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 13.5,
+            "high_normal": 17.5,
+            "critical_low": 7.0,
+            "critical_high": 20.0
+          },
+          {
+            "gender": "Female",
+            "low_normal": 12.0,
+            "high_normal": 15.5,
+            "critical_low": 7.0,
+            "critical_high": 20.0
+          }
+        ]
+      },
+      {
+        "code": "RBC",
+        "name": "Red Blood Cell Count",
+        "unit": "10^12/L",
+        "loinc_code": "789-8",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 4.5,
+            "high_normal": 5.9,
+            "critical_low": 2.5,
+            "critical_high": 7.0
+          },
+          {
+            "gender": "Female",
+            "low_normal": 4.0,
+            "high_normal": 5.2,
+            "critical_low": 2.5,
+            "critical_high": 7.0
+          }
+        ]
+      },
+      {
+        "code": "HCT",
+        "name": "Hematocrit (PCV)",
+        "unit": "%",
+        "loinc_code": "4544-3",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 41.0,
+            "high_normal": 50.0,
+            "critical_low": 20.0,
+            "critical_high": 60.0
+          },
+          {
+            "gender": "Female",
+            "low_normal": 36.0,
+            "high_normal": 46.0,
+            "critical_low": 20.0,
+            "critical_high": 60.0
+          }
+        ]
+      },
+      {
+        "code": "MCV",
+        "name": "Mean Corpuscular Volume",
+        "unit": "fL",
+        "loinc_code": "787-2",
+        "data_type": "numeric",
+        "display_order": 4,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 80.0,
+            "high_normal": 100.0,
+            "critical_low": 60.0,
+            "critical_high": 120.0
+          }
+        ]
+      },
+      {
+        "code": "MCH",
+        "name": "Mean Corpuscular Hemoglobin",
+        "unit": "pg",
+        "loinc_code": "785-6",
+        "data_type": "numeric",
+        "display_order": 5,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 27.0,
+            "high_normal": 33.0
+          }
+        ]
+      },
+      {
+        "code": "MCHC",
+        "name": "Mean Corpuscular Hb Concentration",
+        "unit": "g/dL",
+        "loinc_code": "786-4",
+        "data_type": "numeric",
+        "display_order": 6,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 32.0,
+            "high_normal": 36.0
+          }
+        ]
+      },
+      {
+        "code": "RDW",
+        "name": "Red Cell Distribution Width",
+        "unit": "%",
+        "loinc_code": "788-0",
+        "data_type": "numeric",
+        "display_order": 7,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 11.5,
+            "high_normal": 14.5
+          }
+        ]
+      },
+      {
+        "code": "WBC",
+        "name": "Total White Blood Cell Count",
+        "unit": "10^9/L",
+        "loinc_code": "6690-2",
+        "data_type": "numeric",
+        "display_order": 8,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 4.0,
+            "high_normal": 11.0,
+            "critical_low": 2.0,
+            "critical_high": 30.0
+          }
+        ]
+      },
+      {
+        "code": "NEUT",
+        "name": "Neutrophils",
+        "unit": "%",
+        "loinc_code": "770-8",
+        "data_type": "numeric",
+        "display_order": 9,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 40.0,
+            "high_normal": 75.0
+          }
+        ]
+      },
+      {
+        "code": "LYMPH",
+        "name": "Lymphocytes",
+        "unit": "%",
+        "loinc_code": "736-9",
+        "data_type": "numeric",
+        "display_order": 10,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 20.0,
+            "high_normal": 45.0
+          }
+        ]
+      },
+      {
+        "code": "MONO",
+        "name": "Monocytes",
+        "unit": "%",
+        "loinc_code": "5905-5",
+        "data_type": "numeric",
+        "display_order": 11,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 2.0,
+            "high_normal": 10.0
+          }
+        ]
+      },
+      {
+        "code": "EOS",
+        "name": "Eosinophils",
+        "unit": "%",
+        "loinc_code": "711-2",
+        "data_type": "numeric",
+        "display_order": 12,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 1.0,
+            "high_normal": 6.0
+          }
+        ]
+      },
+      {
+        "code": "BASO",
+        "name": "Basophils",
+        "unit": "%",
+        "loinc_code": "706-2",
+        "data_type": "numeric",
+        "display_order": 13,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 1.5
+          }
+        ]
+      },
+      {
+        "code": "PLT",
+        "name": "Platelet Count",
+        "unit": "10^9/L",
+        "loinc_code": "777-3",
+        "data_type": "numeric",
+        "display_order": 14,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 150.0,
+            "high_normal": 450.0,
+            "critical_low": 30.0,
+            "critical_high": 1000.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "LFT",
+    "name": "Liver Function Tests (LFT)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 3,
+    "price": 35.0,
+    "description": "Hepatic biochemical panel including bilirubin fractions, enzymes, and calculated protein ratios.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "TBIL",
+        "name": "Total Bilirubin",
+        "unit": "mg/dL",
+        "loinc_code": "1975-2",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.2,
+            "high_normal": 1.2,
+            "critical_high": 15.0
+          }
+        ]
+      },
+      {
+        "code": "DBIL",
+        "name": "Direct (Conjugated) Bilirubin",
+        "unit": "mg/dL",
+        "loinc_code": "1968-7",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 0.3
+          }
+        ]
+      },
+      {
+        "code": "IBIL",
+        "name": "Indirect Bilirubin",
+        "unit": "mg/dL",
+        "loinc_code": "1971-1",
+        "data_type": "calculated",
+        "calculation_formula": "total_bilirubin - direct_bilirubin",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.1,
+            "high_normal": 0.9
+          }
+        ]
+      },
+      {
+        "code": "TP",
+        "name": "Total Protein",
+        "unit": "g/dL",
+        "loinc_code": "2885-2",
+        "data_type": "numeric",
+        "display_order": 4,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 6.4,
+            "high_normal": 8.3
+          }
+        ]
+      },
+      {
+        "code": "ALB",
+        "name": "Albumin",
+        "unit": "g/dL",
+        "loinc_code": "1751-7",
+        "data_type": "numeric",
+        "display_order": 5,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 3.5,
+            "high_normal": 5.0,
+            "critical_low": 1.8
+          }
+        ]
+      },
+      {
+        "code": "GLOB",
+        "name": "Globulin",
+        "unit": "g/dL",
+        "loinc_code": "2339-0",
+        "data_type": "calculated",
+        "calculation_formula": "total_protein - albumin",
+        "display_order": 6,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 2.3,
+            "high_normal": 3.5
+          }
+        ]
+      },
+      {
+        "code": "AG_RATIO",
+        "name": "A/G Ratio",
+        "unit": "ratio",
+        "loinc_code": "1759-0",
+        "data_type": "calculated",
+        "calculation_formula": "albumin / (total_protein - albumin)",
+        "display_order": 7,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 1.2,
+            "high_normal": 2.2
+          }
+        ]
+      },
+      {
+        "code": "SGPT",
+        "name": "Alanine Aminotransferase (ALT/SGPT)",
+        "unit": "U/L",
+        "loinc_code": "1742-6",
+        "data_type": "numeric",
+        "display_order": 8,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 10.0,
+            "high_normal": 50.0,
+            "critical_high": 500.0
+          },
+          {
+            "gender": "Female",
+            "low_normal": 7.0,
+            "high_normal": 35.0,
+            "critical_high": 500.0
+          }
+        ]
+      },
+      {
+        "code": "SGOT",
+        "name": "Aspartate Aminotransferase (AST/SGOT)",
+        "unit": "U/L",
+        "loinc_code": "1920-8",
+        "data_type": "numeric",
+        "display_order": 9,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 10.0,
+            "high_normal": 40.0,
+            "critical_high": 500.0
+          },
+          {
+            "gender": "Female",
+            "low_normal": 9.0,
+            "high_normal": 32.0,
+            "critical_high": 500.0
+          }
+        ]
+      },
+      {
+        "code": "ALP",
+        "name": "Alkaline Phosphatase (ALP)",
+        "unit": "U/L",
+        "loinc_code": "6768-6",
+        "data_type": "numeric",
+        "display_order": 10,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 44.0,
+            "high_normal": 147.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "KFT",
+    "name": "Kidney Function Tests (KFT / Renal Panel)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 3,
+    "price": 30.0,
+    "description": "Renal metabolic panel including urea, creatinine, BUN, and calculated BUN/Creatinine ratio.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "UREA",
+        "name": "Blood Urea",
+        "unit": "mg/dL",
+        "loinc_code": "2270-3",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 15.0,
+            "high_normal": 40.0,
+            "critical_high": 150.0
+          }
+        ]
+      },
+      {
+        "code": "BUN",
+        "name": "Blood Urea Nitrogen (BUN)",
+        "unit": "mg/dL",
+        "loinc_code": "3094-0",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 7.0,
+            "high_normal": 20.0,
+            "critical_high": 80.0
+          }
+        ]
+      },
+      {
+        "code": "CREAT",
+        "name": "Serum Creatinine",
+        "unit": "mg/dL",
+        "loinc_code": "2160-0",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 0.7,
+            "high_normal": 1.3,
+            "critical_high": 6.0
+          },
+          {
+            "gender": "Female",
+            "low_normal": 0.5,
+            "high_normal": 1.1,
+            "critical_high": 6.0
+          }
+        ]
+      },
+      {
+        "code": "BUN_CR_RATIO",
+        "name": "BUN / Creatinine Ratio",
+        "unit": "ratio",
+        "loinc_code": "3097-3",
+        "data_type": "calculated",
+        "calculation_formula": "bun / creatinine",
+        "display_order": 4,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 10.0,
+            "high_normal": 20.0
+          }
+        ]
+      },
+      {
+        "code": "URIC",
+        "name": "Serum Uric Acid",
+        "unit": "mg/dL",
+        "loinc_code": "3084-1",
+        "data_type": "numeric",
+        "display_order": 5,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 3.5,
+            "high_normal": 7.2
+          },
+          {
+            "gender": "Female",
+            "low_normal": 2.6,
+            "high_normal": 6.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "LIPID",
+    "name": "Lipid Profile",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 4,
+    "price": 35.0,
+    "description": "Comprehensive cardiovascular risk lipid profile with Friedewald equation derived fractions.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "CHOL",
+        "name": "Total Cholesterol",
+        "unit": "mg/dL",
+        "loinc_code": "2093-3",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 125.0,
+            "high_normal": 200.0,
+            "critical_high": 350.0
+          }
+        ]
+      },
+      {
+        "code": "TRIG",
+        "name": "Triglycerides",
+        "unit": "mg/dL",
+        "loinc_code": "2571-8",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 50.0,
+            "high_normal": 150.0,
+            "critical_high": 500.0
+          }
+        ]
+      },
+      {
+        "code": "HDL",
+        "name": "HDL Cholesterol",
+        "unit": "mg/dL",
+        "loinc_code": "2085-9",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 40.0,
+            "high_normal": 60.0
+          },
+          {
+            "gender": "Female",
+            "low_normal": 50.0,
+            "high_normal": 70.0
+          }
+        ]
+      },
+      {
+        "code": "VLDL",
+        "name": "VLDL Cholesterol",
+        "unit": "mg/dL",
+        "loinc_code": "13457-7",
+        "data_type": "calculated",
+        "calculation_formula": "triglycerides / 5.0",
+        "display_order": 4,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 10.0,
+            "high_normal": 30.0
+          }
+        ]
+      },
+      {
+        "code": "LDL",
+        "name": "LDL Cholesterol (Calculated)",
+        "unit": "mg/dL",
+        "loinc_code": "13457-7",
+        "data_type": "calculated",
+        "calculation_formula": "total_cholesterol - hdl_cholesterol - (triglycerides / 5.0)",
+        "display_order": 5,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 60.0,
+            "high_normal": 100.0,
+            "critical_high": 220.0
+          }
+        ]
+      },
+      {
+        "code": "CHOL_HDL_RATIO",
+        "name": "Total / HDL Cholesterol Ratio",
+        "unit": "ratio",
+        "loinc_code": "9830-1",
+        "data_type": "calculated",
+        "calculation_formula": "total_cholesterol / hdl_cholesterol",
+        "display_order": 6,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 3.0,
+            "high_normal": 5.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "GLU_F",
+    "name": "Fasting Blood Glucose (FBS)",
+    "department": "Biochemistry",
+    "specimen_type": "Plasma (Fluoride)",
+    "tat_hours": 2,
+    "price": 12.0,
+    "description": "Quantitative enzymatic determination of fasting blood sugar.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "GLU_FAST",
+        "name": "Fasting Glucose",
+        "unit": "mg/dL",
+        "loinc_code": "1558-6",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 70.0,
+            "high_normal": 99.0,
+            "critical_low": 45.0,
+            "critical_high": 400.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "GLU_PP",
+    "name": "Postprandial Blood Glucose (PPBS)",
+    "department": "Biochemistry",
+    "specimen_type": "Plasma (Fluoride)",
+    "tat_hours": 2,
+    "price": 12.0,
+    "description": "Quantitative enzymatic determination of 2-hour postprandial glucose.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "GLU_POST",
+        "name": "Postprandial Glucose",
+        "unit": "mg/dL",
+        "loinc_code": "1521-4",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 80.0,
+            "high_normal": 140.0,
+            "critical_low": 45.0,
+            "critical_high": 450.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "GLU_R",
+    "name": "Random Blood Glucose (RBS)",
+    "department": "Biochemistry",
+    "specimen_type": "Plasma (Fluoride)",
+    "tat_hours": 1,
+    "price": 10.0,
+    "description": "Immediate random blood glucose assessment.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "GLU_RAND",
+        "name": "Random Glucose",
+        "unit": "mg/dL",
+        "loinc_code": "2345-7",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 70.0,
+            "high_normal": 140.0,
+            "critical_low": 45.0,
+            "critical_high": 400.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "HBA1C",
+    "name": "Glycated Hemoglobin (HbA1c)",
+    "department": "Biochemistry",
+    "specimen_type": "Whole Blood (EDTA)",
+    "tat_hours": 3,
+    "price": 30.0,
+    "description": "HPLC assessment of 3-month average glycemic control.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "A1C",
+        "name": "HbA1c",
+        "unit": "%",
+        "loinc_code": "4548-4",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 4.0,
+            "high_normal": 5.6,
+            "critical_high": 13.0
+          }
+        ]
+      },
+      {
+        "code": "EAG",
+        "name": "Estimated Average Glucose (eAG)",
+        "unit": "mg/dL",
+        "loinc_code": "2708-6",
+        "data_type": "calculated",
+        "calculation_formula": "(28.7 * hba1c) - 46.7",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 68.0,
+            "high_normal": 114.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "URINE_RE",
+    "name": "Urine Routine & Microscopic Examination (Urine R/E)",
+    "department": "Urinalysis",
+    "specimen_type": "Clean Catch Urine",
+    "tat_hours": 2,
+    "price": 15.0,
+    "description": "Physical, biochemical test-strip, and microscopic sediment analysis of urine.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "U_COLOR",
+        "name": "Color",
+        "unit": "",
+        "loinc_code": "5778-6",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Pale Yellow"
+          }
+        ]
+      },
+      {
+        "code": "U_APP",
+        "name": "Appearance / Clarity",
+        "unit": "",
+        "loinc_code": "5767-9",
+        "data_type": "text",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Clear"
+          }
+        ]
+      },
+      {
+        "code": "U_SPGRAV",
+        "name": "Specific Gravity",
+        "unit": "",
+        "loinc_code": "5811-5",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 1.005,
+            "high_normal": 1.03
+          }
+        ]
+      },
+      {
+        "code": "U_PH",
+        "name": "pH",
+        "unit": "",
+        "loinc_code": "5803-2",
+        "data_type": "numeric",
+        "display_order": 4,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 4.5,
+            "high_normal": 8.0
+          }
+        ]
+      },
+      {
+        "code": "U_PROT",
+        "name": "Protein / Albumin",
+        "unit": "",
+        "loinc_code": "20454-5",
+        "data_type": "text",
+        "display_order": 5,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Nil"
+          }
+        ]
+      },
+      {
+        "code": "U_GLU",
+        "name": "Glucose",
+        "unit": "",
+        "loinc_code": "5792-7",
+        "data_type": "text",
+        "display_order": 6,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Nil"
+          }
+        ]
+      },
+      {
+        "code": "U_KET",
+        "name": "Ketone Bodies",
+        "unit": "",
+        "loinc_code": "5797-6",
+        "data_type": "text",
+        "display_order": 7,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Negative"
+          }
+        ]
+      },
+      {
+        "code": "U_PUS",
+        "name": "Pus Cells (WBC)",
+        "unit": "/hpf",
+        "loinc_code": "5821-4",
+        "data_type": "numeric",
+        "display_order": 8,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 5.0,
+            "critical_high": 50.0
+          }
+        ]
+      },
+      {
+        "code": "U_RBC",
+        "name": "Red Blood Cells (RBC)",
+        "unit": "/hpf",
+        "loinc_code": "5819-8",
+        "data_type": "numeric",
+        "display_order": 9,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 2.0,
+            "critical_high": 40.0
+          }
+        ]
+      },
+      {
+        "code": "U_EPI",
+        "name": "Epithelial Cells",
+        "unit": "/hpf",
+        "loinc_code": "5788-5",
+        "data_type": "numeric",
+        "display_order": 10,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 5.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "TFT",
+    "name": "Thyroid Profile (TSH, FT3, FT4)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 4,
+    "price": 40.0,
+    "description": "Chemiluminescent immunoassay of thyroid-stimulating hormone and free iodothyronines.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "TSH",
+        "name": "Thyroid Stimulating Hormone (TSH)",
+        "unit": "uIU/mL",
+        "loinc_code": "3016-3",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.4,
+            "high_normal": 4.2,
+            "critical_low": 0.05,
+            "critical_high": 20.0
+          }
+        ]
+      },
+      {
+        "code": "FT3",
+        "name": "Free Triiodothyronine (FT3)",
+        "unit": "pg/mL",
+        "loinc_code": "3051-0",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 2.0,
+            "high_normal": 4.4
+          }
+        ]
+      },
+      {
+        "code": "FT4",
+        "name": "Free Thyroxine (FT4)",
+        "unit": "ng/dL",
+        "loinc_code": "3024-7",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.8,
+            "high_normal": 1.8,
+            "critical_low": 0.4,
+            "critical_high": 4.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "ELECTRO",
+    "name": "Serum Electrolytes (Na, K, Cl, HCO3)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 1,
+    "price": 25.0,
+    "description": "Ion-selective electrode measurement of serum electrolytes.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "NA",
+        "name": "Sodium (Na+)",
+        "unit": "mmol/L",
+        "loinc_code": "2951-2",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 135.0,
+            "high_normal": 145.0,
+            "critical_low": 120.0,
+            "critical_high": 160.0
+          }
+        ]
+      },
+      {
+        "code": "K",
+        "name": "Potassium (K+)",
+        "unit": "mmol/L",
+        "loinc_code": "2823-3",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 3.5,
+            "high_normal": 5.1,
+            "critical_low": 2.8,
+            "critical_high": 6.5
+          }
+        ]
+      },
+      {
+        "code": "CL",
+        "name": "Chloride (Cl-)",
+        "unit": "mmol/L",
+        "loinc_code": "2075-0",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 98.0,
+            "high_normal": 107.0,
+            "critical_low": 80.0,
+            "critical_high": 120.0
+          }
+        ]
+      },
+      {
+        "code": "HCO3",
+        "name": "Bicarbonate (HCO3-)",
+        "unit": "mmol/L",
+        "loinc_code": "1963-8",
+        "data_type": "numeric",
+        "display_order": 4,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 22.0,
+            "high_normal": 29.0,
+            "critical_low": 10.0,
+            "critical_high": 40.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "TROP_I",
+    "name": "Cardiac Troponin I (High Sensitivity)",
+    "department": "Biochemistry",
+    "specimen_type": "Plasma (Heparin)",
+    "tat_hours": 1,
+    "price": 45.0,
+    "description": "High-sensitivity quantitative troponin for acute coronary syndrome evaluation.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "TROP_I_VAL",
+        "name": "Troponin I (hs-cTnI)",
+        "unit": "ng/mL",
+        "loinc_code": "42757-5",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 0.04,
+            "critical_high": 0.4
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "CK_MB",
+    "name": "Creatine Kinase-MB (CK-MB)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 28.0,
+    "description": "Myocardial isoform of creatine kinase.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "CKMB_VAL",
+        "name": "CK-MB",
+        "unit": "U/L",
+        "loinc_code": "2157-6",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 25.0,
+            "critical_high": 100.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "PT_INR",
+    "name": "Prothrombin Time & INR",
+    "department": "Hematology",
+    "specimen_type": "Sodium Citrate Blood",
+    "tat_hours": 1,
+    "price": 22.0,
+    "description": "Extrinsic coagulation pathway assessment and oral anticoagulant monitoring.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "PT_TIME",
+        "name": "Prothrombin Time (PT)",
+        "unit": "seconds",
+        "loinc_code": "5902-2",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 11.0,
+            "high_normal": 14.0
+          }
+        ]
+      },
+      {
+        "code": "PT_CONTROL",
+        "name": "Control Time",
+        "unit": "seconds",
+        "loinc_code": "5903-0",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 11.5,
+            "high_normal": 12.5
+          }
+        ]
+      },
+      {
+        "code": "INR",
+        "name": "International Normalized Ratio (INR)",
+        "unit": "ratio",
+        "loinc_code": "6301-6",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.8,
+            "high_normal": 1.2,
+            "critical_high": 4.5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "APTT",
+    "name": "Activated Partial Thromboplastin Time (APTT)",
+    "department": "Hematology",
+    "specimen_type": "Sodium Citrate Blood",
+    "tat_hours": 1,
+    "price": 22.0,
+    "description": "Intrinsic coagulation pathway evaluation and unfractionated heparin monitoring.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "APTT_TIME",
+        "name": "APTT Patient Time",
+        "unit": "seconds",
+        "loinc_code": "3173-2",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 26.0,
+            "high_normal": 38.0,
+            "critical_high": 100.0
+          }
+        ]
+      },
+      {
+        "code": "APTT_CTRL",
+        "name": "APTT Control Time",
+        "unit": "seconds",
+        "loinc_code": "3174-0",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 28.0,
+            "high_normal": 32.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "CRP",
+    "name": "C-Reactive Protein (Quantitative)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 20.0,
+    "description": "Acute phase reactant for systemic inflammation and infection.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "CRP_VAL",
+        "name": "C-Reactive Protein",
+        "unit": "mg/L",
+        "loinc_code": "1988-5",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 6.0,
+            "critical_high": 150.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "ESR",
+    "name": "Erythrocyte Sedimentation Rate (ESR)",
+    "department": "Hematology",
+    "specimen_type": "Sodium Citrate Blood",
+    "tat_hours": 2,
+    "price": 10.0,
+    "description": "Westergren method measurement of erythrocyte settling.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "ESR_VAL",
+        "name": "ESR 1st Hour",
+        "unit": "mm/hr",
+        "loinc_code": "4537-7",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 0.0,
+            "high_normal": 15.0
+          },
+          {
+            "gender": "Female",
+            "low_normal": 0.0,
+            "high_normal": 20.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "CA_PHOS",
+    "name": "Calcium & Phosphorus Panel",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 3,
+    "price": 25.0,
+    "description": "Mineral metabolism and bone health indices.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "CA_TOT",
+        "name": "Total Calcium",
+        "unit": "mg/dL",
+        "loinc_code": "17861-6",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 8.5,
+            "high_normal": 10.5,
+            "critical_low": 6.5,
+            "critical_high": 13.0
+          }
+        ]
+      },
+      {
+        "code": "PHOS_INORG",
+        "name": "Inorganic Phosphorus",
+        "unit": "mg/dL",
+        "loinc_code": "2777-1",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 2.5,
+            "high_normal": 4.5,
+            "critical_low": 1.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MG",
+    "name": "Serum Magnesium",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 18.0,
+    "description": "Colorimetric determination of total serum magnesium.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "MG_VAL",
+        "name": "Magnesium",
+        "unit": "mg/dL",
+        "loinc_code": "2601-3",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 1.7,
+            "high_normal": 2.4,
+            "critical_low": 1.0,
+            "critical_high": 4.5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "AMYLASE",
+    "name": "Serum Amylase",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 22.0,
+    "description": "Enzymatic marker for acute pancreatitis.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "AMY_VAL",
+        "name": "Amylase",
+        "unit": "U/L",
+        "loinc_code": "1798-8",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 28.0,
+            "high_normal": 100.0,
+            "critical_high": 400.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "LIPASE",
+    "name": "Serum Lipase",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 24.0,
+    "description": "Pancreatic digestive enzyme with high sensitivity for acute pancreatitis.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "LIP_VAL",
+        "name": "Lipase",
+        "unit": "U/L",
+        "loinc_code": "3040-3",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 13.0,
+            "high_normal": 60.0,
+            "critical_high": 300.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "D_DIMER",
+    "name": "D-Dimer Quantitative",
+    "department": "Hematology",
+    "specimen_type": "Sodium Citrate Blood",
+    "tat_hours": 1,
+    "price": 40.0,
+    "description": "Fibrin degradation product for venous thromboembolism / pulmonary embolism screening.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "DDIM_VAL",
+        "name": "D-Dimer",
+        "unit": "ug/mL FEU",
+        "loinc_code": "48065-7",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 0.5,
+            "critical_high": 5.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "FERRITIN",
+    "name": "Serum Ferritin",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 4,
+    "price": 30.0,
+    "description": "Cellular iron storage protein marker.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "FERR_VAL",
+        "name": "Ferritin",
+        "unit": "ng/mL",
+        "loinc_code": "2276-0",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 24.0,
+            "high_normal": 336.0,
+            "critical_low": 10.0
+          },
+          {
+            "gender": "Female",
+            "low_normal": 11.0,
+            "high_normal": 307.0,
+            "critical_low": 10.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "VIT_D",
+    "name": "25-Hydroxy Vitamin D",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 6,
+    "price": 45.0,
+    "description": "Total 25-hydroxyvitamin D [D2 + D3] evaluation.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "VITD_VAL",
+        "name": "25-OH Vitamin D",
+        "unit": "ng/mL",
+        "loinc_code": "62292-8",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 30.0,
+            "high_normal": 100.0,
+            "critical_low": 10.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "VIT_B12",
+    "name": "Vitamin B12 (Cyanocobalamin)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 6,
+    "price": 40.0,
+    "description": "Chemiluminescent determination of serum cobalamin.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "B12_VAL",
+        "name": "Vitamin B12",
+        "unit": "pg/mL",
+        "loinc_code": "2132-9",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 211.0,
+            "high_normal": 911.0,
+            "critical_low": 150.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "ABO_RH",
+    "name": "Blood Group & Rh Type",
+    "department": "Pathology",
+    "specimen_type": "Whole Blood (EDTA)",
+    "tat_hours": 1,
+    "price": 15.0,
+    "description": "Forward and reverse grouping with anti-D testing.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "ABO_GRP",
+        "name": "ABO Group",
+        "unit": "",
+        "loinc_code": "883-9",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "O"
+          }
+        ]
+      },
+      {
+        "code": "RH_TYPE",
+        "name": "Rh(D) Factor",
+        "unit": "",
+        "loinc_code": "10331-7",
+        "data_type": "text",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Positive"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "STOOL_RE",
+    "name": "Stool Routine Examination",
+    "department": "Pathology",
+    "specimen_type": "Stool",
+    "tat_hours": 2,
+    "price": 15.0,
+    "description": "Macroscopic and microscopic parasitological evaluation of feces.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "ST_COLOR",
+        "name": "Color",
+        "unit": "",
+        "loinc_code": "5774-5",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Brown"
+          }
+        ]
+      },
+      {
+        "code": "ST_CONS",
+        "name": "Consistency",
+        "unit": "",
+        "loinc_code": "5771-1",
+        "data_type": "text",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Formed"
+          }
+        ]
+      },
+      {
+        "code": "ST_OCCULT",
+        "name": "Occult Blood",
+        "unit": "",
+        "loinc_code": "14563-1",
+        "data_type": "text",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Negative"
+          }
+        ]
+      },
+      {
+        "code": "ST_PUS",
+        "name": "Pus Cells",
+        "unit": "/hpf",
+        "loinc_code": "10701-1",
+        "data_type": "numeric",
+        "display_order": 4,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 2.0
+          }
+        ]
+      },
+      {
+        "code": "ST_RBC",
+        "name": "RBCs",
+        "unit": "/hpf",
+        "loinc_code": "10700-3",
+        "data_type": "numeric",
+        "display_order": 5,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 0.0
+          }
+        ]
+      },
+      {
+        "code": "ST_OVA",
+        "name": "Ova / Cysts / Parasites",
+        "unit": "",
+        "loinc_code": "10702-9",
+        "data_type": "text",
+        "display_order": 6,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Not Detected"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "DENGUE_NS1",
+    "name": "Dengue NS1 Antigen & Rapid Panel",
+    "department": "Serology",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 1,
+    "price": 28.0,
+    "description": "Early acute dengue non-structural protein 1 and antibody screen.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "DENG_NS1",
+        "name": "Dengue NS1 Antigen",
+        "unit": "",
+        "loinc_code": "51659-1",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Negative"
+          }
+        ]
+      },
+      {
+        "code": "DENG_IGM",
+        "name": "Dengue IgM Antibody",
+        "unit": "",
+        "loinc_code": "23522-6",
+        "data_type": "text",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Negative"
+          }
+        ]
+      },
+      {
+        "code": "DENG_IGG",
+        "name": "Dengue IgG Antibody",
+        "unit": "",
+        "loinc_code": "23521-8",
+        "data_type": "text",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Negative"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "MALARIA_AG",
+    "name": "Malaria Rapid Diagnostic Test (Pf/Pv)",
+    "department": "Pathology",
+    "specimen_type": "Whole Blood (EDTA)",
+    "tat_hours": 1,
+    "price": 18.0,
+    "description": "Immunochromatographic detection of P. falciparum HRP-2 and P. vivax LDH.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "MAL_PF",
+        "name": "Plasmodium falciparum Antigen",
+        "unit": "",
+        "loinc_code": "49753-7",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Negative"
+          }
+        ]
+      },
+      {
+        "code": "MAL_PV",
+        "name": "Plasmodium vivax Antigen",
+        "unit": "",
+        "loinc_code": "49754-5",
+        "data_type": "text",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Negative"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "WIDAL",
+    "name": "Widal Test (Typhoid Agglutination)",
+    "department": "Serology",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 16.0,
+    "description": "Tube agglutination titration against Salmonella somatic and flagellar antigens.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "WID_TO",
+        "name": "S. typhi (O) Titer",
+        "unit": "",
+        "loinc_code": "22576-3",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "< 1:80"
+          }
+        ]
+      },
+      {
+        "code": "WID_TH",
+        "name": "S. typhi (H) Titer",
+        "unit": "",
+        "loinc_code": "22577-1",
+        "data_type": "text",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "< 1:80"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "ABG",
+    "name": "Arterial Blood Gas Analysis (ABG)",
+    "department": "Biochemistry",
+    "specimen_type": "Arterial Whole Blood (Heparin)",
+    "tat_hours": 1,
+    "price": 40.0,
+    "description": "Critical care acid-base and ventilation gas analysis.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "ABG_PH",
+        "name": "pH",
+        "unit": "",
+        "loinc_code": "2744-1",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 7.35,
+            "high_normal": 7.45,
+            "critical_low": 7.1,
+            "critical_high": 7.6
+          }
+        ]
+      },
+      {
+        "code": "ABG_PO2",
+        "name": "pO2 (Oxygen Tension)",
+        "unit": "mmHg",
+        "loinc_code": "2703-7",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 80.0,
+            "high_normal": 100.0,
+            "critical_low": 55.0
+          }
+        ]
+      },
+      {
+        "code": "ABG_PCO2",
+        "name": "pCO2 (Carbon Dioxide Tension)",
+        "unit": "mmHg",
+        "loinc_code": "2019-8",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 35.0,
+            "high_normal": 45.0,
+            "critical_low": 20.0,
+            "critical_high": 70.0
+          }
+        ]
+      },
+      {
+        "code": "ABG_HCO3",
+        "name": "Calculated Bicarbonate",
+        "unit": "mmol/L",
+        "loinc_code": "1960-4",
+        "data_type": "numeric",
+        "display_order": 4,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 22.0,
+            "high_normal": 26.0,
+            "critical_low": 10.0,
+            "critical_high": 40.0
+          }
+        ]
+      },
+      {
+        "code": "ABG_SO2",
+        "name": "Oxygen Saturation (SaO2)",
+        "unit": "%",
+        "loinc_code": "2708-6",
+        "data_type": "numeric",
+        "display_order": 5,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 95.0,
+            "high_normal": 100.0,
+            "critical_low": 85.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "PROCALCITONIN",
+    "name": "Procalcitonin (PCT)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 55.0,
+    "description": "Biomarker for severe bacterial infections and sepsis monitoring.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "PCT_VAL",
+        "name": "Procalcitonin",
+        "unit": "ng/mL",
+        "loinc_code": "33959-8",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 0.5,
+            "critical_high": 2.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "IRON_TIBC",
+    "name": "Serum Iron & TIBC Profile",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 4,
+    "price": 35.0,
+    "description": "Iron metabolism profile with transferrin saturation calculation.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "FE_SERUM",
+        "name": "Serum Iron",
+        "unit": "ug/dL",
+        "loinc_code": "2498-4",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 65.0,
+            "high_normal": 175.0
+          },
+          {
+            "gender": "Female",
+            "low_normal": 50.0,
+            "high_normal": 170.0
+          }
+        ]
+      },
+      {
+        "code": "TIBC",
+        "name": "Total Iron Binding Capacity (TIBC)",
+        "unit": "ug/dL",
+        "loinc_code": "2500-7",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 250.0,
+            "high_normal": 450.0
+          }
+        ]
+      },
+      {
+        "code": "TSAT",
+        "name": "Transferrin Saturation",
+        "unit": "%",
+        "loinc_code": "2502-3",
+        "data_type": "calculated",
+        "calculation_formula": "(iron / tibc) * 100.0",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 20.0,
+            "high_normal": 50.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "PSA",
+    "name": "Prostate Specific Antigen (PSA)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 4,
+    "price": 35.0,
+    "description": "Total and free PSA screening for prostatic neoplasms.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "PSA_TOT",
+        "name": "Total PSA",
+        "unit": "ng/mL",
+        "loinc_code": "2857-1",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 0.0,
+            "high_normal": 4.0,
+            "critical_high": 20.0
+          }
+        ]
+      },
+      {
+        "code": "PSA_FREE",
+        "name": "Free PSA",
+        "unit": "ng/mL",
+        "loinc_code": "10886-0",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 0.0,
+            "high_normal": 1.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "BHCG",
+    "name": "Total Beta-hCG (Quantitative)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 30.0,
+    "description": "Pregnancy and trophoblastic tumor marker.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "BHCG_VAL",
+        "name": "Beta-hCG",
+        "unit": "mIU/mL",
+        "loinc_code": "19080-1",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 5.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "RF",
+    "name": "Rheumatoid Factor (RF)",
+    "department": "Serology",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 3,
+    "price": 22.0,
+    "description": "Turbidimetric quantitative RF determination.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "RF_VAL",
+        "name": "Rheumatoid Factor",
+        "unit": "IU/mL",
+        "loinc_code": "11572-5",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 14.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "ANTI_CCP",
+    "name": "Anti-Cyclic Citrullinated Peptide (Anti-CCP)",
+    "department": "Serology",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 6,
+    "price": 48.0,
+    "description": "High-specificity autoantibody marker for rheumatoid arthritis.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "ACCP_VAL",
+        "name": "Anti-CCP",
+        "unit": "U/mL",
+        "loinc_code": "33935-8",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 17.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "ANA_IFA",
+    "name": "Antinuclear Antibodies (ANA by IFA)",
+    "department": "Serology",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 8,
+    "price": 50.0,
+    "description": "Gold standard HEp-2 immunofluorescence for systemic lupus and autoimmune connective tissue disease.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "ANA_TIT",
+        "name": "ANA Titer",
+        "unit": "",
+        "loinc_code": "8099-4",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "< 1:40 (Negative)"
+          }
+        ]
+      },
+      {
+        "code": "ANA_PAT",
+        "name": "Pattern",
+        "unit": "",
+        "loinc_code": "20397-6",
+        "data_type": "text",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "None"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "HBSAG",
+    "name": "Hepatitis B Surface Antigen (HBsAg)",
+    "department": "Serology",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 20.0,
+    "description": "Chemiluminescent / ELISA detection of HBV viral surface coat protein.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "HBSAG_VAL",
+        "name": "HBsAg",
+        "unit": "",
+        "loinc_code": "5196-1",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Non-Reactive"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "ANTI_HCV",
+    "name": "Hepatitis C Virus Antibody (Anti-HCV)",
+    "department": "Serology",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 25.0,
+    "description": "Qualitative ELISA antibody screen against hepatitis C core and non-structural antigens.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "HCV_VAL",
+        "name": "Anti-HCV",
+        "unit": "",
+        "loinc_code": "13955-0",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Non-Reactive"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "HIV_1_2",
+    "name": "HIV 1 & 2 4th Generation Ag/Ab Screen",
+    "department": "Serology",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 25.0,
+    "description": "Combination p24 antigen and HIV-1/HIV-2 antibodies screening.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "HIV_VAL",
+        "name": "HIV 1/2 Screen",
+        "unit": "",
+        "loinc_code": "56888-1",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Non-Reactive"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "VDRL_RPR",
+    "name": "Syphilis Serology (VDRL / RPR)",
+    "department": "Serology",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 15.0,
+    "description": "Rapid Plasma Reagin nontreponemal flocculation test.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "RPR_VAL",
+        "name": "RPR Titer",
+        "unit": "",
+        "loinc_code": "20507-0",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Non-Reactive"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "FOBT",
+    "name": "Fecal Occult Blood Test (FOBT / FIT)",
+    "department": "Pathology",
+    "specimen_type": "Stool",
+    "tat_hours": 2,
+    "price": 15.0,
+    "description": "Fecal immunochemical screening for lower gastrointestinal micro-bleeding.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "FOBT_VAL",
+        "name": "Occult Blood",
+        "unit": "",
+        "loinc_code": "14563-1",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Negative"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "AFB_SPUTUM",
+    "name": "Sputum for Acid Fast Bacilli (AFB Stain)",
+    "department": "Microbiology",
+    "specimen_type": "Sputum",
+    "tat_hours": 4,
+    "price": 20.0,
+    "description": "Ziehl-Neelsen staining microscopy for Mycobacterium tuberculosis.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "AFB_SMEAR",
+        "name": "AFB Smear Result",
+        "unit": "",
+        "loinc_code": "11475-1",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Negative (No AFB seen)"
+          }
+        ]
+      },
+      {
+        "code": "AFB_GRADE",
+        "name": "Smear Grading",
+        "unit": "",
+        "loinc_code": "11477-7",
+        "data_type": "text",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Nil"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "URINE_CS",
+    "name": "Urine Culture & Sensitivity",
+    "department": "Microbiology",
+    "specimen_type": "Clean Catch Urine",
+    "tat_hours": 48,
+    "price": 35.0,
+    "description": "Aerobic bacterial culture with automated Kirby-Bauer antibiotic susceptibility profiling.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "UCS_GROWTH",
+        "name": "Bacterial Growth Status",
+        "unit": "",
+        "loinc_code": "630-4",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "No significant bacteriuria (<10^4 CFU/mL)"
+          }
+        ]
+      },
+      {
+        "code": "UCS_ORG",
+        "name": "Isolated Organism",
+        "unit": "",
+        "loinc_code": "634-6",
+        "data_type": "text",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "None"
+          }
+        ]
+      },
+      {
+        "code": "UCS_COUNT",
+        "name": "Colony Count",
+        "unit": "CFU/mL",
+        "loinc_code": "564-5",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 10000.0,
+            "critical_high": 100000.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "BLOOD_CS",
+    "name": "Blood Culture & Sensitivity (Aerobic)",
+    "department": "Microbiology",
+    "specimen_type": "Whole Blood (Culture Bottle)",
+    "tat_hours": 72,
+    "price": 45.0,
+    "description": "Automated BACTEC continuous monitoring blood culture.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "BCS_STATUS",
+        "name": "Culture Growth Status",
+        "unit": "",
+        "loinc_code": "600-7",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "No growth observed after 5 days of incubation"
+          }
+        ]
+      },
+      {
+        "code": "BCS_ORG",
+        "name": "Organism Isolated",
+        "unit": "",
+        "loinc_code": "601-5",
+        "data_type": "text",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "None"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "CSF_ANALYSIS",
+    "name": "Cerebrospinal Fluid Analysis (CSF)",
+    "department": "Pathology",
+    "specimen_type": "CSF",
+    "tat_hours": 2,
+    "price": 50.0,
+    "description": "Biochemical and cytological evaluation of lumbar puncture fluid.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "CSF_APP",
+        "name": "Appearance",
+        "unit": "",
+        "loinc_code": "10234-3",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Clear & Colorless"
+          }
+        ]
+      },
+      {
+        "code": "CSF_PROT",
+        "name": "CSF Protein",
+        "unit": "mg/dL",
+        "loinc_code": "2889-4",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 15.0,
+            "high_normal": 45.0,
+            "critical_high": 200.0
+          }
+        ]
+      },
+      {
+        "code": "CSF_GLU",
+        "name": "CSF Glucose",
+        "unit": "mg/dL",
+        "loinc_code": "2342-4",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 50.0,
+            "high_normal": 80.0,
+            "critical_low": 20.0
+          }
+        ]
+      },
+      {
+        "code": "CSF_WBC",
+        "name": "Total Leucocyte Count",
+        "unit": "/uL",
+        "loinc_code": "26477-0",
+        "data_type": "numeric",
+        "display_order": 4,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 5.0,
+            "critical_high": 100.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "PLEURAL_FLUID",
+    "name": "Pleural Fluid Routine Analysis",
+    "department": "Pathology",
+    "specimen_type": "Pleural Fluid",
+    "tat_hours": 3,
+    "price": 40.0,
+    "description": "Exudate vs transudate differentiation using Light criteria.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "PL_PROT",
+        "name": "Fluid Protein",
+        "unit": "g/dL",
+        "loinc_code": "2888-6",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 1.0,
+            "high_normal": 3.0
+          }
+        ]
+      },
+      {
+        "code": "PL_LDH",
+        "name": "Fluid LDH",
+        "unit": "U/L",
+        "loinc_code": "2538-7",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 50.0,
+            "high_normal": 200.0
+          }
+        ]
+      },
+      {
+        "code": "PL_GLU",
+        "name": "Fluid Glucose",
+        "unit": "mg/dL",
+        "loinc_code": "2340-8",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 60.0,
+            "high_normal": 100.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "ASCITIC_FLUID",
+    "name": "Ascitic Fluid Routine Examination",
+    "department": "Pathology",
+    "specimen_type": "Ascitic Fluid",
+    "tat_hours": 3,
+    "price": 40.0,
+    "description": "Peritoneal fluid analysis with Serum-Ascites Albumin Gradient (SAAG).",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "ASC_ALB",
+        "name": "Ascitic Albumin",
+        "unit": "g/dL",
+        "loinc_code": "1755-8",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.5,
+            "high_normal": 2.5
+          }
+        ]
+      },
+      {
+        "code": "ASC_PROT",
+        "name": "Total Protein",
+        "unit": "g/dL",
+        "loinc_code": "2887-8",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 1.0,
+            "high_normal": 3.0
+          }
+        ]
+      },
+      {
+        "code": "ASC_WBC",
+        "name": "Polymorphonuclear Cells",
+        "unit": "/uL",
+        "loinc_code": "30452-7",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 250.0,
+            "critical_high": 500.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "SYNOVIAL_FLUID",
+    "name": "Synovial Fluid Examination",
+    "department": "Pathology",
+    "specimen_type": "Synovial Fluid",
+    "tat_hours": 3,
+    "price": 45.0,
+    "description": "Arthrocentesis fluid crystal polarising microscopy and cell differential.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "SYN_CRYST",
+        "name": "Crystals (MSU / CPPD)",
+        "unit": "",
+        "loinc_code": "33870-7",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "No crystals observed"
+          }
+        ]
+      },
+      {
+        "code": "SYN_WBC",
+        "name": "Synovial Leucocytes",
+        "unit": "/uL",
+        "loinc_code": "26480-4",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 200.0,
+            "critical_high": 50000.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "SPEP",
+    "name": "Serum Protein Electrophoresis (SPEP)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 24,
+    "price": 55.0,
+    "description": "Capillary zone electrophoresis for monoclonal paraprotein bands.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "SPEP_ALB",
+        "name": "Albumin Fraction",
+        "unit": "%",
+        "loinc_code": "2862-1",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 55.0,
+            "high_normal": 65.0
+          }
+        ]
+      },
+      {
+        "code": "SPEP_A1",
+        "name": "Alpha-1 Globulin",
+        "unit": "%",
+        "loinc_code": "2865-4",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 2.0,
+            "high_normal": 4.5
+          }
+        ]
+      },
+      {
+        "code": "SPEP_A2",
+        "name": "Alpha-2 Globulin",
+        "unit": "%",
+        "loinc_code": "2868-8",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 7.0,
+            "high_normal": 13.0
+          }
+        ]
+      },
+      {
+        "code": "SPEP_BETA",
+        "name": "Beta Globulin",
+        "unit": "%",
+        "loinc_code": "2871-2",
+        "data_type": "numeric",
+        "display_order": 4,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 9.0,
+            "high_normal": 15.0
+          }
+        ]
+      },
+      {
+        "code": "SPEP_GAMMA",
+        "name": "Gamma Globulin",
+        "unit": "%",
+        "loinc_code": "2874-6",
+        "data_type": "numeric",
+        "display_order": 5,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 11.0,
+            "high_normal": 22.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "IGG",
+    "name": "Immunoglobulin G (IgG Quantitative)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 6,
+    "price": 35.0,
+    "description": "Nephelometric quantitative serum IgG level.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "IGG_VAL",
+        "name": "IgG",
+        "unit": "mg/dL",
+        "loinc_code": "2465-3",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 700.0,
+            "high_normal": 1600.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "IGE",
+    "name": "Total Serum IgE",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 6,
+    "price": 35.0,
+    "description": "Quantitative atopic allergy and helminthic infection biomarker.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "IGE_VAL",
+        "name": "Total IgE",
+        "unit": "IU/mL",
+        "loinc_code": "19113-0",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 100.0,
+            "critical_high": 1000.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "LDH",
+    "name": "Lactate Dehydrogenase (LDH)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 3,
+    "price": 22.0,
+    "description": "General tissue damage and hematologic turnover marker.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "LDH_VAL",
+        "name": "Serum LDH",
+        "unit": "U/L",
+        "loinc_code": "2532-0",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 140.0,
+            "high_normal": 280.0,
+            "critical_high": 1000.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "G6PD",
+    "name": "Glucose-6-Phosphate Dehydrogenase (G6PD)",
+    "department": "Hematology",
+    "specimen_type": "Whole Blood (EDTA)",
+    "tat_hours": 6,
+    "price": 30.0,
+    "description": "Erythrocyte G6PD enzyme activity to screen for hemolytic anemia.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "G6PD_ACT",
+        "name": "G6PD Activity",
+        "unit": "U/g Hb",
+        "loinc_code": "2340-8",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 7.0,
+            "high_normal": 20.0,
+            "critical_low": 2.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "HB_ELECTRO",
+    "name": "Hemoglobin Variant Analysis (HPLC)",
+    "department": "Hematology",
+    "specimen_type": "Whole Blood (EDTA)",
+    "tat_hours": 24,
+    "price": 50.0,
+    "description": "High performance liquid chromatography for hemoglobinopathies and thalassemia.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "HB_A0",
+        "name": "Hb A0 Fraction",
+        "unit": "%",
+        "loinc_code": "42247-7",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 95.0,
+            "high_normal": 98.0
+          }
+        ]
+      },
+      {
+        "code": "HB_A2",
+        "name": "Hb A2 Fraction",
+        "unit": "%",
+        "loinc_code": "42248-5",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 1.5,
+            "high_normal": 3.5
+          }
+        ]
+      },
+      {
+        "code": "HB_F",
+        "name": "Fetal Hb (Hb F)",
+        "unit": "%",
+        "loinc_code": "42249-3",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 1.5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "FIBRINOGEN",
+    "name": "Plasma Fibrinogen Activity",
+    "department": "Hematology",
+    "specimen_type": "Sodium Citrate Blood",
+    "tat_hours": 2,
+    "price": 25.0,
+    "description": "Clauss clotting assay for functional fibrinogen.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "FIB_VAL",
+        "name": "Fibrinogen",
+        "unit": "mg/dL",
+        "loinc_code": "3255-7",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 200.0,
+            "high_normal": 400.0,
+            "critical_low": 100.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "URINE_ACR",
+    "name": "Microalbumin & Creatinine Ratio (Urine ACR)",
+    "department": "Biochemistry",
+    "specimen_type": "Random Urine",
+    "tat_hours": 3,
+    "price": 30.0,
+    "description": "Early diabetic nephropathy and renal microvascular damage marker.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "U_ALB",
+        "name": "Urine Albumin (Microalbumin)",
+        "unit": "mg/L",
+        "loinc_code": "14957-5",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 20.0
+          }
+        ]
+      },
+      {
+        "code": "U_CREAT",
+        "name": "Urine Creatinine",
+        "unit": "mg/dL",
+        "loinc_code": "2161-8",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 20.0,
+            "high_normal": 300.0
+          }
+        ]
+      },
+      {
+        "code": "U_ACR",
+        "name": "Albumin / Creatinine Ratio (ACR)",
+        "unit": "mg/g Cr",
+        "loinc_code": "14959-1",
+        "data_type": "calculated",
+        "calculation_formula": "(urine_albumin / urine_creatinine) * 100.0",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 30.0,
+            "critical_high": 300.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "SERUM_OSM",
+    "name": "Serum Osmolality",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 25.0,
+    "description": "Freezing point depression determination of serum osmolar concentration.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "SOSM_VAL",
+        "name": "Serum Osmolality",
+        "unit": "mOsm/kg",
+        "loinc_code": "2692-2",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 275.0,
+            "high_normal": 295.0,
+            "critical_low": 250.0,
+            "critical_high": 320.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "URINE_OSM",
+    "name": "Urine Osmolality",
+    "department": "Biochemistry",
+    "specimen_type": "Random Urine",
+    "tat_hours": 2,
+    "price": 25.0,
+    "description": "Renal tubular concentrating ability evaluation.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "UOSM_VAL",
+        "name": "Urine Osmolality",
+        "unit": "mOsm/kg",
+        "loinc_code": "2695-5",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 300.0,
+            "high_normal": 900.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "SEMEN_ANALYSIS",
+    "name": "Semen Analysis (Spermiogram)",
+    "department": "Pathology",
+    "specimen_type": "Semen",
+    "tat_hours": 3,
+    "price": 35.0,
+    "description": "WHO criteria manual sperm concentration, motility, and morphology analysis.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "SEM_VOL",
+        "name": "Ejaculate Volume",
+        "unit": "mL",
+        "loinc_code": "33217-1",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 1.5,
+            "high_normal": 6.0
+          }
+        ]
+      },
+      {
+        "code": "SEM_CNT",
+        "name": "Total Sperm Concentration",
+        "unit": "million/mL",
+        "loinc_code": "9780-8",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 15.0,
+            "high_normal": 200.0,
+            "critical_low": 5.0
+          }
+        ]
+      },
+      {
+        "code": "SEM_MOT",
+        "name": "Total Motility (PR + NP)",
+        "unit": "%",
+        "loinc_code": "10582-5",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 40.0,
+            "high_normal": 80.0
+          }
+        ]
+      },
+      {
+        "code": "SEM_NORM",
+        "name": "Normal Kruger Morphology",
+        "unit": "%",
+        "loinc_code": "10583-3",
+        "data_type": "numeric",
+        "display_order": 4,
+        "ranges": [
+          {
+            "gender": "Male",
+            "low_normal": 4.0,
+            "high_normal": 20.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "PAP_SMEAR",
+    "name": "Cervical Pap Smear Cytology",
+    "department": "Pathology",
+    "specimen_type": "Cervical Scrape",
+    "tat_hours": 48,
+    "price": 40.0,
+    "description": "Liquid-based Bethesda cytology system for pre-invasive cervical dysplasia.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "PAP_ADEQ",
+        "name": "Specimen Adequacy",
+        "unit": "",
+        "loinc_code": "19765-7",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "Female",
+            "text_normal": "Satisfactory for evaluation"
+          }
+        ]
+      },
+      {
+        "code": "PAP_DIAG",
+        "name": "Epithelial Abnormalities",
+        "unit": "",
+        "loinc_code": "19766-5",
+        "data_type": "text",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "Female",
+            "text_normal": "NILM (Negative for Intraepithelial Lesion or Malignancy)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "COVID_PCR",
+    "name": "SARS-CoV-2 RT-PCR Detection",
+    "department": "Microbiology",
+    "specimen_type": "Nasopharyngeal Swab",
+    "tat_hours": 4,
+    "price": 35.0,
+    "description": "Real-time reverse transcriptase polymerase chain reaction for COVID-19.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "COV_PCR_RES",
+        "name": "SARS-CoV-2 RNA",
+        "unit": "",
+        "loinc_code": "94500-6",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Not Detected (Negative)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "LUMBAR_PUNCT",
+    "name": "Lumbar Puncture Gram Stain & Indian Ink",
+    "department": "Microbiology",
+    "specimen_type": "CSF",
+    "tat_hours": 2,
+    "price": 25.0,
+    "description": "Immediate emergency stain for bacterial and cryptococcal meningitis.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "CSF_GRAM",
+        "name": "Gram Stain",
+        "unit": "",
+        "loinc_code": "664-3",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "No organisms seen"
+          }
+        ]
+      },
+      {
+        "code": "CSF_INK",
+        "name": "India Ink Preparation",
+        "unit": "",
+        "loinc_code": "668-4",
+        "data_type": "text",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "No encapsulated yeast cells"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "H_PYLORI_AG",
+    "name": "Helicobacter pylori Stool Antigen",
+    "department": "Microbiology",
+    "specimen_type": "Stool",
+    "tat_hours": 2,
+    "price": 25.0,
+    "description": "Monoclonal antigen enzyme immunoassay for active H. pylori gastritis.",
+    "is_panel": false,
+    "parameters": [
+      {
+        "code": "HP_AG_VAL",
+        "name": "H. pylori Antigen",
+        "unit": "",
+        "loinc_code": "49540-8",
+        "data_type": "text",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "text_normal": "Negative"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "LIVER_ENZYMES",
+    "name": "Liver Enzymes Screening Panel (ALT, AST, GGT)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 26.0,
+    "description": "Focused transaminase and gamma-glutamyl transferase monitoring.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "ALT_FOC",
+        "name": "ALT / SGPT",
+        "unit": "U/L",
+        "loinc_code": "1742-6",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 10.0,
+            "high_normal": 45.0,
+            "critical_high": 500.0
+          }
+        ]
+      },
+      {
+        "code": "AST_FOC",
+        "name": "AST / SGOT",
+        "unit": "U/L",
+        "loinc_code": "1920-8",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 10.0,
+            "high_normal": 38.0,
+            "critical_high": 500.0
+          }
+        ]
+      },
+      {
+        "code": "GGT_FOC",
+        "name": "Gamma-GT",
+        "unit": "U/L",
+        "loinc_code": "2324-2",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 9.0,
+            "high_normal": 48.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "CARDIAC_TRIO",
+    "name": "Emergency STAT Cardiac Marker Trio",
+    "department": "Biochemistry",
+    "specimen_type": "Plasma (Heparin)",
+    "tat_hours": 1,
+    "price": 65.0,
+    "description": "STAT Troponin I, CK-MB, and Myoglobin point-of-care emergency panel.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "STAT_TROP",
+        "name": "STAT Troponin I",
+        "unit": "ng/mL",
+        "loinc_code": "42757-5",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 0.04,
+            "critical_high": 0.4
+          }
+        ]
+      },
+      {
+        "code": "STAT_CKMB",
+        "name": "STAT CK-MB",
+        "unit": "U/L",
+        "loinc_code": "2157-6",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.0,
+            "high_normal": 25.0,
+            "critical_high": 100.0
+          }
+        ]
+      },
+      {
+        "code": "STAT_MYO",
+        "name": "STAT Myoglobin",
+        "unit": "ng/mL",
+        "loinc_code": "2639-3",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 25.0,
+            "high_normal": 72.0,
+            "critical_high": 200.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "METABOLIC_PANEL",
+    "name": "Basic Metabolic Panel (BMP)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 2,
+    "price": 35.0,
+    "description": "Electrolytes, glucose, BUN, creatinine, and calcium combined.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "BMP_GLU",
+        "name": "Glucose",
+        "unit": "mg/dL",
+        "loinc_code": "2345-7",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 70.0,
+            "high_normal": 99.0,
+            "critical_low": 45.0,
+            "critical_high": 400.0
+          }
+        ]
+      },
+      {
+        "code": "BMP_CA",
+        "name": "Calcium",
+        "unit": "mg/dL",
+        "loinc_code": "17861-6",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 8.5,
+            "high_normal": 10.2,
+            "critical_low": 6.5,
+            "critical_high": 13.0
+          }
+        ]
+      },
+      {
+        "code": "BMP_NA",
+        "name": "Sodium",
+        "unit": "mmol/L",
+        "loinc_code": "2951-2",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 136.0,
+            "high_normal": 145.0,
+            "critical_low": 120.0,
+            "critical_high": 160.0
+          }
+        ]
+      },
+      {
+        "code": "BMP_K",
+        "name": "Potassium",
+        "unit": "mmol/L",
+        "loinc_code": "2823-3",
+        "data_type": "numeric",
+        "display_order": 4,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 3.5,
+            "high_normal": 5.1,
+            "critical_low": 2.8,
+            "critical_high": 6.5
+          }
+        ]
+      },
+      {
+        "code": "BMP_CO2",
+        "name": "Carbon Dioxide / Bicarb",
+        "unit": "mmol/L",
+        "loinc_code": "2028-9",
+        "data_type": "numeric",
+        "display_order": 5,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 22.0,
+            "high_normal": 29.0,
+            "critical_low": 10.0,
+            "critical_high": 40.0
+          }
+        ]
+      },
+      {
+        "code": "BMP_CL",
+        "name": "Chloride",
+        "unit": "mmol/L",
+        "loinc_code": "2075-0",
+        "data_type": "numeric",
+        "display_order": 6,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 96.0,
+            "high_normal": 106.0,
+            "critical_low": 80.0,
+            "critical_high": 120.0
+          }
+        ]
+      },
+      {
+        "code": "BMP_BUN",
+        "name": "BUN",
+        "unit": "mg/dL",
+        "loinc_code": "3094-0",
+        "data_type": "numeric",
+        "display_order": 7,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 6.0,
+            "high_normal": 20.0,
+            "critical_high": 80.0
+          }
+        ]
+      },
+      {
+        "code": "BMP_CR",
+        "name": "Creatinine",
+        "unit": "mg/dL",
+        "loinc_code": "2160-0",
+        "data_type": "numeric",
+        "display_order": 8,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.6,
+            "high_normal": 1.3,
+            "critical_high": 6.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "CMP_PANEL",
+    "name": "Comprehensive Metabolic Panel (CMP)",
+    "department": "Biochemistry",
+    "specimen_type": "Serum (SST)",
+    "tat_hours": 3,
+    "price": 48.0,
+    "description": "14-parameter comprehensive metabolic index combining BMP with hepatic enzymes.",
+    "is_panel": true,
+    "parameters": [
+      {
+        "code": "CMP_GLU",
+        "name": "Glucose",
+        "unit": "mg/dL",
+        "loinc_code": "2345-7",
+        "data_type": "numeric",
+        "display_order": 1,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 70.0,
+            "high_normal": 99.0,
+            "critical_low": 45.0,
+            "critical_high": 400.0
+          }
+        ]
+      },
+      {
+        "code": "CMP_NA",
+        "name": "Sodium",
+        "unit": "mmol/L",
+        "loinc_code": "2951-2",
+        "data_type": "numeric",
+        "display_order": 2,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 136.0,
+            "high_normal": 145.0,
+            "critical_low": 120.0,
+            "critical_high": 160.0
+          }
+        ]
+      },
+      {
+        "code": "CMP_K",
+        "name": "Potassium",
+        "unit": "mmol/L",
+        "loinc_code": "2823-3",
+        "data_type": "numeric",
+        "display_order": 3,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 3.5,
+            "high_normal": 5.1,
+            "critical_low": 2.8,
+            "critical_high": 6.5
+          }
+        ]
+      },
+      {
+        "code": "CMP_BUN",
+        "name": "BUN",
+        "unit": "mg/dL",
+        "loinc_code": "3094-0",
+        "data_type": "numeric",
+        "display_order": 4,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 6.0,
+            "high_normal": 20.0,
+            "critical_high": 80.0
+          }
+        ]
+      },
+      {
+        "code": "CMP_CR",
+        "name": "Creatinine",
+        "unit": "mg/dL",
+        "loinc_code": "2160-0",
+        "data_type": "numeric",
+        "display_order": 5,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.6,
+            "high_normal": 1.3,
+            "critical_high": 6.0
+          }
+        ]
+      },
+      {
+        "code": "CMP_ALB",
+        "name": "Albumin",
+        "unit": "g/dL",
+        "loinc_code": "1751-7",
+        "data_type": "numeric",
+        "display_order": 6,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 3.5,
+            "high_normal": 5.0,
+            "critical_low": 1.8
+          }
+        ]
+      },
+      {
+        "code": "CMP_TBIL",
+        "name": "Total Bilirubin",
+        "unit": "mg/dL",
+        "loinc_code": "1975-2",
+        "data_type": "numeric",
+        "display_order": 7,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 0.2,
+            "high_normal": 1.2,
+            "critical_high": 15.0
+          }
+        ]
+      },
+      {
+        "code": "CMP_ALT",
+        "name": "ALT",
+        "unit": "U/L",
+        "loinc_code": "1742-6",
+        "data_type": "numeric",
+        "display_order": 8,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 10.0,
+            "high_normal": 45.0,
+            "critical_high": 500.0
+          }
+        ]
+      },
+      {
+        "code": "CMP_AST",
+        "name": "AST",
+        "unit": "U/L",
+        "loinc_code": "1920-8",
+        "data_type": "numeric",
+        "display_order": 9,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 10.0,
+            "high_normal": 38.0,
+            "critical_high": 500.0
+          }
+        ]
+      },
+      {
+        "code": "CMP_ALP",
+        "name": "ALP",
+        "unit": "U/L",
+        "loinc_code": "6768-6",
+        "data_type": "numeric",
+        "display_order": 10,
+        "ranges": [
+          {
+            "gender": "All",
+            "low_normal": 44.0,
+            "high_normal": 147.0
+          }
+        ]
+      }
+    ]
+  }
+]

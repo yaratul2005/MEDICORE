@@ -1,0 +1,38 @@
+<div class="space-y-2 text-xs">
+  <div class="flex items-center justify-between pb-1">
+    <span class="font-bold text-main">Medications & Prescriptions</span>
+    <span class="text-[10px] font-mono text-muted">{{ items|length }} Items</span>
+  </div>
+
+  {% for it in items %}
+  <div class="p-2.5 rounded-lg border border-subtle app-bg flex flex-col gap-1">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-1.5">
+        <span class="font-bold text-main">{{ it.drug_name }}</span>
+        {% if it.generic_name and it.generic_name != it.drug_name %}
+        <span class="text-secondary text-[11px]">({{ it.generic_name }})</span>
+        {% endif %}
+      </div>
+      <span class="font-mono text-teal-600 dark:text-teal-400 font-bold">{{ it.dosage }}</span>
+    </div>
+    <div class="flex items-center gap-2 text-[11px] text-muted">
+      <span>{{ it.frequency }}</span>
+      <span>•</span>
+      <span>{{ it.route }}</span>
+      <span>•</span>
+      <span>{{ it.duration_days }} days</span>
+      <span>•</span>
+      <span class="font-mono">Qty: {{ it.quantity }}</span>
+    </div>
+    {% if it.instructions %}
+    <p class="text-[11px] text-secondary italic">Dir: {{ it.instructions }}</p>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="p-8 text-center text-muted">
+    <i data-lucide="pill" class="w-8 h-8 opacity-40 mx-auto mb-1"></i>
+    <p>No prescriptions on file for this patient.</p>
+  </div>
+  {% endfor %}
+</div>
+<script>lucide.createIcons();</script>

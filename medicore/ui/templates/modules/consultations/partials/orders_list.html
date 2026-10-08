@@ -1,0 +1,34 @@
+<div id="orders-list" class="space-y-1.5">
+  {% for o in orders %}
+  <div class="p-2 rounded-lg border border-subtle surface-bg flex items-center justify-between text-xs hover:border-teal-500/40 transition-colors">
+    <div class="flex items-center gap-2">
+      <span class="px-1.5 py-0.2 rounded font-mono text-[9px] uppercase font-bold bg-slate-100 dark:bg-slate-800 text-secondary">{{ o.type }}</span>
+      <span class="font-semibold text-main">{{ o.test_name }}</span>
+      
+      {% if o.priority == 'Stat' %}
+      <span class="px-1.5 py-0.2 rounded font-mono text-[9px] uppercase font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-900">Stat</span>
+      {% elif o.priority == 'Urgent' %}
+      <span class="px-1.5 py-0.2 rounded font-mono text-[9px] uppercase font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Urgent</span>
+      {% else %}
+      <span class="px-1.5 py-0.2 rounded font-mono text-[9px] uppercase text-muted">Routine</span>
+      {% endif %}
+
+      <span class="px-1.5 py-0.2 rounded text-[10px] bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 border border-teal-200 dark:border-teal-800 font-mono">{{ o.status }}</span>
+    </div>
+
+    {% if can_order %}
+    <button hx-delete="/consultations/encounter/{{ encounter.id }}/orders/{{ o.id }}"
+            hx-target="#orders-list"
+            hx-swap="outerHTML"
+            class="text-muted hover:text-rose-600 p-1 transition-colors">
+      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+    </button>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="p-3 text-center text-muted text-xs border border-dashed border-subtle rounded-lg">
+    No diagnostic investigations or orders placed for this encounter.
+  </div>
+  {% endfor %}
+</div>
+<script>lucide.createIcons();</script>

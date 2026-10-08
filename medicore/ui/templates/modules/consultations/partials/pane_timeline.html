@@ -1,0 +1,197 @@
+<div id="pane-timeline" class="h-full flex flex-col surface-bg border-r border-subtle divide-y divide-subtle overflow-y-auto">
+
+  <!-- Patient Summary Card -->
+  <div class="p-4 bg-slate-50/50 dark:bg-slate-900/30 flex flex-col gap-2.5">
+    <div class="flex items-start justify-between">
+      <span class="px-2 py-0.5 rounded font-mono font-bold text-xs bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+        {{ patient.mrn }}
+      </span>
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-secondary border border-subtle">
+        {{ patient.gender }} • {{ patient.date_of_birth|age }}
+      </span>
+    </div>
+
+    <div>
+      <h2 class="text-base font-bold text-main tracking-tight">{{ patient.full_name }}</h2>
+      <div class="flex items-center gap-2 text-xs text-muted font-mono mt-0.5">
+        <span>DOB: {{ patient.date_of_birth }}</span>
+        {% if patient.blood_group %}
+        <span>•</span>
+        <span class="font-bold text-rose-600 dark:text-rose-400">Blood: {{ patient.blood_group }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Allergy Alert Banner -->
+    {% if patient.allergies %}
+    <div class="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 flex items-start gap-2 shadow-xs">
+      <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5"></i>
+      <div class="text-xs">
+        <span class="font-bold text-rose-800 dark:text-rose-300">Allergy Alert:</span>
+        <span class="text-rose-700 dark:text-rose-400 font-medium ml-1">{{ patient.allergies }}</span>
+      </div>
+    </div>
+    {% else %}
+    <div class="p-2 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400">
+      <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+      <span>No Known Drug Allergies (NKDA)</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Vitals Overview & Sparklines -->
+  <div class="p-4 space-y-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-1.5">
+        <i data-lucide="activity" class="w-4 h-4 text-teal-600 dark:text-teal-400"></i>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-muted">Vital Signs</h3>
+      </div>
+      {% if can_enter_vitals %}
+      <button onclick="document.getElementById('vitals-modal').classList.remove('hidden')"
+              class="px-2 py-1 rounded bg-teal-50 hover:bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-[11px] font-semibold transition-colors flex items-center gap-1">
+        <i data-lucide="plus" class="w-3 h-3"></i>
+        <span>Record Vitals</span>
+      </button>
+      {% endif %}
+    </div>
+
+    {% if latest_vitals %}
+    <!-- Vitals Warning Alerts -->
+    {% if vitals_warnings %}
+    <div class="space-y-1">
+      {% for w in vitals_warnings %}
+      <div class="p-2 rounded bg-{{ w.severity }}-50 dark:bg-{{ w.severity }}-950/40 border border-{{ w.severity }}-200 dark:border-{{ w.severity }}-900 text-[11px] text-{{ w.severity }}-700 dark:text-{{ w.severity }}-300 flex items-center justify-between">
+        <span class="font-semibold">{{ w.label }} ({{ w.param }})</span>
+        <span class="font-mono font-bold">{{ w.value }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Dense 2x3 Grid of Current Vitals -->
+    <div class="grid grid-cols-2 gap-2 text-xs">
+      <!-- Blood Pressure -->
+      <div class="p-2.5 rounded-lg border border-subtle app-bg">
+        <span class="text-[10px] uppercase font-semibold text-muted block">Blood Pressure</span>
+        <div class="flex items-baseline justify-between mt-0.5">
+          <span class="font-mono text-sm font-bold {% if latest_vitals.systolic and (latest_vitals.systolic >= 140 or latest_vitals.systolic < 90) %}text-rose-600 dark:text-rose-400{% else %}text-main{% endif %}">
+            {{ latest_vitals.systolic|default('-', true) }}/{{ latest_vitals.diastolic|default('-', true) }}
+          </span>
+          <span class="text-[10px] text-muted">mmHg</span>
+        </div>
+        {% if sparklines and sparklines.systolic %}
+        <div class="mt-1">{{ sparklines.systolic|safe }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Pulse Rate -->
+      <div class="p-2.5 rounded-lg border border-subtle app-bg">
+        <span class="text-[10px] uppercase font-semibold text-muted block">Heart Rate</span>
+        <div class="flex items-baseline justify-between mt-0.5">
+          <span class="font-mono text-sm font-bold {% if latest_vitals.pulse and (latest_vitals.pulse > 100 or latest_vitals.pulse < 60) %}text-rose-600 dark:text-rose-400{% else %}text-main{% endif %}">
+            {{ latest_vitals.pulse|default('-', true) }}
+          </span>
+          <span class="text-[10px] text-muted">bpm</span>
+        </div>
+        {% if sparklines and sparklines.pulse %}
+        <div class="mt-1">{{ sparklines.pulse|safe }}</div>
+        {% endif %}
+      </div>
+
+      <!-- SpO2 Oxygen -->
+      <div class="p-2.5 rounded-lg border border-subtle app-bg">
+        <span class="text-[10px] uppercase font-semibold text-muted block">SpO₂ Oxygen</span>
+        <div class="flex items-baseline justify-between mt-0.5">
+          <span class="font-mono text-sm font-bold {% if latest_vitals.spo2 and latest_vitals.spo2 < 95 %}text-amber-600 dark:text-amber-400{% else %}text-main{% endif %}">
+            {{ latest_vitals.spo2|default('-', true) }}%
+          </span>
+          <span class="text-[10px] text-muted">sat</span>
+        </div>
+        {% if sparklines and sparklines.spo2 %}
+        <div class="mt-1">{{ sparklines.spo2|safe }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Temperature -->
+      <div class="p-2.5 rounded-lg border border-subtle app-bg">
+        <span class="text-[10px] uppercase font-semibold text-muted block">Temperature</span>
+        <div class="flex items-baseline justify-between mt-0.5">
+          <span class="font-mono text-sm font-bold {% if latest_vitals.temp_c and latest_vitals.temp_c >= 37.8 %}text-rose-600 dark:text-rose-400{% else %}text-main{% endif %}">
+            {{ latest_vitals.temp_c|default('-', true) }}°C
+          </span>
+          <span class="text-[10px] text-muted">oral</span>
+        </div>
+        {% if sparklines and sparklines.temp %}
+        <div class="mt-1">{{ sparklines.temp|safe }}</div>
+        {% endif %}
+      </div>
+
+      <!-- BMI Auto-Calculated -->
+      <div class="p-2.5 rounded-lg border border-subtle app-bg">
+        <span class="text-[10px] uppercase font-semibold text-muted block">BMI (Body Mass)</span>
+        <div class="flex items-baseline justify-between mt-0.5">
+          <span class="font-mono text-sm font-bold text-teal-600 dark:text-teal-400">
+            {{ latest_vitals.bmi|default('-', true) }}
+          </span>
+          <span class="text-[10px] text-muted">kg/m²</span>
+        </div>
+      </div>
+
+      <!-- BSA Mosteller Auto-Calculated -->
+      <div class="p-2.5 rounded-lg border border-subtle app-bg">
+        <span class="text-[10px] uppercase font-semibold text-muted block">BSA (Mosteller)</span>
+        <div class="flex items-baseline justify-between mt-0.5">
+          <span class="font-mono text-sm font-bold text-secondary">
+            {{ latest_vitals.bsa|default('-', true) }}
+          </span>
+          <span class="text-[10px] text-muted">m²</span>
+        </div>
+      </div>
+    </div>
+    <div class="text-[10px] text-muted flex items-center justify-between">
+      <span>Recorded by: {{ latest_vitals.recorded_by|default('Triage', true) }}</span>
+      <span class="font-mono">{{ latest_vitals.recorded_at.strftime('%Y-%m-%d %H:%M') }}</span>
+    </div>
+    {% else %}
+    <div class="p-4 rounded-lg border border-dashed border-subtle text-center text-muted text-xs">
+      <p>No vitals recorded yet.</p>
+      {% if can_enter_vitals %}
+      <button onclick="document.getElementById('vitals-modal').classList.remove('hidden')"
+              class="mt-2 text-teal-600 dark:text-teal-400 font-medium hover:underline inline-flex items-center gap-1">
+        <i data-lucide="plus" class="w-3 h-3"></i> Record initial vitals
+      </button>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Clinical Timeline: Past Visits -->
+  <div class="flex-1 p-4 space-y-3">
+    <div class="flex items-center gap-1.5">
+      <i data-lucide="clock" class="w-4 h-4 text-secondary"></i>
+      <h3 class="text-xs font-bold uppercase tracking-wider text-muted">Past Encounters & History</h3>
+    </div>
+
+    <div class="space-y-2 text-xs">
+      {% for past in past_encounters %}
+      <div class="p-2.5 rounded-lg border border-subtle app-bg hover:border-teal-500/50 transition-colors">
+        <div class="flex items-center justify-between text-[11px]">
+          <span class="font-mono font-bold text-teal-600 dark:text-teal-400">#{{ past.id }}</span>
+          <span class="font-mono text-muted text-[10px]">{{ past.started_at.strftime('%Y-%m-%d') }}</span>
+        </div>
+        <p class="font-semibold text-main mt-0.5">{{ past.chief_complaint or 'Clinical Consultation' }}</p>
+        <div class="flex items-center justify-between text-[10px] text-muted mt-1">
+          <span>{{ past.doctor_name }}</span>
+          <span class="px-1.5 py-0.2 rounded font-mono bg-slate-100 dark:bg-slate-800 text-secondary">{{ past.status }}</span>
+        </div>
+      </div>
+      {% else %}
+      <div class="text-center p-6 text-muted text-xs">
+        No prior clinical encounters on file for this patient.
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+<script>lucide.createIcons();</script>

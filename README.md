@@ -17,7 +17,7 @@
   <a href="https://htmx.org/"><img src="https://img.shields.io/badge/HTMX-1.9.12-336699" alt="HTMX"></a>
   <a href="https://alpinejs.dev/"><img src="https://img.shields.io/badge/Alpine.js-3.13+-77C1D2?logo=alpinedotjs&logoColor=white" alt="Alpine.js"></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white" alt="Docker"></a>
-  <a href="#-testing--verification"><img src="https://img.shields.io/badge/Tests-42%20Passed-success" alt="Tests"></a>
+  <a href="#-testing--verification"><img src="https://img.shields.io/badge/Tests-51%20Passed-success" alt="Tests"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License"></a>
 </p>
 
@@ -164,6 +164,22 @@ Built on CSS variable design tokens (`tokens.css`). Supports **Light** and **Dar
 
 ---
 
+### 🔬 5. Clinical Laboratory Management (LIS) (`medicore.modules.laboratory`)
+
+- **Diagnostic Worklist**: Centralized requisition dashboard auto-provisioned from `order.placed` clinical orders or walk-ins. Filter dynamically by Priority (`STAT`, `Urgent`, `Routine`), Department, Status, or breached TAT deadlines.
+- **Specimen Flow Lifecycle**: Automated barcode labeling (`SPEC-YYYY-XXXXX`), phlebotomy collection, lab receiving, and rejection handling (hemolyzed, clotted, insufficient volume) with automatic recollection requests.
+- **Result Entry Grid**: Analyte grids per test and panel (e.g. CBC, LFT, KFT, Lipid Panel, Urinalysis, Cardiac Markers) with automatic high/low/critical flagging against age- and sex-stratified biological reference intervals.
+- **Calculated Analytes Engine**: Automatic calculation of derived parameters without manual math (A/G Ratio, Globulin, Indirect Bilirubin, Friedewald VLDL/LDL, BUN/Creatinine Ratio).
+- **Previous-Result Delta Trend**: Inline comparison against prior approved patient results with dates to identify clinical acute variations.
+- **Two-Step Approval & Immutability**: Medical laboratory technologists enter results (`laboratory.result.enter`); Consultant Pathologists authorize and sign off reports (`laboratory.result.approve`). Approved diagnostic reports are strictly immutable.
+- **Report Amendments**: Pathologist amendments bump the version (v1 ➔ v2), mark the report as a prominent `CORRECTED REPORT`, record the clinical amendment reason, and audit all changes.
+- **Life-Threatening Critical Values**: Prominently highlighted critical flags with ordering physician telephone acknowledgement logging (doctor name, timestamp, and clinical action notes). Emits `result.critical` domain events.
+- **Automated Analyzer CSV Ingestion**: Batch upload or copy-paste analyzer outputs (`barcode,parameter_code,value`) from Sysmex, Roche Cobas, Beckman, and Mindray systems with automated range evaluation.
+- **Branded Diagnostic Lab Report PDF**: Professional PDF generation using ReportLab featuring hospital branding, patient demographic header, comprehensive results table, corrected-report notices, physician acknowledgements, and pathologist signatures.
+- **Patient 360 Integration**: Dedicated `Labs` tab within the Patient 360 workspace providing repeat test trend cards and complete investigation history.
+
+---
+
 ## 🚀 Quickstart Guide
 
 ### Option A: Running with Docker (Recommended)
@@ -210,7 +226,7 @@ alembic upgrade head
 ```
 
 #### 4. Seed Clinical Data
-Populate realistic hospital data (200 patients, 5 doctors across 5 departments, 100 appointments, 150 clinical encounters with SOAP notes, vitals, prescriptions, ICD-10 reference data, 300 pharmacy items, 403 batches, 514 stock movements, 80 dispenses, and default RBAC roles):
+Populate realistic hospital data (200 patients, 5 doctors across 5 departments, 100 appointments, 150 clinical encounters with SOAP notes, vitals, prescriptions, ICD-10 reference data, 300 pharmacy items, 403 batches, 514 stock movements, 80 dispenses, 69 lab tests with 182 parameters, 200 lab orders, and default RBAC roles):
 ```bash
 python -m medicore.seed.seeder
 ```
@@ -224,7 +240,7 @@ uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 ## 🧪 Testing & Verification
 
-MediCore includes a comprehensive test suite covering core infrastructure, scheduling concurrency, duplicate patient prevention, clinical safety rules, and encounter lifecycles:
+MediCore includes a comprehensive test suite covering core infrastructure, scheduling concurrency, duplicate patient prevention, clinical safety rules, encounter lifecycles, pharmacy FEFO & stock ledgers, and laboratory diagnostic workflows:
 
 ```bash
 uv run --extra dev pytest -v
@@ -232,49 +248,58 @@ uv run --extra dev pytest -v
 
 ```text
 ============================= test session starts =============================
-medicore/tests/test_appointments.py::test_doctor_slot_generation PASSED        [ 3%]
-medicore/tests/test_appointments.py::test_booking_conflict_detection PASSED   [ 6%]
-medicore/tests/test_appointments.py::test_status_transitions_and_events PASSED[ 9%]
-medicore/tests/test_appointments.py::test_walkin_registration_and_queue_token PASSED [12%]
-medicore/tests/test_appointments.py::test_waiting_room_display_endpoints PASSED [16%]
-medicore/tests/test_appointments.py::test_reschedule_with_conflict_guard PASSED [19%]
-medicore/tests/test_appointments.py::test_appointment_reminders_and_stats PASSED [22%]
-medicore/tests/test_appointments.py::test_concurrent_double_booking_protection PASSED [25%]
-medicore/tests/test_consultations.py::test_vitals_math_and_clinical_warnings PASSED [29%]
-medicore/tests/test_consultations.py::test_soap_text_shortcuts_expansion PASSED [32%]
-medicore/tests/test_consultations.py::test_quantity_calculation_from_frequency PASSED [35%]
-medicore/tests/test_consultations.py::test_icd10_and_drug_search PASSED    [38%]
-medicore/tests/test_consultations.py::test_pluggable_safety_rules_engine PASSED [41%]
-medicore/tests/test_consultations.py::test_start_consultation_lifecycle PASSED [45%]
-medicore/tests/test_consultations.py::test_soap_note_autosave_signing_and_addenda PASSED [48%]
-medicore/tests/test_consultations.py::test_prescription_safety_warning_and_override_enforcement PASSED [51%]
-medicore/tests/test_consultations.py::test_order_placement_and_event_emission PASSED [54%]
-medicore/tests/test_consultations.py::test_encounter_completion_and_billing_event PASSED [58%]
-medicore/tests/test_consultations.py::test_pdf_visit_summary_generation PASSED [61%]
-medicore/tests/test_consultations.py::test_patient_360_clinical_tabs_wired PASSED [64%]
-medicore/tests/test_core.py::test_config_profiles PASSED                   [67%]
-medicore/tests/test_core.py::test_password_hashing PASSED                  [70%]
-medicore/tests/test_core.py::test_event_bus PASSED                         [74%]
-medicore/tests/test_core.py::test_settings_registry PASSED                 [77%]
-medicore/tests/test_core.py::test_module_registry PASSED                   [80%]
-medicore/tests/test_patients.py::test_patients_index_page PASSED           [ 61%]
-medicore/tests/test_patients.py::test_patients_table_partial PASSED        [ 64%]
-medicore/tests/test_patient_detail_pane PASSED                           [ 66%]
-medicore/tests/test_duplicate_patient_detection PASSED                   [ 69%]
-medicore/tests/test_create_patient_and_audit_event PASSED                 [ 71%]
-medicore/tests/test_server_enforced_duplicate_prevention_and_override PASSED [ 73%]
-medicore/tests/test_pharmacy.py::test_fefo_batch_picking_and_expired_blocking PASSED [ 76%]
-medicore/tests/test_pharmacy.py::test_immutable_stock_movement_ledger PASSED [ 78%]
-medicore/tests/test_pharmacy.py::test_low_stock_and_expiry_alerts_and_quarantine PASSED [ 80%]
-medicore/tests/test_pharmacy.py::test_prescription_signed_event_creates_dispense_queue PASSED [ 83%]
-medicore/tests/test_pharmacy.py::test_dispense_order_completion_and_domain_event PASSED [ 85%]
-medicore/tests/test_partial_dispensing_and_generic_substitution PASSED     [ 88%]
-medicore/tests/test_pharmacy.py::test_counter_otc_sales_flow PASSED        [ 90%]
-medicore/tests/test_pharmacy.py::test_multi_store_transfers PASSED         [ 92%]
-medicore/tests/test_pharmacy.py::test_pharmacy_returns_approval_workflow PASSED [ 95%]
-medicore/tests/test_pharmacy.py::test_reports_csv_exports PASSED           [ 97%]
+medicore/tests/test_appointments.py::test_doctor_slot_generation PASSED        [ 1%]
+medicore/tests/test_appointments.py::test_booking_conflict_detection PASSED   [ 3%]
+medicore/tests/test_appointments.py::test_status_transitions_and_events PASSED[ 5%]
+medicore/tests/test_appointments.py::test_walkin_registration_and_queue_token PASSED [ 7%]
+medicore/tests/test_appointments.py::test_waiting_room_display_endpoints PASSED [ 9%]
+medicore/tests/test_appointments.py::test_reschedule_with_conflict_guard PASSED [11%]
+medicore/tests/test_appointments.py::test_appointment_reminders_and_stats PASSED [13%]
+medicore/tests/test_appointments.py::test_concurrent_double_booking_protection PASSED [15%]
+medicore/tests/test_consultations.py::test_vitals_math_and_clinical_warnings PASSED [17%]
+medicore/tests/test_consultations.py::test_soap_text_shortcuts_expansion PASSED [19%]
+medicore/tests/test_consultations.py::test_quantity_calculation_from_frequency PASSED [21%]
+medicore/tests/test_consultations.py::test_icd10_and_drug_search PASSED    [23%]
+medicore/tests/test_consultations.py::test_pluggable_safety_rules_engine PASSED [25%]
+medicore/tests/test_consultations.py::test_start_consultation_lifecycle PASSED [27%]
+medicore/tests/test_consultations.py::test_soap_note_autosave_signing_and_addenda PASSED [29%]
+medicore/tests/test_consultations.py::test_prescription_safety_warning_and_override_enforcement PASSED [31%]
+medicore/tests/test_consultations.py::test_order_placement_and_event_emission PASSED [33%]
+medicore/tests/test_consultations.py::test_encounter_completion_and_billing_event PASSED [35%]
+medicore/tests/test_consultations.py::test_pdf_visit_summary_generation PASSED [37%]
+medicore/tests/test_consultations.py::test_patient_360_clinical_tabs_wired PASSED [39%]
+medicore/tests/test_core.py::test_config_profiles PASSED                   [41%]
+medicore/tests/test_core.py::test_password_hashing PASSED                  [43%]
+medicore/tests/test_core.py::test_event_bus PASSED                         [45%]
+medicore/tests/test_core.py::test_settings_registry PASSED                 [47%]
+medicore/tests/test_core.py::test_module_registry PASSED                   [ 49%]
+medicore/tests/test_laboratory.py::test_tat_deadline_and_breach_detection PASSED [ 50%]
+medicore/tests/test_laboratory.py::test_specimen_flow_lifecycle PASSED   [ 52%]
+medicore/tests/test_laboratory.py::test_reference_range_evaluation PASSED [ 54%]
+medicore/tests/test_laboratory.py::test_calculated_parameters_engine PASSED [ 56%]
+medicore/tests/test_laboratory.py::test_two_step_workflow_and_amendments PASSED [ 58%]
+medicore/tests/test_laboratory.py::test_critical_value_and_acknowledgement PASSED [ 60%]
+medicore/tests/test_laboratory.py::test_instrument_csv_import PASSED     [ 62%]
+medicore/tests/test_laboratory.py::test_order_placed_event_subscription PASSED [ 64%]
+medicore/tests/test_laboratory.py::test_lab_report_pdf_generation PASSED [ 66%]
+medicore/tests/test_patients.py::test_patients_index_page PASSED         [ 68%]
+medicore/tests/test_patients.py::test_patients_table_partial PASSED      [ 70%]
+medicore/tests/test_patients.py::test_patient_detail_pane PASSED         [ 72%]
+medicore/tests/test_patients.py::test_duplicate_patient_detection PASSED [ 74%]
+medicore/tests/test_patients.py::test_create_patient_and_audit_event PASSED [ 76%]
+medicore/tests/test_patients.py::test_server_enforced_duplicate_prevention_and_override PASSED [ 78%]
+medicore/tests/test_pharmacy.py::test_fefo_batch_picking_and_expired_blocking PASSED [80%]
+medicore/tests/test_pharmacy.py::test_immutable_stock_movement_ledger PASSED [82%]
+medicore/tests/test_pharmacy.py::test_low_stock_and_expiry_alerts_and_quarantine PASSED [84%]
+medicore/tests/test_pharmacy.py::test_prescription_signed_event_creates_dispense_queue PASSED [86%]
+medicore/tests/test_pharmacy.py::test_dispense_order_completion_and_domain_event PASSED [88%]
+medicore/tests/test_pharmacy.py::test_partial_dispensing_and_generic_substitution PASSED [90%]
+medicore/tests/test_pharmacy.py::test_counter_otc_sales_flow PASSED        [92%]
+medicore/tests/test_pharmacy.py::test_multi_store_transfers PASSED         [94%]
+medicore/tests/test_pharmacy.py::test_pharmacy_returns_approval_workflow PASSED [96%]
+medicore/tests/test_pharmacy.py::test_reports_csv_exports PASSED           [98%]
 medicore/tests/test_pharmacy.py::test_pharmacy_ui_and_widget_endpoints PASSED [100%]
-============================== 42 passed in 37.80s ==============================
+============================== 51 passed in 41.52s ==============================
 ```
 
 ---
@@ -289,7 +314,14 @@ medicore/tests/test_pharmacy.py::test_pharmacy_ui_and_widget_endpoints PASSED [1
 | **`/consultations/encounter/{id}/pdf`** | Downloadable clinical visit summary PDF with hospital header & branding |
 | **`/appointments`** | Day/Week calendar, appointments table, queue management desk |
 | **`/appointments/display`** | Full-screen waiting room TV display with live 5s auto-refresh |
-| **`/patients`** | Master patient directory, Patient 360 (Visits, Vitals, Prescriptions) |
+| **`/patients`** | Master patient directory, Patient 360 (Visits, Vitals, Prescriptions, Labs) |
+| **`/laboratory`** | Diagnostic worklist, STAT/Urgent priority filters, TAT breach monitoring |
+| **`/laboratory/order/{id}/results`** | Analyte result entry grid, automated reference flags, delta trends, calculated parameters |
+| **`/laboratory/order/{id}/report`** | Diagnostic laboratory report view with pathologist verification & amendments |
+| **`/laboratory/order/{id}/pdf`** | Downloadable branded lab report PDF with pathologist electronic signature |
+| **`/laboratory/catalog`** | Laboratory test catalog directory, turnaround times, and departmental test panels |
+| **`/laboratory/catalog/{id}`** | Test parameter editor, LOINC code configuration, and age/sex reference intervals |
+| **`/laboratory/import`** | Automated clinical analyzer CSV import terminal (Sysmex, Cobas, Mindray) |
 | **`/pharmacy`** | Prescription dispensing queue, quick stats, inventory alert widgets |
 | **`/pharmacy/dispense/{id}`** | Safety-first clinical dispense workspace (FEFO batch picking, allergy banner, overrides) |
 | **`/pharmacy/otc`** | Rapid Over-the-Counter POS terminal for counter medication sales |
@@ -311,6 +343,8 @@ medicore/tests/test_pharmacy.py::test_pharmacy_ui_and_widget_endpoints PASSED [1
 | `dr.sarah` | `doctor123` | **Doctor** | Clinical OPD encounters, SOAP notes, e-prescribing, order placement |
 | `nurse.john` | `nurse123` | **Nurse** | Vitals recording, triage assessment, waiting room queue control |
 | `receptionist.mary` | `reception123` | **Receptionist** | Front-desk intake, appointment scheduling, walk-in tokens |
+| `tech.alex` | `lab123` | **LabTechnician** | Diagnostic worklist, specimen collection, result entry, analyzer CSV import |
+| `pathologist.victor` | `path123` | **Pathologist** | Result review, two-step authorization, clinical amendments, critical ack |
 | `pharmacist.lisa` | `pharmacy123` | **Pharmacist** | Prescription dispensing, FEFO picking, generic substitutions, OTC sales |
 | `storekeeper.dan` | `store123` | **StoreKeeper** | Stock movements, warehouse purchases, goods receipt, inter-store transfers |
 
@@ -318,7 +352,7 @@ medicore/tests/test_pharmacy.py::test_pharmacy_ui_and_widget_endpoints PASSED [1
 
 ## 🛠️ Adding New Modules
 
-To add a new clinical or administrative module (e.g., `laboratory`, `pharmacy`, `billing`) in 5 easy steps without modifying core source code, refer to [ARCHITECTURE.md](ARCHITECTURE.md).
+To add a new clinical or administrative module (e.g., `billing`, `radiology`, `inpatient`) in 5 easy steps without modifying core source code, refer to [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 

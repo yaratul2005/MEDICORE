@@ -1,0 +1,106 @@
+<div class="space-y-4 text-xs">
+  
+  <!-- Analyte Trend Sparklines / History -->
+  {% if trends %}
+  <div>
+    <h4 class="text-[11px] font-bold uppercase tracking-wider text-muted mb-2 flex items-center gap-1.5">
+      <i data-lucide="trending-up" class="w-3.5 h-3.5 text-teal-600"></i>
+      Analyte Trends (Repeat Tests)
+    </h4>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+      {% for code, points in trends.items() %}
+      {% if points|length >= 1 %}
+      <div class="p-2.5 rounded-lg border border-subtle surface-bg">
+        <div class="flex items-center justify-between mb-1">
+          <span class="font-semibold text-main">{{ points[-1].name }}</span>
+          <span class="font-mono text-[10px] text-muted">{{ code }}</span>
+        </div>
+        <div class="flex items-baseline gap-1.5">
+          <span class="text-base font-bold font-mono {% if points[-1].flag in ['H', 'L', 'Critical_High', 'Critical_Low'] %}text-rose-600{% else %}text-teal-600 dark:text-teal-400{% endif %}">
+            {{ points[-1].value }}
+          </span>
+          <span class="text-[10px] text-muted font-mono">{{ points[-1].unit }}</span>
+          <span class="text-[10px] text-muted ml-auto font-mono">Latest: {{ points[-1].date }}</span>
+        </div>
+
+        <!-- History Dots -->
+        {% if points|length > 1 %}
+        <div class="mt-2 pt-1.5 border-t border-subtle flex items-center gap-1 text-[10px] text-muted">
+          <span>Prior:</span>
+          {% for pt in points[:-1] %}
+          <span class="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.2 rounded" title="{{ pt.date }}: {{ pt.value }} {{ pt.unit }}">
+            {{ pt.value }}
+          </span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Patient Requisition History Table -->
+  <div>
+    <h4 class="text-[11px] font-bold uppercase tracking-wider text-muted mb-2 flex items-center gap-1.5">
+      <i data-lucide="history" class="w-3.5 h-3.5 text-teal-600"></i>
+      Requisition & Diagnostic Reports ({{ total_orders }})
+    </h4>
+    
+    {% if orders %}
+    <div class="border border-subtle rounded-lg overflow-hidden surface-bg">
+      <table class="w-full text-left border-collapse text-[11px]">
+        <thead class="surface-bg border-b border-subtle text-muted uppercase text-[9px] font-semibold">
+          <tr>
+            <th class="py-2 px-3">Order #</th>
+            <th class="py-2 px-3">Date</th>
+            <th class="py-2 px-3">Department</th>
+            <th class="py-2 px-3">Priority</th>
+            <th class="py-2 px-3">Status</th>
+            <th class="py-2 px-3 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-subtle">
+          {% for o in orders %}
+          <tr class="hover:surface-hover">
+            <td class="py-2 px-3 font-mono font-semibold text-main">{{ o.order_no }}</td>
+            <td class="py-2 px-3 text-muted">{{ o.ordered_at.strftime('%Y-%m-%d') }}</td>
+            <td class="py-2 px-3 text-secondary">{{ o.department }}</td>
+            <td class="py-2 px-3">
+              {% if o.priority == 'STAT' %}
+              <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-600 text-white">STAT</span>
+              {% else %}
+              <span class="text-secondary">{{ o.priority }}</span>
+              {% endif %}
+            </td>
+            <td class="py-2 px-3">
+              {% if o.status == 'approved' %}
+              <span class="text-emerald-600 font-semibold">Authorized</span>
+              {% else %}
+              <span class="text-muted">{{ o.status.title() }}</span>
+              {% endif %}
+            </td>
+            <td class="py-2 px-3 text-right">
+              <a href="/laboratory/order{{ '/' ~ o.id ~ '/report' }}" target="_blank" class="text-teal-600 hover:underline font-semibold mr-2">
+                Report
+              </a>
+              <a href="/laboratory/order{{ '/' ~ o.id ~ '/report/pdf' }}" target="_blank" class="text-muted hover:text-teal-600">
+                PDF
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="p-6 text-center text-muted border border-dashed border-subtle rounded-lg">
+      <i data-lucide="flask-conical" class="w-6 h-6 mx-auto mb-1 opacity-40"></i>
+      <p class="font-medium text-xs">No diagnostic lab orders recorded for this patient.</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+<script>lucide.createIcons();</script>

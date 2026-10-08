@@ -30,9 +30,9 @@ uvicorn.log
 cloudflared.log
 
 # Temporary bundle/sync artifacts from previous transfers
-bundle*
-chunk*
-part*
+/bundle*
+/chunk*
+/part*
 project_archive.b64
 sync_update.b64
 update_files.*

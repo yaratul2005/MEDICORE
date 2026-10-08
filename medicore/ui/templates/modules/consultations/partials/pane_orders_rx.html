@@ -1,0 +1,338 @@
+<div id="pane-orders-rx" class="h-full flex flex-col surface-bg divide-y divide-subtle overflow-y-auto"
+     x-data="{
+       activeSection: 'all',
+       selectedIcdCode: '',
+       selectedIcdDesc: '',
+       selectedDrugName: '',
+       selectedGenericName: '',
+       rxDosage: '500 mg',
+       rxFreq: 'BID',
+       rxDays: 5,
+       rxRoute: 'Oral',
+       rxInstructions: 'Take after meals',
+       rxQty: 10,
+       freqMultipliers: { 'OD': 1, 'BID': 2, 'TID': 3, 'QDS': 4, 'PRN': 1, 'STAT': 1, 'QHS': 1, 'Q4H': 6, 'Q6H': 4, 'Q8H': 3, 'Q12H': 2 },
+       updateQty() {
+         let mult = this.freqMultipliers[this.rxFreq] || 1;
+         let days = parseInt(this.rxDays) || 1;
+         this.rxQty = mult * days;
+       }
+     }">
+
+  <!-- Placeholder modal target for Safety Warnings -->
+  <div id="safety-modal-target"></div>
+
+  <!-- SECTION 1: ICD-10 DIAGNOSES -->
+  <div class="p-4 space-y-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-1.5">
+        <i data-lucide="tag" class="w-4 h-4 text-teal-600 dark:text-teal-400"></i>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-muted">ICD-10 Diagnoses</h3>
+      </div>
+      <span class="text-[10px] text-muted">Primary & Secondary</span>
+    </div>
+
+    <!-- Active Diagnoses List -->
+    {% include "modules/consultations/partials/diagnoses_list.html" %}
+
+    <!-- Add Diagnosis Form & Autocomplete -->
+    {% if can_write_notes %}
+    <div class="space-y-2 pt-1">
+      <div class="relative">
+        <input type="text" id="icd-search-input"
+               placeholder="Search ICD-10 code or description..."
+               hx-get="/consultations/search/icd10"
+               hx-trigger="keyup changed delay:250ms"
+               hx-target="#icd-results"
+               class="w-full px-3 py-1.5 rounded-lg border border-subtle app-bg text-xs text-main focus:ring-1 focus:ring-teal-500 focus:outline-none">
+        
+        <div id="icd-results" class="absolute z-20 left-0 right-0 mt-1 surface-bg rounded-lg border border-subtle shadow-lg max-h-48 overflow-y-auto empty:hidden"></div>
+      </div>
+
+      <form id="dx-add-form"
+            hx-post="/consultations/encounter/{{ encounter.id }}/diagnoses"
+            hx-target="#diagnoses-list"
+            hx-swap="outerHTML"
+            class="flex items-center gap-2">
+        <input type="text" name="icd10_code" x-model="selectedIcdCode" placeholder="Code" required
+               class="w-20 px-2.5 py-1.5 rounded-lg border border-subtle app-bg text-xs font-mono font-bold text-teal-600 dark:text-teal-400 focus:outline-none">
+        <input type="text" name="description" x-model="selectedIcdDesc" placeholder="Diagnosis description" required
+               class="flex-1 px-2.5 py-1.5 rounded-lg border border-subtle app-bg text-xs text-main focus:outline-none">
+        <label class="flex items-center gap-1 text-[11px] text-secondary cursor-pointer select-none">
+          <input type="checkbox" name="is_primary" value="true" class="rounded text-teal-600 focus:ring-0">
+          <span>Primary</span>
+        </label>
+        <button type="submit"
+                class="px-2.5 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-medium text-xs shadow-xs transition-colors">
+          Add
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- SECTION 2: E-PRESCRIPTION (Rx) -->
+  <div class="p-4 space-y-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-1.5">
+        <i data-lucide="pill" class="w-4 h-4 text-teal-600 dark:text-teal-400"></i>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-muted">E-Prescription (Rx)</h3>
+      </div>
+
+      {% if can_prescribe %}
+      <!-- Repeat Last Prescription Button -->
+      <button hx-post="/consultations/encounter/{{ encounter.id }}/prescriptions/repeat"
+              hx-target="#prescriptions-list"
+              hx-swap="outerHTML"
+              title="Clone medications from prior visit"
+              class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-secondary text-[11px] font-medium transition-colors flex items-center gap-1">
+        <i data-lucide="copy" class="w-3 h-3"></i>
+        <span>Repeat Last Rx</span>
+      </button>
+      {% endif %}
+    </div>
+
+    <!-- Active Prescription Items List -->
+    {% include "modules/consultations/partials/prescriptions_list.html" %}
+
+    <!-- Add Prescription Form & Safety Validation -->
+    {% if can_prescribe %}
+    <div class="p-3 rounded-xl border border-subtle bg-slate-50/40 dark:bg-slate-900/20 space-y-2 text-xs">
+      
+      <!-- Drug Search Input -->
+      <div class="relative">
+        <label class="block text-[10px] uppercase font-bold text-muted mb-0.5">Drug Master Autocomplete</label>
+        <input type="text" id="drug-search-input"
+               placeholder="Search brand or generic drug name..."
+               hx-get="/consultations/search/drugs"
+               hx-trigger="keyup changed delay:250ms"
+               hx-target="#drug-results"
+               class="w-full px-3 py-1.5 rounded-lg border border-subtle app-bg text-main focus:ring-1 focus:ring-teal-500 focus:outline-none">
+        
+        <div id="drug-results" class="absolute z-20 left-0 right-0 mt-1 surface-bg rounded-lg border border-subtle shadow-lg max-h-48 overflow-y-auto empty:hidden"></div>
+      </div>
+
+      <form id="rx-add-form"
+            hx-post="/consultations/encounter/{{ encounter.id }}/prescriptions/add"
+            hx-target="#prescriptions-list"
+            hx-swap="outerHTML"
+            class="space-y-2">
+        
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[10px] text-muted block">Drug Name</label>
+            <input type="text" name="drug_name" x-model="selectedDrugName" required
+                   placeholder="e.g. Amoxil"
+                   class="w-full px-2.5 py-1.5 rounded-lg border border-subtle app-bg text-main font-semibold focus:outline-none">
+          </div>
+          <div>
+            <label class="text-[10px] text-muted block">Generic Name</label>
+            <input type="text" name="generic_name" x-model="selectedGenericName"
+                   placeholder="e.g. Amoxicillin"
+                   class="w-full px-2.5 py-1.5 rounded-lg border border-subtle app-bg text-secondary focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2">
+          <div>
+            <label class="text-[10px] text-muted block">Dosage</label>
+            <input type="text" name="dosage" x-model="rxDosage" required
+                   class="w-full px-2 py-1.5 rounded-lg border border-subtle app-bg text-main focus:outline-none">
+          </div>
+          <div>
+            <label class="text-[10px] text-muted block">Frequency</label>
+            <select name="frequency" x-model="rxFreq" @change="updateQty()"
+                    class="w-full px-2 py-1.5 rounded-lg border border-subtle app-bg text-main focus:outline-none">
+              {% for f in frequencies %}
+              <option value="{{ f.code }}">{{ f.code }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] text-muted block">Days</label>
+            <input type="number" name="duration_days" x-model="rxDays" @input="updateQty()" min="1"
+                   class="w-full px-2 py-1.5 rounded-lg border border-subtle app-bg text-main focus:outline-none">
+          </div>
+          <div>
+            <label class="text-[10px] text-muted block">Quantity</label>
+            <input type="number" name="quantity" x-model="rxQty" min="1"
+                   class="w-full px-2 py-1.5 rounded-lg border border-subtle app-bg text-teal-600 dark:text-teal-400 font-bold focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="text-[10px] text-muted block">Route</label>
+            <select name="route" x-model="rxRoute"
+                    class="w-full px-2 py-1.5 rounded-lg border border-subtle app-bg text-main focus:outline-none">
+              <option value="Oral">Oral</option>
+              <option value="IV">IV</option>
+              <option value="IM">IM</option>
+              <option value="Inhalation">Inhalation</option>
+              <option value="Topical">Topical</option>
+              <option value="Sublingual">Sublingual</option>
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label class="text-[10px] text-muted block">Directions / Instructions</label>
+            <input type="text" name="instructions" x-model="rxInstructions"
+                   placeholder="e.g. After meals with water"
+                   class="w-full px-2.5 py-1.5 rounded-lg border border-subtle app-bg text-main focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Action & Pre-Flight Safety Verification -->
+        <div class="flex items-center justify-between pt-1">
+          <!-- Pluggable Safety Check Button -->
+          <button type="button"
+                  hx-post="/consultations/encounter/{{ encounter.id }}/prescriptions/check"
+                  hx-include="#rx-add-form"
+                  hx-target="#safety-modal-target"
+                  class="text-[11px] text-teal-600 hover:text-teal-700 dark:text-teal-400 font-semibold flex items-center gap-1">
+            <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+            <span>Run Safety Check</span>
+          </button>
+
+          <button type="submit"
+                  class="px-3.5 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs shadow-xs transition-colors flex items-center gap-1">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Add Medication</span>
+          </button>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- SECTION 3: INVESTIGATIONS & ORDERS (LAB & IMAGING) -->
+  <div class="p-4 space-y-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-1.5">
+        <i data-lucide="flask-conical" class="w-4 h-4 text-teal-600 dark:text-teal-400"></i>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-muted">Investigations & Orders</h3>
+      </div>
+      <span class="text-[10px] text-muted">Emits order.placed</span>
+    </div>
+
+    <!-- Active Orders List -->
+    {% include "modules/consultations/partials/orders_list.html" %}
+
+    <!-- Add Order Form -->
+    {% if can_order %}
+    <form hx-post="/consultations/encounter/{{ encounter.id }}/orders"
+          hx-target="#orders-list"
+          hx-swap="outerHTML"
+          class="flex items-center gap-2 text-xs pt-1">
+      <select name="type" class="w-24 px-2.5 py-1.5 rounded-lg border border-subtle app-bg text-secondary focus:outline-none">
+        <option value="Lab">Lab Test</option>
+        <option value="Imaging">Imaging</option>
+      </select>
+      <input type="text" name="test_name" placeholder="e.g. CBC, Lipid Panel, Chest X-Ray" required
+             class="flex-1 px-3 py-1.5 rounded-lg border border-subtle app-bg text-main focus:ring-1 focus:ring-teal-500 focus:outline-none">
+      <select name="priority" class="w-24 px-2 py-1.5 rounded-lg border border-subtle app-bg text-secondary focus:outline-none">
+        <option value="Routine">Routine</option>
+        <option value="Urgent">Urgent</option>
+        <option value="Stat">Stat</option>
+      </select>
+      <button type="submit"
+              class="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-medium shadow-xs transition-colors flex items-center gap-1">
+        <i data-lucide="send" class="w-3 h-3"></i>
+        <span>Order</span>
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  <!-- SECTION 4: FOLLOW-UP & REFERRAL -->
+  <div class="p-4 space-y-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-1.5">
+        <i data-lucide="calendar" class="w-4 h-4 text-teal-600 dark:text-teal-400"></i>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-muted">Follow-Up & Referral</h3>
+      </div>
+    </div>
+
+    <!-- Follow Up Scheduling -->
+    <form hx-post="/consultations/encounter/{{ encounter.id }}/followup"
+          class="space-y-2 text-xs p-3 rounded-lg border border-subtle app-bg">
+      <div class="flex items-center justify-between">
+        <span class="font-bold text-main">Recommended Return Visit</span>
+        <div id="followup-badge"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <input type="date" name="recommended_date"
+               value="{{ follow_up.recommended_date if follow_up else '' }}" required
+               class="px-2.5 py-1.5 rounded-lg border border-subtle surface-bg text-main focus:outline-none font-mono">
+        <input type="text" name="notes" placeholder="Instructions for next visit"
+               value="{{ follow_up.notes if follow_up else '' }}"
+               class="px-2.5 py-1.5 rounded-lg border border-subtle surface-bg text-main focus:outline-none">
+      </div>
+      <div class="flex items-center justify-between pt-1">
+        <label class="flex items-center gap-1.5 text-[11px] text-secondary cursor-pointer">
+          <input type="checkbox" name="book_appointment" value="true" class="rounded text-teal-600 focus:ring-0">
+          <span>Automatically book slot in appointments calendar</span>
+        </label>
+        <button type="submit"
+                class="px-2.5 py-1 rounded bg-teal-50 hover:bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-[11px] font-semibold transition-colors">
+          Save Follow-up
+        </button>
+      </div>
+    </form>
+
+    <!-- Referral Letter Form -->
+    <form hx-post="/consultations/encounter/{{ encounter.id }}/referral"
+          class="space-y-2 text-xs p-3 rounded-lg border border-subtle app-bg">
+      <div class="flex items-center justify-between">
+        <span class="font-bold text-main">Specialist Referral</span>
+        <div id="referral-badge"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <select name="referred_to_specialty" class="px-2.5 py-1.5 rounded-lg border border-subtle surface-bg text-main focus:outline-none">
+          <option value="Cardiology">Cardiology</option>
+          <option value="Endocrinology">Endocrinology</option>
+          <option value="Orthopedics">Orthopedics</option>
+          <option value="Neurology">Neurology</option>
+          <option value="Dermatology">Dermatology</option>
+          <option value="Pulmonology">Pulmonology</option>
+          <option value="Gastroenterology">Gastroenterology</option>
+        </select>
+        <input type="text" name="referred_to_doctor" placeholder="Physician name (optional)"
+               class="px-2.5 py-1.5 rounded-lg border border-subtle surface-bg text-main focus:outline-none">
+      </div>
+      <input type="text" name="reason" placeholder="Clinical indication / reason for referral" required
+             class="w-full px-2.5 py-1.5 rounded-lg border border-subtle surface-bg text-main focus:outline-none">
+      <div class="flex justify-end pt-1">
+        <button type="submit"
+                class="px-2.5 py-1 rounded bg-teal-50 hover:bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-[11px] font-semibold transition-colors">
+          Generate Referral Letter
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+
+<script>
+  function selectDiagnosis(code, desc) {
+    let scope = Alpine.$data(document.getElementById('pane-orders-rx'));
+    scope.selectedIcdCode = code;
+    scope.selectedIcdDesc = desc;
+    document.getElementById('icd-results').innerHTML = '';
+    document.getElementById('icd-search-input').value = '';
+  }
+
+  function selectDrug(brand, generic, strength, route, freq, days, instructions) {
+    let scope = Alpine.$data(document.getElementById('pane-orders-rx'));
+    scope.selectedDrugName = brand;
+    scope.selectedGenericName = generic;
+    scope.rxDosage = strength || '1 unit';
+    scope.rxRoute = route || 'Oral';
+    scope.rxFreq = freq || 'OD';
+    scope.rxDays = days || 5;
+    scope.rxInstructions = instructions || 'Take after meals';
+    scope.updateQty();
+    document.getElementById('drug-results').innerHTML = '';
+    document.getElementById('drug-search-input').value = '';
+  }
+  lucide.createIcons();
+</script>

@@ -1,0 +1,107 @@
+<div id="safety-modal-container" class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+  <div class="relative surface-bg rounded-xl max-w-lg w-full border border-rose-300 dark:border-rose-900 shadow-2xl overflow-hidden animate-scale-up">
+    
+    <!-- Header with Red Banner -->
+    <div class="px-5 py-3.5 bg-rose-50 dark:bg-rose-950/60 border-b border-rose-200 dark:border-rose-900 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-rose-900 dark:text-rose-200">Clinical Safety Decision Warning</h3>
+          <p class="text-[11px] text-rose-700 dark:text-rose-400">Conflict detected for candidate medication: <b class="font-mono">{{ candidate_drug }}</b></p>
+        </div>
+      </div>
+      <button type="button" onclick="document.getElementById('safety-modal-container').remove()"
+              class="text-rose-500 hover:text-rose-700 p-1 rounded-lg transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- Conflicts List -->
+    <div class="p-5 space-y-3 text-xs">
+      {% if error %}
+      <div class="p-2.5 rounded-lg bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200 font-semibold text-xs">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <div class="space-y-2">
+        {% for a in alerts %}
+        <div class="p-3 rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/20 space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-rose-900 dark:text-rose-200">{{ a.type }}</span>
+            <span class="px-1.5 py-0.2 rounded font-mono text-[10px] uppercase font-bold bg-rose-200 text-rose-900 dark:bg-rose-900 dark:text-rose-200">
+              {{ a.severity }} Severity
+            </span>
+          </div>
+          <p class="text-rose-800 dark:text-rose-300 font-medium">{{ a.message }}</p>
+          {% if a.mechanism %}
+          <p class="text-[11px] text-muted italic">Mechanism: {{ a.mechanism }}</p>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Mandatory DEMO DATA Disclaimer -->
+      <div class="p-2.5 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-[11px] text-amber-800 dark:text-amber-300">
+        <span class="font-bold uppercase tracking-wider block text-[10px]">Notice: Demo Safety Dataset</span>
+        <span>The interaction database bundled in this prototype is for demonstration purposes and is NOT clinically validated for actual medical decisions.</span>
+      </div>
+
+      <!-- Override Justification Form -->
+      <form hx-post="/consultations/encounter/{{ encounter.id }}/prescriptions/add"
+            hx-target="#prescriptions-list"
+            hx-swap="outerHTML"
+            onsubmit="document.getElementById('safety-modal-container').remove()"
+            class="space-y-3 pt-2">
+        
+        <!-- Forward candidate prescription parameters -->
+        <input type="hidden" name="drug_name" value="{{ candidate_drug }}">
+        <input type="hidden" name="generic_name" value="{{ candidate_generic }}">
+        <input type="hidden" name="dosage" id="modal-override-dosage" value="">
+        <input type="hidden" name="frequency" id="modal-override-frequency" value="">
+        <input type="hidden" name="route" id="modal-override-route" value="">
+        <input type="hidden" name="duration_days" id="modal-override-duration" value="">
+        <input type="hidden" name="quantity" id="modal-override-qty" value="">
+        <input type="hidden" name="instructions" id="modal-override-instructions" value="">
+
+        <div>
+          <label for="override_reason" class="block font-bold text-main mb-1">
+            Clinical Override Justification <span class="text-rose-500">* (Mandatory)</span>
+          </label>
+          <textarea id="override_reason" name="override_reason" rows="2" required
+                    placeholder="Enter clinical rationale for proceeding despite interaction warning (e.g. Risk reviewed with patient; close monitoring instituted; alternative contraindicated)..."
+                    class="w-full p-2.5 rounded-lg border border-rose-300 dark:border-rose-900 app-bg text-main focus:ring-1 focus:ring-rose-500 focus:outline-none"></textarea>
+          <span class="text-[10px] text-muted">This override will be permanently logged to the immutable audit trail.</span>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-subtle">
+          <button type="button" onclick="document.getElementById('safety-modal-container').remove()"
+                  class="px-3 py-1.5 rounded-lg border border-subtle surface-hover text-secondary font-medium transition-colors">
+            Cancel Prescription
+          </button>
+          <button type="submit"
+                  class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-colors shadow-xs flex items-center gap-1.5">
+            <i data-lucide="shield-alert" class="w-4 h-4"></i>
+            <span>Confirm Override & Prescribe</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+<script>
+  // Copy current prescription form fields to modal hidden fields
+  let dForm = document.getElementById('rx-add-form');
+  if (dForm) {
+    document.getElementById('modal-override-dosage').value = dForm.querySelector('[name=dosage]').value || '1 dose';
+    document.getElementById('modal-override-frequency').value = dForm.querySelector('[name=frequency]').value || 'OD';
+    document.getElementById('modal-override-route').value = dForm.querySelector('[name=route]').value || 'Oral';
+    document.getElementById('modal-override-duration').value = dForm.querySelector('[name=duration_days]').value || '5';
+    document.getElementById('modal-override-qty').value = dForm.querySelector('[name=quantity]').value || '10';
+    document.getElementById('modal-override-instructions').value = dForm.querySelector('[name=instructions]').value || '';
+  }
+  lucide.createIcons();
+</script>

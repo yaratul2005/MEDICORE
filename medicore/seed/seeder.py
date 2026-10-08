@@ -48,6 +48,23 @@ from medicore.modules.pharmacy.models import (
     StockTransferRequest,
     Supplier,
 )
+from medicore.modules.laboratory.models import (
+    LabOrder,
+    LabOrderItem,
+    LabReport,
+    Parameter,
+    ReferenceRange,
+    Result,
+    Specimen,
+    TestCatalog,
+    TestPanel,
+)
+from medicore.modules.laboratory.service import (
+    calculate_age_years,
+    calculate_tat_deadline,
+    compute_derived_parameters,
+    evaluate_parameter_value,
+)
 from medicore.modules.pharmacy.service import record_stock_movement
 
 fake = Faker()
@@ -98,6 +115,16 @@ def seed_database():
             ("pharmacy.po.create", "pharmacy", "purchase_order", "create", "Draft and submit purchase orders"),
             ("pharmacy.po.manage", "pharmacy", "purchase_order", "manage", "Manage supplier purchase orders and goods receipts"),
             ("pharmacy.reports.read", "pharmacy", "reports", "read", "Access pharmacy reports and analytics"),
+            ("laboratory.order.view", "laboratory", "order", "view", "View laboratory worklist and patient test requisitions"),
+            ("laboratory.order.create", "laboratory", "order", "create", "Create walk-in or manual laboratory test orders"),
+            ("laboratory.specimen.collect", "laboratory", "specimen", "collect", "Collect biological samples and print barcode labels"),
+            ("laboratory.specimen.receive", "laboratory", "specimen", "receive", "Receive biological specimens in central laboratory"),
+            ("laboratory.specimen.reject", "laboratory", "specimen", "reject", "Reject compromised samples and request recollect"),
+            ("laboratory.result.enter", "laboratory", "result", "enter", "Enter test results and import automated analyzer CSVs"),
+            ("laboratory.result.approve", "laboratory", "result", "approve", "Pathologist authorization and approval of diagnostic lab reports"),
+            ("laboratory.result.amend", "laboratory", "result", "amend", "Amend and issue corrected diagnostic reports with audit logging"),
+            ("laboratory.critical.acknowledge", "laboratory", "critical", "acknowledge", "Physician acknowledgement of life-threatening critical lab values"),
+            ("laboratory.catalog.manage", "laboratory", "catalog", "manage", "Manage test catalog, LOINC mappings, and biological reference intervals"),
             ("core.settings.view", "core", "settings", "view", "View system configuration"),
             ("core.settings.edit", "core", "settings", "edit", "Modify hospital and module settings"),
             ("core.audit.view", "core", "audit", "view", "Inspect clinical audit trail logs"),
@@ -120,18 +147,21 @@ def seed_database():
                 "appointments.appointment.read", "appointments.appointment.update", "core.audit.view",
                 "consultations.encounter.read", "consultations.encounter.start", "consultations.vitals.create",
                 "consultations.notes.write", "consultations.notes.sign", "consultations.prescription.write",
-                "consultations.orders.create", "consultations.encounter.complete"
+                "consultations.orders.create", "consultations.encounter.complete",
+                "laboratory.order.view", "laboratory.order.create", "laboratory.critical.acknowledge",
             ]),
             ("Nurse", "Inpatient and outpatient care nursing staff", [
                 "patients.patient.read", "patients.patient.update",
                 "appointments.appointment.read", "appointments.queue.manage",
-                "consultations.encounter.read", "consultations.vitals.create"
+                "consultations.encounter.read", "consultations.vitals.create",
+                "laboratory.order.view", "laboratory.specimen.collect",
             ]),
             ("Receptionist", "Patient registration, booking and front-desk intake desk", [
                 "patients.patient.read", "patients.patient.create",
                 "appointments.appointment.read", "appointments.appointment.create",
                 "appointments.appointment.update", "appointments.queue.manage",
-                "consultations.encounter.read"
+                "consultations.encounter.read",
+                "laboratory.order.view", "laboratory.order.create",
             ]),
             ("Pharmacist", "Licensed pharmacy staff dispensing medications and reviewing prescriptions", [
                 "pharmacy.dispense.read", "pharmacy.dispense.process", "pharmacy.stock.read", "pharmacy.stock.manage",
@@ -140,6 +170,14 @@ def seed_database():
             ("StoreKeeper", "Inventory storekeeper managing purchasing, goods receipt, and warehouse transfers", [
                 "pharmacy.stock.read", "pharmacy.stock.manage", "pharmacy.po.create", "pharmacy.po.manage",
                 "pharmacy.reports.read", "core.audit.view",
+            ]),
+            ("LabTechnician", "Medical laboratory technologist collecting samples, running analyzers and entering test results", [
+                "laboratory.order.view", "laboratory.specimen.collect", "laboratory.specimen.receive",
+                "laboratory.specimen.reject", "laboratory.result.enter", "patients.patient.read", "core.audit.view",
+            ]),
+            ("Pathologist", "Consultant pathologist managing test catalog, verifying results and authorizing diagnostic reports", [
+                "laboratory.order.view", "laboratory.result.enter", "laboratory.result.approve",
+                "laboratory.result.amend", "laboratory.catalog.manage", "patients.patient.read", "core.audit.view",
             ]),
         ]
 
@@ -174,6 +212,8 @@ def seed_database():
             ("nurse.john", "john.miller@medicore.health", "Nurse John Miller, RN", "nurse123", False, "Nurse"),
             ("pharmacist.lisa", "lisa.wong@medicore.health", "Lisa Wong, PharmD", "pharmacy123", False, "Pharmacist"),
             ("storekeeper.dan", "dan.miller@medicore.health", "Dan Miller (Storekeeper)", "store123", False, "StoreKeeper"),
+            ("tech.alex", "alex.rivera@medicore.health", "Alex Rivera (Lab Tech)", "lab123", False, "LabTechnician"),
+            ("pathologist.victor", "victor.vance@medicore.health", "Dr. Victor Vance, MD (Pathologist)", "path123", False, "Pathologist"),
         ]
 
         seeded_users = {}
@@ -797,13 +837,18 @@ def seed_database():
         # Step 9: Seed Pharmacy
         seed_pharmacy_data(session)
 
+        # Step 10: Seed Laboratory
+        seed_laboratory_data(session)
+
         total_appts = len(session.exec(select(Appointment)).all())
         total_tokens = len(session.exec(select(QueueToken)).all())
         total_encounters = len(session.exec(select(Encounter)).all())
         total_items = len(session.exec(select(Item)).all())
         total_batches = len(session.exec(select(Batch)).all())
         total_dispenses = len(session.exec(select(Dispense)).all())
-        print(f"Seeding completed successfully! 200 patients, 5 doctors, {total_appts} appointments, {total_tokens} queue tokens, {total_encounters} encounters, {total_items} pharmacy items, {total_batches} batches, and {total_dispenses} dispenses ready.")
+        total_lab_orders = len(session.exec(select(LabOrder)).all())
+        total_lab_tests = len(session.exec(select(TestCatalog)).all())
+        print(f"Seeding completed successfully! 200 patients, 5 doctors, {total_appts} appointments, {total_tokens} queue tokens, {total_encounters} encounters, {total_items} pharmacy items, {total_batches} batches, {total_dispenses} dispenses, {total_lab_tests} lab tests, and {total_lab_orders} lab orders ready.")
 
 
 def seed_pharmacy_data(session: Session):
@@ -1329,6 +1374,357 @@ def seed_pharmacy_data(session: Session):
     total_movements = len(session.exec(select(StockMovement)).all())
     total_dispenses = len(session.exec(select(Dispense)).all())
     print(f"  [OK] Pharmacy seeded: {total_items} items, {total_batches} batches, {total_movements} stock ledger entries, {total_dispenses} dispenses.")
+
+
+def seed_laboratory_data(session: Session):
+    print("[10/10] Seeding Laboratory module (60+ tests catalog, LOINC, reference intervals, 200 lab orders)...")
+
+    # 1. Load catalog.json
+    catalog_path = Path(__file__).parent.parent / "modules" / "laboratory" / "data" / "catalog.json"
+    if not catalog_path.exists():
+        print("  [WARN] Laboratory catalog.json not found!")
+        return
+
+    with open(catalog_path, "r", encoding="utf-8") as f:
+        catalog_raw = json.load(f)
+
+    db_tests = {t.code: t for t in session.exec(select(TestCatalog)).all()}
+
+    for t_data in catalog_raw:
+        t_code = t_data["code"]
+        test_obj = db_tests.get(t_code)
+        if not test_obj:
+            test_obj = TestCatalog(
+                code=t_code,
+                name=t_data["name"],
+                department=t_data.get("department", "Hematology"),
+                specimen_type=t_data.get("specimen_type", "Whole Blood (EDTA)"),
+                tat_hours=t_data.get("tat_hours", 4),
+                price=t_data.get("price", 25.0),
+                description=t_data.get("description"),
+                is_panel=t_data.get("is_panel", False),
+                is_active=True,
+            )
+            session.add(test_obj)
+            session.commit()
+            session.refresh(test_obj)
+            db_tests[t_code] = test_obj
+
+        for p_data in t_data.get("parameters", []):
+            p_code = p_data["code"]
+            param_obj = session.exec(
+                select(Parameter).where(
+                    Parameter.test_id == test_obj.id,
+                    Parameter.code == p_code,
+                )
+            ).first()
+            if not param_obj:
+                param_obj = Parameter(
+                    test_id=test_obj.id,
+                    code=p_code,
+                    name=p_data["name"],
+                    unit=p_data.get("unit", ""),
+                    loinc_code=p_data.get("loinc_code"),
+                    data_type=p_data.get("data_type", "numeric"),
+                    calculation_formula=p_data.get("calculation_formula"),
+                    display_order=p_data.get("display_order", 0),
+                    is_active=True,
+                )
+                session.add(param_obj)
+                session.commit()
+                session.refresh(param_obj)
+
+            existing_ranges = session.exec(
+                select(ReferenceRange).where(ReferenceRange.parameter_id == param_obj.id)
+            ).all()
+            if not existing_ranges:
+                for r_data in p_data.get("ranges", []):
+                    rr = ReferenceRange(
+                        parameter_id=param_obj.id,
+                        gender=r_data.get("gender", "All"),
+                        age_min_years=r_data.get("age_min_years", 0.0),
+                        age_max_years=r_data.get("age_max_years", 120.0),
+                        low_normal=r_data.get("low_normal"),
+                        high_normal=r_data.get("high_normal"),
+                        critical_low=r_data.get("critical_low"),
+                        critical_high=r_data.get("critical_high"),
+                        text_normal=r_data.get("text_normal"),
+                    )
+                    session.add(rr)
+                session.commit()
+
+    total_tests = len(session.exec(select(TestCatalog)).all())
+    total_params = len(session.exec(select(Parameter)).all())
+    print(f"  - Loaded {total_tests} catalog tests with {total_params} parameters and LOINC codes.")
+
+    # 2. Seed 200 orders
+    existing_orders = session.exec(select(LabOrder)).all()
+    needed_orders = 200 - len(existing_orders)
+    if needed_orders <= 0:
+        print(f"  [OK] Laboratory orders already seeded: {len(existing_orders)} orders present.")
+        return
+
+    print(f"  - Generating {needed_orders} realistic laboratory requisitions, specimens, results, and reports...")
+    all_patients = session.exec(select(Patient)).all()
+    if not all_patients:
+        print("  [WARN] No patients found to link lab orders.")
+        return
+
+    doctors = [
+        "Sarah Chen, MD",
+        "James Wilson, MD",
+        "Emily Martinez, MD",
+        "Robert Taylor, MD",
+        "Lisa Wong, MD",
+        "Victor Vance, MD",
+    ]
+
+    key_test_codes = ["CBC", "LFT", "KFT", "LIPID", "GLU-F", "URINE-RE", "TFT", "ELECTRO", "TROP-I", "HBA1C", "COAG-PT", "CRP-Q"]
+    available_tests = [t for code, t in db_tests.items() if code in key_test_codes]
+    if not available_tests:
+        available_tests = list(db_tests.values())
+
+    now_utc = datetime.now(timezone.utc)
+
+    for i in range(needed_orders):
+        order_idx = len(existing_orders) + i + 1
+        order_no = f"LAB-2026-{order_idx:05d}"
+        barcode = f"SPEC-2026-{order_idx:05d}"
+        rep_no = f"REP-2026-{order_idx:05d}"
+
+        patient = random.choice(all_patients)
+        test = random.choice(available_tests)
+        doc = random.choice(doctors)
+
+        # Priority
+        pri_roll = random.random()
+        if pri_roll < 0.15:
+            priority = "STAT"
+        elif pri_roll < 0.35:
+            priority = "Urgent"
+        else:
+            priority = "Routine"
+
+        # Determine target status
+        if i < 40:
+            status = "ordered"
+            days_ago = random.randint(0, 2)
+            tat_breached = (priority == "STAT" and random.random() < 0.3)
+        elif i < 70:
+            status = "specimen_collected"
+            days_ago = random.randint(0, 2)
+            tat_breached = (priority in ["STAT", "Urgent"] and random.random() < 0.25)
+        elif i < 100:
+            status = random.choice(["specimen_received", "in_progress"])
+            days_ago = random.randint(0, 3)
+            tat_breached = (random.random() < 0.2)
+        elif i < 115:
+            status = "result_entered"
+            days_ago = random.randint(0, 4)
+            tat_breached = False
+        elif i < 195:
+            status = "approved"
+            days_ago = random.randint(1, 20)
+            tat_breached = False
+        else:
+            status = "approved"  # amended
+            days_ago = random.randint(2, 25)
+            tat_breached = False
+
+        ordered_at = now_utc - timedelta(days=days_ago, hours=random.randint(1, 10), minutes=random.randint(0, 59))
+        tat_deadline = calculate_tat_deadline(ordered_at, priority, test.tat_hours)
+
+        order = LabOrder(
+            order_no=order_no,
+            order_source="order.placed" if i % 2 == 0 else "walkin",
+            patient_id=patient.id,
+            patient_name=f"{patient.first_name} {patient.last_name}",
+            patient_mrn=patient.mrn,
+            patient_gender=patient.gender,
+            patient_dob=datetime.strptime(str(patient.date_of_birth), "%Y-%m-%d").date() if patient.date_of_birth else None,
+            doctor_name=doc,
+            priority=priority,
+            status=status,
+            department=test.department,
+            ordered_at=ordered_at,
+            tat_deadline=tat_deadline,
+            is_tat_breached=tat_breached,
+            clinical_notes=f"Clinical evaluation for {test.name}",
+            total_price=test.price,
+        )
+        session.add(order)
+        session.flush()
+
+        # Specimen
+        spec_status = "pending_collection"
+        collected_at = None
+        received_at = None
+        if status in ["specimen_collected", "specimen_received", "in_progress", "result_entered", "approved"]:
+            spec_status = "collected"
+            collected_at = ordered_at + timedelta(minutes=random.randint(10, 45))
+        if status in ["specimen_received", "in_progress", "result_entered", "approved"]:
+            spec_status = "received"
+            received_at = collected_at + timedelta(minutes=random.randint(15, 60))
+
+        timeline = [{"status": "pending_collection", "timestamp": ordered_at.isoformat(), "user": "System"}]
+        if collected_at:
+            timeline.append({"status": "collected", "timestamp": collected_at.isoformat(), "user": "nurse.john"})
+        if received_at:
+            timeline.append({"status": "received", "timestamp": received_at.isoformat(), "user": "tech.alex"})
+
+        specimen = Specimen(
+            lab_order_id=order.id,
+            barcode=barcode,
+            specimen_type=test.specimen_type,
+            status=spec_status,
+            collected_by="nurse.john" if collected_at else None,
+            collected_at=collected_at,
+            received_by="tech.alex" if received_at else None,
+            received_at=received_at,
+            timeline_json=json.dumps(timeline),
+        )
+        session.add(specimen)
+        session.flush()
+
+        # LabOrderItem
+        item = LabOrderItem(
+            lab_order_id=order.id,
+            test_id=test.id,
+            test_code=test.code,
+            test_name=test.name,
+            department=test.department,
+            specimen_type=test.specimen_type,
+            status=status,
+            price=test.price,
+            specimen_id=specimen.id,
+        )
+        session.add(item)
+        session.flush()
+
+        # Create results if status in [result_entered, approved]
+        if status in ["result_entered", "approved"]:
+            test_params = session.exec(
+                select(Parameter).where(Parameter.test_id == test.id).order_by(Parameter.display_order)
+            ).all()
+
+            is_amended = (i >= 195)
+            rep_ver = 2 if is_amended else 1
+
+            for p in test_params:
+                rr = session.exec(
+                    select(ReferenceRange).where(ReferenceRange.parameter_id == p.id)
+                ).first()
+
+                low_n = rr.low_normal if rr and rr.low_normal is not None else 10.0
+                high_n = rr.high_normal if rr and rr.high_normal is not None else 50.0
+                crit_l = rr.critical_low if rr else None
+                crit_h = rr.critical_high if rr else None
+
+                val_num = None
+                val_text = ""
+                flag = "Normal"
+                is_crit = False
+
+                val_roll = random.random()
+                if p.data_type == "numeric":
+                    if val_roll < 0.65:
+                        val_num = round(random.uniform(low_n, high_n), 1)
+                        flag = "Normal"
+                    elif val_roll < 0.90:
+                        if random.choice([True, False]) and high_n:
+                            val_num = round(random.uniform(high_n * 1.05, high_n * 1.5), 1)
+                            flag = "H"
+                        else:
+                            val_num = round(random.uniform(max(0.1, low_n * 0.6), low_n * 0.95), 1)
+                            flag = "L"
+                    else:
+                        is_crit = True
+                        if crit_h and random.choice([True, False]):
+                            val_num = round(random.uniform(crit_h * 1.05, crit_h * 1.3), 1)
+                            flag = "Critical_High"
+                        elif crit_l:
+                            val_num = round(random.uniform(max(0.1, crit_l * 0.6), crit_l * 0.95), 1)
+                            flag = "Critical_Low"
+                        else:
+                            val_num = round(high_n * 2.0, 1)
+                            flag = "Critical_High"
+
+                    val_text = str(val_num)
+                else:
+                    if val_roll < 0.85:
+                        val_text = rr.text_normal if (rr and rr.text_normal) else "Negative"
+                        flag = "Normal"
+                    else:
+                        val_text = "Positive / Reactive"
+                        flag = "Critical_High" if "TROP" in test.code else "Abnormal"
+                        if flag == "Critical_High":
+                            is_crit = True
+
+                ref_disp = f"{low_n} - {high_n} {p.unit}".strip() if (low_n and high_n) else (rr.text_normal if rr else "")
+
+                ack_by = None
+                ack_at = None
+                ack_notes = None
+                if is_crit:
+                    if random.random() < 0.7:
+                        ack_by = "dr.sarah"
+                        ack_at = ordered_at + timedelta(hours=3)
+                        ack_notes = "Critical value notified to ward; clinical treatment initiated."
+
+                entered_time = ordered_at + timedelta(hours=2)
+                val_time = entered_time + timedelta(hours=1) if status == "approved" else None
+
+                res_rec = Result(
+                    lab_order_id=order.id,
+                    lab_order_item_id=item.id,
+                    parameter_id=p.id,
+                    parameter_code=p.code,
+                    parameter_name=p.name,
+                    value_text=val_text,
+                    value_numeric=val_num,
+                    unit=p.unit,
+                    reference_range_display=ref_disp,
+                    flag=flag,
+                    is_critical=is_crit,
+                    critical_acknowledged_by=ack_by,
+                    critical_acknowledged_at=ack_at,
+                    critical_acknowledged_notes=ack_notes,
+                    version=rep_ver,
+                    entered_by="tech.alex",
+                    entered_at=entered_time,
+                    validated_by="Dr. Victor Vance, MD" if status == "approved" else None,
+                    validated_at=val_time,
+                )
+                session.add(res_rec)
+
+            report = LabReport(
+                lab_order_id=order.id,
+                report_no=rep_no,
+                version=rep_ver,
+                status="approved" if status == "approved" else "draft",
+                is_corrected_report=is_amended,
+                amendment_reason="Analyzer calibration adjustment and re-run confirmed corrected results" if is_amended else None,
+                approved_by="Dr. Victor Vance, MD" if status == "approved" else None,
+                approved_at=ordered_at + timedelta(hours=3) if status == "approved" else None,
+                created_at=ordered_at,
+            )
+            session.add(report)
+
+        else:
+            report = LabReport(
+                lab_order_id=order.id,
+                report_no=rep_no,
+                version=1,
+                status="draft",
+                created_at=ordered_at,
+            )
+            session.add(report)
+
+    session.commit()
+    total_orders_final = len(session.exec(select(LabOrder)).all())
+    total_results_final = len(session.exec(select(Result)).all())
+    total_reports_final = len(session.exec(select(LabReport)).all())
+    print(f"  [OK] Laboratory seeded successfully: {total_orders_final} orders, {total_results_final} results, {total_reports_final} reports.")
 
 
 if __name__ == "__main__":
