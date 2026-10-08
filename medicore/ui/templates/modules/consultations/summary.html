@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Clinical Visit Summary & Rx - {{ patient.full_name }} ({{ patient.mrn }})</title>
+  <link rel="icon" type="image/png" href="/static/img/medicore-logo.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -38,10 +39,13 @@
     
     <!-- Hospital Header -->
     <div class="flex items-start justify-between border-b-2 border-teal-700 pb-4">
-      <div>
-        <h1 class="text-xl font-bold text-teal-800 tracking-tight">{{ hospital_info.name|default('MediCore Hospital & Medical Center') }}</h1>
-        <p class="text-slate-500 text-[11px] mt-0.5">{{ hospital_info.address|default('100 Healthcare Boulevard, Metro City') }}</p>
-        <p class="text-slate-500 text-[11px]">Tel: {{ hospital_info.phone|default('+1 (555) 234-5678') }} • Emergency: {{ hospital_info.emergency_contact|default('911 / (555) 999-0000') }}</p>
+      <div class="flex items-center gap-3.5">
+        <img src="/static/img/medicore-logo.png" alt="MediCore Logo" class="w-12 h-12 object-contain flex-shrink-0">
+        <div>
+          <h1 class="text-xl font-bold text-teal-800 tracking-tight">{{ hospital_info.name|default('MediCore Hospital & Medical Center') }}</h1>
+          <p class="text-slate-500 text-[11px] mt-0.5">{{ hospital_info.address|default('100 Healthcare Boulevard, Metro City') }}</p>
+          <p class="text-slate-500 text-[11px]">Tel: {{ hospital_info.phone|default('+1 (555) 234-5678') }} • Emergency: {{ hospital_info.emergency_contact|default('911 / (555) 999-0000') }}</p>
+        </div>
       </div>
       <div class="text-right">
         <span class="text-xs font-bold text-teal-800 uppercase tracking-wider block">Clinical Visit Summary & Rx</span>

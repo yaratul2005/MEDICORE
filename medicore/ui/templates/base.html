@@ -33,6 +33,9 @@
 
   <!-- MediCore Design Tokens -->
   <link rel="stylesheet" href="/static/css/tokens.css">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/static/img/medicore-logo.png">
 </head>
 <body class="app-bg text-main antialiased h-screen flex flex-col overflow-hidden selection:bg-teal-500 selection:text-white">
 
@@ -46,17 +49,17 @@
     <aside class="w-60 bg-slate-900 text-slate-200 flex flex-col flex-shrink-0 z-20 border-r border-slate-800">
       
       <!-- Brand Header -->
-      <div class="h-14 flex items-center gap-3 px-4 border-b border-slate-800 bg-slate-950/60">
-        <div class="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center text-white font-bold shadow-md shadow-teal-900/30">
-          <i data-lucide="cross" class="w-5 h-5 text-white"></i>
-        </div>
-        <div class="flex flex-col">
-          <span class="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
-            MediCore
-            <span class="text-[10px] uppercase font-mono px-1 py-0.2 rounded bg-teal-950 text-teal-400 border border-teal-800">Core</span>
-          </span>
-          <span class="text-[11px] text-slate-400 truncate max-w-[130px]">{{ hospital_profile.name|default('Central Hospital') }}</span>
-        </div>
+      <div class="h-14 flex items-center px-4 border-b border-slate-800 bg-slate-950/60">
+        <a href="/" class="flex items-center gap-3 group">
+          <img src="/static/img/medicore-logo.png" alt="MediCore Logo" class="w-8 h-8 object-contain flex-shrink-0 transition-transform group-hover:scale-105">
+          <div class="flex flex-col">
+            <span class="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
+              MediCore
+              <span class="text-[10px] uppercase font-mono px-1 py-0.2 rounded bg-teal-950 text-teal-400 border border-teal-800">Core</span>
+            </span>
+            <span class="text-[11px] text-slate-400 truncate max-w-[130px]">{{ hospital_profile.name|default('Central Hospital') }}</span>
+          </div>
+        </a>
       </div>
 
       <!-- Navigation Links -->
